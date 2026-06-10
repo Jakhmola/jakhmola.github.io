@@ -77,6 +77,7 @@ export function renderPage({ config, featured, rest, summaries, builtAt = new Da
   <link rel="canonical" href="${e(config.siteUrl)}">
   <link rel="icon" href="${FAVICON}">
   <link rel="stylesheet" href="style.css">
+  <script src="enhance.js" defer></script>
 </head>
 <body>
   <main>
@@ -87,7 +88,7 @@ export function renderPage({ config, featured, rest, summaries, builtAt = new Da
           <span class="term-title">shubham@jakhmola.github.io:~</span>
         </div>
         <div class="term-body">
-          <p class="prompt" aria-hidden="true">$ whoami<span class="cursor"></span></p>
+          <p class="prompt" aria-hidden="true"><span class="cmd">$ whoami</span><span class="cursor"></span></p>
           <h1>${e(config.name)}</h1>
           <p class="role">${e(config.title)}</p>
           <p class="pitch">${e(config.pitch)}</p>
@@ -102,19 +103,19 @@ export function renderPage({ config, featured, rest, summaries, builtAt = new Da
     </header>
 
     <section id="about">
-      <h2><span class="prompt" aria-hidden="true">$ </span>cat about.txt</h2>
+      <h2><span class="prompt" aria-hidden="true">$ </span><span class="cmd">cat about.txt</span></h2>
       <p>${e(config.about)}</p>
     </section>
 
     <section id="skills">
-      <h2><span class="prompt" aria-hidden="true">$ </span>ls skills/</h2>
+      <h2><span class="prompt" aria-hidden="true">$ </span><span class="cmd">ls skills/</span></h2>
       <ul class="tags skills">
 ${skills.map((s) => `        <li>${e(s)}</li>`).join('\n')}
       </ul>
     </section>
 
     <section id="projects">
-      <h2><span class="prompt" aria-hidden="true">$ </span>ls projects/ --featured</h2>
+      <h2><span class="prompt" aria-hidden="true">$ </span><span class="cmd">ls projects/ --featured</span></h2>
       <div class="cards">
 ${featured.map((r) => projectCard(r, summaries[r.full_name])).join('\n')}
       </div>
@@ -123,7 +124,7 @@ ${
   rest.length
     ? `
     <section id="more">
-      <h2><span class="prompt" aria-hidden="true">$ </span>ls projects/ --all</h2>
+      <h2><span class="prompt" aria-hidden="true">$ </span><span class="cmd">ls projects/ --all</span></h2>
       <ul class="rest">
 ${rest.map(restItem).join('\n')}
       </ul>
