@@ -99,7 +99,8 @@
     const POINTER_RADIUS = 130;
 
     function build() {
-      const dpr = Math.min(devicePixelRatio || 1, 2);
+      // 1.5x is visually indistinguishable for 1px lines and dots, ~44% less fill
+      const dpr = Math.min(devicePixelRatio || 1, 1.5);
       W = innerWidth;
       H = innerHeight;
       canvas.width = W * dpr;

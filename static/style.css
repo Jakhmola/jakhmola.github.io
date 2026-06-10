@@ -28,12 +28,21 @@ body {
   font-size: 1.0625rem;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+}
+
+/* Ambient glows live on a fixed, composited layer — never repainted on scroll
+   (background-attachment: fixed forces a full-viewport repaint per frame). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background:
     radial-gradient(55rem 38rem at 85% -12%, rgba(126, 231, 135, 0.07), transparent 60%),
     radial-gradient(48rem 34rem at -12% 25%, rgba(121, 192, 255, 0.06), transparent 60%),
-    radial-gradient(50rem 42rem at 75% 115%, rgba(210, 168, 255, 0.06), transparent 60%),
-    var(--bg);
-  background-attachment: fixed;
+    radial-gradient(50rem 42rem at 75% 115%, rgba(210, 168, 255, 0.06), transparent 60%);
 }
 
 main {
@@ -112,7 +121,7 @@ a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
    Hidden state only applies when JS is running (.js on <html>), so no-JS visitors
    and crawlers always see everything. Animations use fill-mode backwards so card
    hover transforms keep working after the entrance finishes. */
-.js .reveal { opacity: 0; }
+.js .reveal { opacity: 0; will-change: transform, opacity; }
 .js .reveal.in {
   opacity: 1;
   animation: pop 0.6s cubic-bezier(0.18, 1.25, 0.4, 1) backwards;
