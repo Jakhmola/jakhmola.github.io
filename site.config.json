@@ -3,7 +3,7 @@
   "title": "AI Engineer",
   "githubUser": "Jakhmola",
   "siteUrl": "https://jakhmola.github.io",
-  "pitch": "I build AI systems that do real work: autonomous coding agents, RAG search engines, and deep-learning pipelines taken from raw data to deployed model. My recent projects include a Claude-Code-powered job-search operations system and a U-Net brain-tumor segmentation pipeline on BraTS 2020.",
+  "pitch": "I build AI systems that do real work: autonomous coding agents, RAG search engines, and deep-learning pipelines taken from raw data to deployed model. Right now I'm focused on LLM agents and retrieval systems that actually ship — this site is one of them, rebuilding itself nightly from my GitHub.",
   "about": "I'm an AI engineer focused on the practical end of the field — getting agents, retrieval systems, and neural networks to actually ship. I've built LLM agents that write and execute code, retrieval-augmented search over real document corpora, an automated support-ticketing system, and reinforcement-learning agents that play Super Mario. On the deep-learning side I've trained and compared U-Net, ResNet, and VGG architectures for medical image segmentation, and worked on behavioral-biometric identification. This site is itself a small example of how I like to work: it rebuilds itself nightly from my GitHub account via a scheduled pipeline, ranks my repos automatically, and summarizes them with an LLM — zero manual upkeep.",
   "email": "j4khmola@gmail.com",
   "github": "https://github.com/Jakhmola",

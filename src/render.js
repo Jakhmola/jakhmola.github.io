@@ -81,16 +81,24 @@ export function renderPage({ config, featured, rest, summaries, builtAt = new Da
 <body>
   <main>
     <header class="hero">
-      <p class="prompt" aria-hidden="true">$ whoami</p>
-      <h1>${e(config.name)}</h1>
-      <p class="role">${e(config.title)}</p>
-      <p class="pitch">${e(config.pitch)}</p>
-      <nav class="contact" aria-label="Contact">
-        <a class="btn" href="${e(config.resume)}">resume.pdf</a>
-        <a href="${e(config.github)}">github</a>
-        <a href="${e(config.linkedin)}">linkedin</a>
-        <a href="mailto:${e(config.email)}">${e(config.email)}</a>
-      </nav>
+      <div class="term">
+        <div class="term-bar" aria-hidden="true">
+          <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+          <span class="term-title">shubham@jakhmola.github.io:~</span>
+        </div>
+        <div class="term-body">
+          <p class="prompt" aria-hidden="true">$ whoami<span class="cursor"></span></p>
+          <h1>${e(config.name)}</h1>
+          <p class="role">${e(config.title)}</p>
+          <p class="pitch">${e(config.pitch)}</p>
+          <nav class="contact" aria-label="Contact">
+            <a class="btn" href="${e(config.resume)}">resume.pdf</a>
+            <a href="${e(config.github)}">github</a>
+            <a href="${e(config.linkedin)}">linkedin</a>
+            <a href="mailto:${e(config.email)}">${e(config.email)}</a>
+          </nav>
+        </div>
+      </div>
     </header>
 
     <section id="about">
