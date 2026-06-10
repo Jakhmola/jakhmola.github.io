@@ -6,20 +6,30 @@
 (() => {
   'use strict';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.add('js');
 
-  /* ---------- typewriter ---------- */
+  /* ---------- typewriter (replays on every viewport re-entry) ---------- */
+  const timers = new WeakMap();
+
   function typewriter() {
     if (reduced || !('IntersectionObserver' in window)) return;
     const els = document.querySelectorAll('.cmd');
     const io = new IntersectionObserver(
       (entries) => {
         for (const en of entries) {
-          if (!en.isIntersecting) continue;
-          io.unobserve(en.target);
-          typeOut(en.target);
+          const el = en.target;
+          if (en.isIntersecting && en.intersectionRatio >= 0.5) {
+            if (!timers.has(el) && el.textContent !== el.dataset.text) typeOut(el);
+          } else if (!en.isIntersecting) {
+            // fully out of view: reset so it retypes next time
+            clearTimeout(timers.get(el));
+            timers.delete(el);
+            el.textContent = '';
+            el.classList.add('typing');
+          }
         }
       },
-      { threshold: 0.5 },
+      { threshold: [0, 0.5] },
     );
     for (const el of els) {
       el.dataset.text = el.textContent;
@@ -31,13 +41,45 @@
 
   function typeOut(el) {
     const text = el.dataset.text;
-    let i = 0;
+    let i = el.textContent.length;
     const tick = () => {
       el.textContent = text.slice(0, ++i);
-      if (i < text.length) setTimeout(tick, 26 + Math.random() * 45);
-      else el.classList.remove('typing');
+      if (i < text.length) timers.set(el, setTimeout(tick, 26 + Math.random() * 45));
+      else {
+        timers.delete(el);
+        el.classList.remove('typing');
+      }
     };
-    tick();
+    timers.set(el, setTimeout(tick, 0));
+  }
+
+  /* ---------- scroll-triggered entrances (replay on every re-entry) ---------- */
+  function reveals() {
+    if (reduced || !('IntersectionObserver' in window)) return;
+    const targets = [];
+    const tag = (selector, stagger) => {
+      document.querySelectorAll(selector).forEach((el, i) => {
+        el.classList.add('reveal');
+        el.style.setProperty('--d', `${Math.min(i * stagger, 650)}ms`);
+        targets.push(el);
+      });
+    };
+    tag('.hero h1, .hero .role, .hero .pitch, .hero .contact', 110);
+    tag('#about p', 0);
+    tag('.skills li', 24);
+    tag('.card', 90);
+    tag('.rest li', 22);
+    tag('footer .contact, footer p', 80);
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const en of entries) {
+          if (en.isIntersecting && en.intersectionRatio >= 0.1) en.target.classList.add('in');
+          else if (!en.isIntersecting) en.target.classList.remove('in');
+        }
+      },
+      { threshold: [0, 0.1] },
+    );
+    for (const el of targets) io.observe(el);
   }
 
   /* ---------- neural-net background ---------- */
@@ -257,5 +299,6 @@
   }
 
   typewriter();
+  reveals();
   neuralNet();
 })();
