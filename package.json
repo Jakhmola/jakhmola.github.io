@@ -1,0 +1,12 @@
+{
+  "name": "jakhmola.github.io",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node src/build.js",
+    "test": "node --test"
+  }
+}

@@ -1,0 +1,123 @@
+[
+  {
+    "name": "career-ops",
+    "full_name": "Jakhmola/career-ops",
+    "html_url": "https://github.com/Jakhmola/career-ops",
+    "description": "Claude-Code-based job search operations system",
+    "fork": false,
+    "topics": ["llm-agents", "claude", "automation"],
+    "language": "Python",
+    "stargazers_count": 3,
+    "pushed_at": "2026-06-01T10:00:00Z"
+  },
+  {
+    "name": "Brain-Tumor-Segmentation",
+    "full_name": "Jakhmola/Brain-Tumor-Segmentation",
+    "html_url": "https://github.com/Jakhmola/Brain-Tumor-Segmentation",
+    "description": "U-Net, ResNet and VGG segmentation models on BraTS 2020",
+    "fork": false,
+    "topics": ["deep-learning", "medical-imaging"],
+    "language": "Jupyter Notebook",
+    "stargazers_count": 5,
+    "pushed_at": "2025-11-12T10:00:00Z"
+  },
+  {
+    "name": "rag-search-engine",
+    "full_name": "Jakhmola/rag-search-engine",
+    "html_url": "https://github.com/Jakhmola/rag-search-engine",
+    "description": "Retrieval-augmented search engine over document corpora",
+    "fork": false,
+    "topics": ["rag", "search"],
+    "language": "Python",
+    "stargazers_count": 2,
+    "pushed_at": "2026-04-20T10:00:00Z"
+  },
+  {
+    "name": "coding_agent",
+    "full_name": "Jakhmola/coding_agent",
+    "html_url": "https://github.com/Jakhmola/coding_agent",
+    "description": "An LLM agent that writes and executes code",
+    "fork": false,
+    "topics": ["agents"],
+    "language": "Python",
+    "stargazers_count": 1,
+    "pushed_at": "2026-05-15T10:00:00Z"
+  },
+  {
+    "name": "automated-ticketing-system",
+    "full_name": "Jakhmola/automated-ticketing-system",
+    "html_url": "https://github.com/Jakhmola/automated-ticketing-system",
+    "description": "Automated support-ticket triage and routing",
+    "fork": false,
+    "topics": [],
+    "language": "Python",
+    "stargazers_count": 0,
+    "pushed_at": "2025-09-01T10:00:00Z"
+  },
+  {
+    "name": "Super-Mario-AI",
+    "full_name": "Jakhmola/Super-Mario-AI",
+    "html_url": "https://github.com/Jakhmola/Super-Mario-AI",
+    "description": "Reinforcement learning agent that plays Super Mario Bros",
+    "fork": false,
+    "topics": ["reinforcement-learning"],
+    "language": "Python",
+    "stargazers_count": 1,
+    "pushed_at": "2025-06-10T10:00:00Z"
+  },
+  {
+    "name": "interview-coach",
+    "full_name": "Jakhmola/interview-coach",
+    "html_url": "https://github.com/Jakhmola/interview-coach",
+    "description": "LLM-powered mock interview practice tool",
+    "fork": false,
+    "topics": ["portfolio-feature"],
+    "language": "TypeScript",
+    "stargazers_count": 0,
+    "pushed_at": "2024-08-01T10:00:00Z"
+  },
+  {
+    "name": "behavioral-biometric-identification",
+    "full_name": "Jakhmola/behavioral-biometric-identification",
+    "html_url": "https://github.com/Jakhmola/behavioral-biometric-identification",
+    "description": "Identifying users from keystroke and mouse dynamics",
+    "fork": false,
+    "topics": [],
+    "language": "Jupyter Notebook",
+    "stargazers_count": 0,
+    "pushed_at": "2023-05-01T10:00:00Z"
+  },
+  {
+    "name": "scratch-experiments",
+    "full_name": "Jakhmola/scratch-experiments",
+    "html_url": "https://github.com/Jakhmola/scratch-experiments",
+    "description": "Throwaway experiments",
+    "fork": false,
+    "topics": ["portfolio-hide"],
+    "language": "Python",
+    "stargazers_count": 0,
+    "pushed_at": "2026-06-05T10:00:00Z"
+  },
+  {
+    "name": "freeCodeCamp-boilerplate",
+    "full_name": "Jakhmola/freeCodeCamp-boilerplate",
+    "html_url": "https://github.com/Jakhmola/freeCodeCamp-boilerplate",
+    "description": "A boilerplate fork",
+    "fork": true,
+    "topics": [],
+    "language": "JavaScript",
+    "stargazers_count": 0,
+    "pushed_at": "2026-06-08T10:00:00Z"
+  },
+  {
+    "name": "Jakhmola",
+    "full_name": "Jakhmola/Jakhmola",
+    "html_url": "https://github.com/Jakhmola/Jakhmola",
+    "description": "Profile repo",
+    "fork": false,
+    "topics": [],
+    "language": null,
+    "stargazers_count": 0,
+    "pushed_at": "2026-01-01T10:00:00Z"
+  }
+]
