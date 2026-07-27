@@ -9,7 +9,7 @@ import path from 'node:path';
 
 import { fetchRepos, fetchReadme } from './github.js';
 import { FEATURE_TOPIC, rankRepos } from './rank.js';
-import { summarizeFeatured } from './summarize.js';
+import { formsFor, summarizeFeatured } from './summarize.js';
 import { renderPage } from './render.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -82,7 +82,14 @@ export async function build({
   await cp(staticDir, outDir, { recursive: true });
   await writeFile(
     path.join(outDir, 'index.html'),
-    renderPage({ config, featured, rest, summaries, builtAt: new Date(now) }),
+    renderPage({
+      config,
+      featured,
+      rest,
+      summaries,
+      forms: formsFor(featured, cache),
+      builtAt: new Date(now),
+    }),
   );
 
   log(`build: ${featured.length} featured, ${rest.length} listed -> ${outDir}`);

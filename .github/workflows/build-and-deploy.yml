@@ -31,6 +31,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
 
       - name: Restore Summary cache
         uses: actions/cache@v4
@@ -72,4 +76,7 @@ jobs:
           status=$(curl -s -o page.html -w '%{http_code}' https://jakhmola.github.io)
           test "$status" = "200"
           grep -q 'Shubham Jakhmola' page.html
-          grep -q '\$ whoami' page.html
+          # Content must be in the HTML, not painted by the bundle: ADR 0001
+          # applies to the front end too.
+          grep -q 'id="field"' page.html
+          grep -q 'class="beat work"' page.html

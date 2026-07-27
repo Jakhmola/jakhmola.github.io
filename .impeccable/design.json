@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-25T02:55:00Z",
+  "title": "Design System: Shubham Jakhmola — Self-Rebuilding Portfolio",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#05070a",
+        "tonalRamp": ["#05070a", "#0b0f16", "#141a25", "#1f2735", "#39465b", "#5c6b83", "#8e9ab0", "#ccd4e2"]
+      },
+      "ink-lift": {
+        "role": "neutral",
+        "displayName": "Ink Lift",
+        "canonical": "#0b0f16",
+        "tonalRamp": ["#05070a", "#0b0f16", "#131a24", "#1d2634", "#33415a", "#54647f", "#8894ac", "#c4cdde"]
+      },
+      "bright": {
+        "role": "neutral",
+        "displayName": "Signal White",
+        "canonical": "#f2f6ff",
+        "tonalRamp": ["#0a0d14", "#151b28", "#28324a", "#3d4a68", "#5b6b8c", "#8494b3", "#b9c5da", "#f2f6ff"]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Read Grey",
+        "canonical": "#ccd4e2",
+        "tonalRamp": ["#0a0c11", "#151a23", "#252d3c", "#394557", "#556478", "#7b8a9f", "#a4b0c3", "#ccd4e2"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Quiet Grey",
+        "canonical": "#8e9ab0",
+        "tonalRamp": ["#0b0d12", "#161a22", "#252b37", "#39414f", "#525c6e", "#6f7a8e", "#8e9ab0", "#b8c1d1"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#1b2230",
+        "tonalRamp": ["#080a0e", "#111621", "#1b2230", "#28313f", "#3a4557", "#556076", "#7e8a9f", "#b3bccc"]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Film Cyan",
+        "canonical": "#9fd8ff",
+        "tonalRamp": ["#04141f", "#082438", "#0f3b58", "#17567c", "#2378ab", "#4ea3d8", "#79c1ef", "#9fd8ff"]
+      },
+      "accent-deep": {
+        "role": "primary",
+        "displayName": "Film Indigo",
+        "canonical": "#6f8cff",
+        "tonalRamp": ["#0a0f2b", "#131c48", "#1e2c6d", "#2b3f97", "#3d55c2", "#5470e4", "#6f8cff", "#a3b4ff"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The name in the hero. Nothing else uses it." },
+      "headline": { "displayName": "Headline", "purpose": "Beat headings, capped at 22ch." },
+      "title": { "displayName": "Title", "purpose": "Featured project names; wraps anywhere for machine-supplied repo names." },
+      "figure": { "displayName": "Figure", "purpose": "Pipeline counts. Thin and wide, tabular; the opposite of the display weight." },
+      "lede": { "displayName": "Lede", "purpose": "A beat's opening paragraph and every LLM-written project summary." },
+      "body": { "displayName": "Body", "purpose": "Prose and default text; tabular figures on globally." },
+      "label": { "displayName": "Label", "purpose": "Uppercase kickers, beat markers, figure captions, scroll cue." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "state-fast", "value": "160ms ease-out", "purpose": "Text colour change on list-row hover." },
+      { "name": "state-standard", "value": "180ms ease-out", "purpose": "Button fill, skip-link reveal, contact underline." },
+      { "name": "field-reveal", "value": "900ms ease-out", "purpose": "Canvas opacity fade-in once html.gl is set." },
+      { "name": "overture-dismiss", "value": "700ms ease-out", "purpose": "Overture opacity + visibility fade after the roll completes." },
+      { "name": "overture-step", "value": "78ms", "purpose": "Interval between repository names in the boot roll." },
+      { "name": "beat-morph", "value": "2.1s expo.out", "purpose": "Particle morph and camera dolly between beats." },
+      { "name": "beat-frame", "value": "2.4s expo.out", "purpose": "Field position and rotation settling into a beat's stage." },
+      { "name": "copy-entry", "value": "1.1s expo.out, stagger 0.07", "purpose": "Beat copy rising 26px into place at 82% viewport." },
+      { "name": "ambient-spin", "value": "0.014 rad/s", "purpose": "Continuous parent-group rotation under the beat choreography." },
+      { "name": "reduced-floor", "value": "0.001ms", "purpose": "All transitions and animations under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "stack", "value": "46rem" },
+      { "name": "lane", "value": "62rem" },
+      { "name": "lane-factor", "value": "clamp((100vw - 720px) / 560, 0, 1)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Ghost Pill Button",
+      "kind": "button",
+      "refersTo": "button-pill",
+      "description": "The only button in the system; used for the resume link in the hero nav and the footer.",
+      "html": "<a class=\"ds-btn-pill\" href=\"resume.pdf\">Resume</a>",
+      "css": ".ds-btn-pill { display: inline-block; font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; font-size: 1.0625rem; font-weight: 600; line-height: 1.6; text-decoration: none; padding: 0.7rem 1.4rem; border: 1px solid #9fd8ff; border-radius: 999px; color: #9fd8ff; background: transparent; transition: background-color 180ms ease-out, color 180ms ease-out; } .ds-btn-pill:hover { background: #9fd8ff; color: #05070a; } .ds-btn-pill:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; border-radius: 999px; }"
+    },
+    {
+      "name": "Metadata Chip",
+      "kind": "chip",
+      "refersTo": "chip-tag",
+      "description": "Read-only repository language/topic and skills tags. Never selectable, never accented.",
+      "html": "<ul class=\"ds-tags\"><li>Python</li><li>PyTorch</li><li>LLM Agents</li></ul>",
+      "css": ".ds-tags { display: flex; flex-wrap: wrap; gap: 0.375rem 0.75rem; margin: 0; padding: 0; list-style: none; } .ds-tags li { font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; font-size: 0.8125rem; line-height: 1.6; padding: 0.3rem 0.7rem; border: 1px solid #1b2230; border-radius: 999px; color: #8e9ab0; }"
+    },
+    {
+      "name": "Out Link",
+      "kind": "nav",
+      "refersTo": "link-out",
+      "description": "The bordered text link that leaves the page for a repository.",
+      "html": "<a class=\"ds-link-out\" href=\"#\">Open on GitHub</a>",
+      "css": ".ds-link-out { font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; font-size: 1.0625rem; font-weight: 600; color: #9fd8ff; text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 2px; transition: color 180ms ease-out; } .ds-link-out:hover { color: #f2f6ff; } .ds-link-out:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "Contact Row",
+      "kind": "nav",
+      "refersTo": "button-pill",
+      "description": "The flat inline nav used under the hero pitch and in the footer. No sticky bar exists anywhere.",
+      "html": "<nav class=\"ds-contact\" aria-label=\"Contact\"><a class=\"ds-btn-pill\" href=\"resume.pdf\">Resume</a><a href=\"#\">GitHub</a><a href=\"#\">LinkedIn</a><a href=\"#\">Email</a></nav>",
+      "css": ".ds-contact { display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem 2rem; font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; font-size: 1.0625rem; line-height: 1.6; } .ds-contact a { color: #9fd8ff; text-decoration: none; border-bottom: 1px solid rgba(159, 216, 255, 0.35); padding-bottom: 3px; } .ds-contact a:hover { color: #f2f6ff; border-bottom-color: currentColor; } .ds-contact a:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; border-radius: 2px; } .ds-contact .ds-btn-pill { border: 1px solid #9fd8ff; border-radius: 999px; padding: 0.7rem 1.4rem; font-weight: 600; transition: background-color 180ms ease-out, color 180ms ease-out; } .ds-contact .ds-btn-pill:hover { background: #9fd8ff; color: #05070a; border-bottom-color: #9fd8ff; }"
+    },
+    {
+      "name": "Ranked List Row",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "The index of repositories that ranked below the featured line: hairline-separated, two-column, baseline-aligned.",
+      "html": "<ul class=\"ds-rest\"><li><a href=\"#\"><span class=\"ds-rest-n\">rag-search</span><span class=\"ds-rest-d\">Retrieval-augmented search over a real document corpus.</span></a></li><li><a href=\"#\"><span class=\"ds-rest-n\">mario-rl</span><span class=\"ds-rest-d\">Reinforcement-learning agent for Super Mario.</span></a></li></ul>",
+      "css": ".ds-rest { margin: 0; padding: 0; list-style: none; border-top: 1px solid #1b2230; max-width: 54rem; font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; } .ds-rest li { border-bottom: 1px solid #1b2230; } .ds-rest li a { display: grid; grid-template-columns: minmax(9rem, 18rem) 1fr; gap: 0.75rem 2rem; align-items: baseline; padding: 1.25rem 0; color: #ccd4e2; text-decoration: none; font-size: 1.0625rem; line-height: 1.6; transition: color 160ms ease-out; } .ds-rest li a:hover { color: #f2f6ff; } .ds-rest li a:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; } .ds-rest-d { color: #8e9ab0; font-size: 0.9375rem; } @media (max-width: 46rem) { .ds-rest li a { grid-template-columns: 1fr; gap: 0.375rem; } }"
+    },
+    {
+      "name": "Beat Header",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "The kicker + heading + lede block that opens every beat; shows the weight/width hierarchy with one family.",
+      "html": "<div class=\"ds-beat\"><p class=\"ds-marker\"><span class=\"ds-marker-n\">01</span> <span>Featured</span></p><h3 class=\"ds-title\">rag-search</h3><p class=\"ds-lede\">A retrieval pipeline over a real document corpus, ranked and summarised without hand-written copy.</p></div>",
+      "css": ".ds-beat { font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-marker { display: flex; align-items: baseline; gap: 0.75rem; margin: 0 0 1.25rem; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #8e9ab0; } .ds-marker-n { color: #9fd8ff; } .ds-title { margin: 0 0 1.25rem; font-size: clamp(2rem, 5.6vw, 4rem); font-weight: 600; font-stretch: 114%; line-height: 0.98; letter-spacing: -0.04em; color: #f2f6ff; overflow-wrap: anywhere; } .ds-lede { margin: 0; max-width: 66ch; font-size: clamp(1.0625rem, 1.4vw, 1.1875rem); line-height: 1.6; color: #ccd4e2; }"
+    },
+    {
+      "name": "Pipeline Figures",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "Tabular counts from the rebuild, in the thin/wide figure voice against uppercase micro-labels.",
+      "html": "<dl class=\"ds-figures\"><div><dt>Considered</dt><dd>38</dd></div><div><dt>Featured</dt><dd>6</dd></div><div><dt>Written by hand</dt><dd>0</dd></div></dl>",
+      "css": ".ds-figures { display: flex; flex-wrap: wrap; gap: 3rem 4.5rem; margin: 0; font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-figures div { margin: 0; } .ds-figures dt { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #8e9ab0; } .ds-figures dd { margin: 0.375rem 0 0; font-size: clamp(2.25rem, 5vw, 3.5rem); font-weight: 200; font-stretch: 115%; line-height: 1; letter-spacing: -0.04em; color: #f2f6ff; }"
+    },
+    {
+      "name": "Overture Panel",
+      "kind": "custom",
+      "refersTo": "boot-overture",
+      "description": "The full-viewport boot panel that flashes every repository name at 78ms while the particle field compiles.",
+      "html": "<div class=\"ds-boot\"><p class=\"ds-boot-l\">Scheduled Rebuild</p><p class=\"ds-boot-stamp\"><span>2026-07-25 02:41</span> UTC</p><p class=\"ds-boot-name\">rag-search</p><div class=\"ds-boot-bar\" role=\"progressbar\" aria-label=\"Loading\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"62\"><i></i></div><p class=\"ds-boot-n\">38 repositories read</p></div>",
+      "css": ".ds-boot { display: grid; align-content: center; justify-items: center; gap: 0.75rem; padding: 4.5rem 2rem; background: #05070a; text-align: center; font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-boot-l { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #8e9ab0; } .ds-boot-stamp { margin: 0; font-size: clamp(1.75rem, 6vw, 3rem); font-weight: 200; font-stretch: 112%; letter-spacing: -0.03em; color: #f2f6ff; } .ds-boot-name { margin: 0; min-height: 1.4em; font-size: 0.9375rem; font-weight: 500; letter-spacing: 0.02em; color: #9fd8ff; overflow-wrap: anywhere; } .ds-boot-bar { width: min(18rem, 60vw); height: 1px; margin-top: 1.25rem; background: #1b2230; overflow: hidden; } .ds-boot-bar i { display: block; height: 100%; width: 100%; background: #9fd8ff; transform: scaleX(0.62); transform-origin: left center; transition: transform 240ms ease-out; } .ds-boot-n { margin: 0; font-size: 0.8125rem; color: #8e9ab0; }"
+    },
+    {
+      "name": "Skip Link",
+      "kind": "nav",
+      "refersTo": "skip-link",
+      "description": "The one lifted surface in the system; parked off-screen and dropped in on focus.",
+      "html": "<a class=\"ds-skip\" href=\"#hero\">Skip to content</a>",
+      "css": ".ds-skip { position: absolute; left: clamp(1.25rem, 5vw, 5rem); top: -5rem; z-index: 40; background: #0b0f16; color: #f2f6ff; text-decoration: none; padding: 0.75rem 1.25rem; border: 1px solid #1b2230; font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif; font-size: 1.0625rem; transition: top 180ms ease-out; } .ds-skip:focus, .ds-skip:focus-visible { top: 1.25rem; outline: 2px solid #9fd8ff; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Instrument Room",
+    "overview": "The page behaves like a dark instrument room with one live readout in it. Everything structural is ink and hairline: no panels, no cards, no chrome. The only thing that moves and the only thing with hue is a single GPU particle field of 48k–170k points that reorganises itself once per scroll beat, and a thin iridescent accent family borrowed from that field for links and figures. Colour is scarce because the field is the colour.\n\nDensity is low and deliberate. Each beat owns a full viewport (min-height: 100svh), so a visitor sees exactly one formation and one block of copy at a time. Copy holds the left of the frame; the field is staged to its right by world-space offsets and only there. Text sits on ink with a gradient scrim between it and the field, so generated copy of any length stays legible over whatever the field happens to be doing.\n\nEverything visual is computed at runtime. The build ships no images and no video: grain is an inline SVG feTurbulence filter, the particle sprite is a shader falloff, the favicon is an inline SVG data URI. The confirmed rejections are the ones the world was built against — terminal-green developer chrome, node-and-edge \"neural net\" canvases, and a static hero image faking a 3D scene.",
+    "keyCharacteristics": [
+      "One typeface (Archivo variable), one ground (ink), one moving element (the field).",
+      "Hierarchy from weight (200–700) and width (105–118%), never from a second family.",
+      "No box shadows anywhere; depth is atmospheric, from scrim, vignette, grain and camera perspective.",
+      "Beats are one-per-viewport at every width.",
+      "Zero shipped raster assets; every visual is generated."
+    ],
+    "rules": [
+      { "name": "The Borrowed Hue Rule", "body": "Flat UI colour is drawn from the field's own palette or it is not used. Cyan and indigo are the entire chromatic vocabulary; no green, no amber, no red — not even for state.", "section": "colors" },
+      { "name": "The One Ramp Rule", "body": "Text uses exactly four steps — bright, text, muted, and accent for links. If a new level of emphasis seems necessary, change weight or width instead of adding a fifth colour.", "section": "colors" },
+      { "name": "The Cool-Only Rule", "body": "Every neutral in the file is blue-shifted. A pure-grey or warm-grey neutral reads as a foreign body against the ink ground and the field behind it.", "section": "colors" },
+      { "name": "The One Voice Rule", "body": "Archivo is the only family in the project. New hierarchy comes from weight (200–700) and width (105–118%); a second family is never the answer.", "section": "typography" },
+      { "name": "The No-Terminal Rule", "body": "No monospace anywhere, including code-adjacent content, repository names, and timestamps. Tabular figures handle numeric alignment instead.", "section": "typography" },
+      { "name": "The Flat-Ink Rule", "body": "Type is a single flat colour. No gradient text, no text shadow, no stroke. Iridescence belongs to the field, not to the letterforms.", "section": "typography" },
+      { "name": "The Machine-Copy Rule", "body": "Every string on the page can be machine-generated and arbitrarily long. Headings cap at 22ch, prose at 66ch, and any element that can receive a repository name sets overflow-wrap: anywhere.", "section": "typography" },
+      { "name": "The One Beat One Formation Rule", "body": "A beat owns a full viewport at every width. Two beats must never share a screen, because the field renders one formation at a time and a split screen would show the visitor the wrong project's shape.", "section": "layout" },
+      { "name": "The Left-Column Rule", "body": "Copy owns the left of the frame at every beat. The field is staged into whatever free width remains on the right, never behind the reading path when there is somewhere else for it to go.", "section": "layout" },
+      { "name": "The Additive Layer Rule", "body": "All copy exists in the server-rendered HTML. html.gl is added by script after boot and only ever adds motion — no content, no layout, and no legibility depends on WebGL or on the bundle loading at all.", "section": "layout" },
+      { "name": "The No-Shadow Rule", "body": "Nothing in flat UI casts a shadow. If an element needs to separate from its background, use a hairline rule, a step of the spacing scale, or the scrim — never a drop shadow, and never a blurred glow behind text.", "section": "elevation" },
+      { "name": "The Scrim-Not-Panel Rule", "body": "Contrast over the field is protected by the full-viewport scrim, not by giving a text block its own background. Any element that needs protection belongs inside the copy column, where the scrim already covers it.", "section": "elevation" },
+      { "name": "The Computed-Visual Rule", "body": "No raster or vector asset ships for decoration. Grain is an SVG turbulence filter, the point sprite is a shader falloff, the favicon is an inline SVG data URI, and every formation is generated from repository data or a deterministic seed.", "section": "components" },
+      { "name": "The Reduced-Motion Floor Rule", "body": "Under prefers-reduced-motion: reduce all transitions collapse to 0.001ms, the field renders one static frame with drift at zero, and #field is shown at full opacity rather than hidden — the visitor loses the motion, never the image.", "section": "components" }
+    ],
+    "dos": [
+      "Do give every new section a full viewport (min-height: 100svh), a data-beat kind, and an entry in the stage table with its own camera z, rotation, offsets and drift.",
+      "Do build new hierarchy out of Archivo's weight (200–700) and width (105–118%) axes.",
+      "Do cap prose at 66ch, headings at 22ch, and set overflow-wrap: anywhere on anything that can receive a machine-supplied repository name.",
+      "Do keep new copy inside the scrimmed left column, where contrast against the field is already guaranteed.",
+      "Do use the seven-step spacing scale and the --edge inline padding token; the scale is the rhythm.",
+      "Do reserve Signal White for the one thing a beat is about, and let everything else sit in read grey or muted.",
+      "Do render every new element in server-side HTML first, and let the WebGL layer only add motion on top of it.",
+      "Do animate with transform and opacity; the progress bar scales, it does not grow its width.",
+      "Do generate any new visual — noise, sprite, icon, texture — rather than shipping a file for it."
+    ],
+    "donts": [
+      "Don't introduce a second typeface, and specifically not a monospace one, anywhere on the page.",
+      "Don't apply a gradient, shadow, stroke, or glow to text. The scrim's gradients and the field's iridescence are the world's own materials; letterforms stay flat single-colour.",
+      "Don't add a box-shadow. Separate with a hairline rule, whitespace, or the scrim.",
+      "Don't wrap content in a card, panel, or filled/bordered box. Beats and hairlines are the grouping devices.",
+      "Don't add a colour outside the cool blue-grey ramp and the cyan/indigo accent family — including green, amber, or red for state.",
+      "Don't let two beats share a viewport at any width; the field can only show one formation at a time.",
+      "Don't put a second animated element on the page. The field is the only thing that moves besides copy entry and hover transitions.",
+      "Don't stage the field over the reading column when there is free width to the right of it; scale offsets by the lane factor instead of hard-coding them.",
+      "Don't gate any content on the WebGL layer, a font load, or a successful bundle fetch."
+    ]
+  }
+}

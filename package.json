@@ -6,7 +6,16 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "node src/build.js",
+    "build": "node src/build.js && npm run bundle",
+    "build:fixtures": "node src/build.js --fixtures test/fixtures && npm run bundle",
+    "bundle": "esbuild app/main.js --bundle --minify --format=esm --target=es2022 --outfile=dist/app.js",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "three": "^0.185.1"
   }
 }

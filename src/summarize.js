@@ -10,7 +10,22 @@ const MODEL = 'openai/gpt-4o-mini';
 const PROMPT =
   'You write portfolio copy for a software engineer. Given a GitHub repository README, ' +
   'write exactly two plain-English sentences for a recruiter: what the project does and ' +
-  'what is technically notable about it. No markdown, no hype, no first person.';
+  'what is technically notable about it. No markdown, no hype, no first person. ' +
+  'Then on a final line by itself write "FORM: x", where x is whichever single word from ' +
+  'lattice, helix, shell, bloom, ring, drift best suits the project\'s character. ' +
+  'The form line is optional decoration for the site; never let it change the two sentences.';
+
+/** Visual seed vocabulary shared with render.js — anything else is ignored. */
+const FORMS = new Set(['lattice', 'helix', 'shell', 'bloom', 'ring', 'drift']);
+
+/** Split the model's reply into prose and an optional form word. */
+export function parseReply(raw) {
+  const text = String(raw || '').trim();
+  const m = text.match(/^\s*FORM:\s*([a-z]+)\s*$/im);
+  const form = m && FORMS.has(m[1].toLowerCase()) ? m[1].toLowerCase() : undefined;
+  const summary = text.replace(/^\s*FORM:.*$/im, '').trim();
+  return { summary, form };
+}
 
 export const readmeHash = (readme) => createHash('sha256').update(readme).digest('hex');
 
@@ -34,9 +49,19 @@ async function callModel(repo, { fetchImpl, token }) {
   });
   if (!res.ok) throw new Error(`GitHub Models ${res.status}`);
   const data = await res.json();
-  const summary = data.choices?.[0]?.message?.content?.trim();
+  const { summary, form } = parseReply(data.choices?.[0]?.message?.content);
   if (!summary) throw new Error('GitHub Models returned no content');
-  return summary;
+  return { summary, form };
+}
+
+/** Cached visual seeds, by repo full_name. Absent entries fall back to repo identity. */
+export function formsFor(featured, cache) {
+  const forms = {};
+  for (const repo of featured) {
+    const form = cache[repo.full_name]?.form;
+    if (form) forms[repo.full_name] = form;
+  }
+  return forms;
 }
 
 /**
@@ -58,8 +83,8 @@ export async function summarizeFeatured(featured, cache, { fetchImpl = fetch, to
       continue;
     }
     try {
-      const summary = await callModel(repo, { fetchImpl, token });
-      cache[repo.full_name] = { hash, summary };
+      const { summary, form } = await callModel(repo, { fetchImpl, token });
+      cache[repo.full_name] = form ? { hash, summary, form } : { hash, summary };
       summaries[repo.full_name] = summary;
     } catch (err) {
       log(`summarize: falling back for ${repo.full_name}: ${err.message}`);

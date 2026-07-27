@@ -25,5 +25,50 @@
     "Git",
     "Linux"
   ],
-  "featuredCount": 6
+  "featuredCount": 6,
+  "trajectory": [
+    {
+      "beat": "moving",
+      "n": "01",
+      "label": "Moving",
+      "org": "Golden Pegasus IT",
+      "years": "2019–2021",
+      "heading": "Nothing can be predicted until the numbers arrive on time",
+      "paras": [
+        "A distributor's ERP wrote twenty million records a day into a nightly job that took six hours and failed quietly — one renamed column upstream and everyone read yesterday's numbers without knowing it. I stopped using the operational database as an analytics store and moved to layered tables where raw arrivals are never overwritten, so a bad transformation became something you fix and replay instead of something you lose. Six hours became forty-five minutes.",
+        "With numbers worth trusting, forecasting was worth doing — gradient-boosted trees over a hand-tuned spreadsheet average, because the spreadsheet had no way to represent a promotion or a festival, and that is most of what moves demand. Then the pandemic broke every pattern it had learned. Monitoring caught it in days; planners ran on manual override for three weeks while I rebuilt it.",
+        "Management still didn't trust the recommendations, so the last piece was the explanation: every number decomposed into what pushed it up and what pulled it down. Once people could see the reasoning they stopped overriding it, and the monthly planning cycle went from two days to four hours."
+      ]
+    },
+    {
+      "beat": "bridge",
+      "n": "02",
+      "label": "Seeing, then aligning",
+      "org": "Newcastle University · Translated",
+      "years": "2022–2024",
+      "paras": [
+        "At Newcastle I labelled ten thousand tree crowns across fifty square kilometres of aerial imagery for a forest-carbon study, and the segmentation model improved most when I fixed the annotations rather than the architecture.",
+        "At Translated I wrote the preference rankings that teach a language model which answer is better — the same problem from the other end: deciding what good looks like before anything can learn it."
+      ]
+    },
+    {
+      "beat": "acting",
+      "n": "03",
+      "label": "Acting",
+      "org": "Bobble AI",
+      "years": "2024–2025",
+      "heading": "Systems that decide something on their own",
+      "paras": [
+        "Bobble's keyboard has a few million people typing on it. The in-app assistant was a finite-state machine: it followed scripted trees and broke on anything a real person actually types. I replaced it with a model that holds a conversation, calls tools when a sticker or a web answer is the better response, and degrades to plain text when a tool fails rather than showing an error. Daily use of the assistant more than doubled in a quarter.",
+        "Two choices I'd defend. I wrote the agent loop in plain Python instead of a framework, because at mobile latency budgets you need to see exactly where the milliseconds go. And I cached the retrieved context rather than the finished answer, so a repeat question skips the expensive crawl but still gets a reply written for the person asking it.",
+        "Three more systems read rather than reply: what someone is likely doing, so a notification is relevant; what the keyboard should say in a generated reply; and which themes keep recurring across usage that nobody had a name for yet."
+      ],
+      "seeds": [
+        { "form": "bloom", "energy": 0.62, "spin": 1 },
+        { "form": "lattice", "energy": 0.48, "spin": -1 },
+        { "form": "ring", "energy": 0.55, "spin": 1 },
+        { "form": "drift", "energy": 0.4, "spin": -1 }
+      ]
+    }
+  ]
 }

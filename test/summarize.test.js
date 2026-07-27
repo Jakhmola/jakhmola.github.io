@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { summarizeFeatured, readmeHash } from '../src/summarize.js';
+import { summarizeFeatured, readmeHash, parseReply, formsFor } from '../src/summarize.js';
 
 const repo = (over = {}) => ({
   name: 'career-ops',
@@ -75,6 +75,22 @@ test('never throws, even when fetch itself rejects', async () => {
   };
   const summaries = await summarizeFeatured([repo({ description: null })], {}, { ...quiet, fetchImpl });
   assert.equal(summaries['Jakhmola/career-ops'], '');
+});
+
+test('the optional FORM line is stripped from prose and kept as a visual seed', () => {
+  assert.deepEqual(parseReply('One. Two.\nFORM: helix'), { summary: 'One. Two.', form: 'helix' });
+  assert.deepEqual(parseReply('One. Two.'), { summary: 'One. Two.', form: undefined });
+  // An invented form is discarded, never rendered, and never leaks into the copy.
+  assert.deepEqual(parseReply('One. Two.\nFORM: pyramid'), { summary: 'One. Two.', form: undefined });
+  assert.equal(parseReply('').summary, '');
+});
+
+test('a FORM line survives into the cache and out through formsFor', async () => {
+  const cache = {};
+  await summarizeFeatured([repo()], cache, { ...quiet, fetchImpl: llmStub('Prose here.\nFORM: ring') });
+  assert.equal(cache['Jakhmola/career-ops'].summary, 'Prose here.');
+  assert.deepEqual(formsFor([repo()], cache), { 'Jakhmola/career-ops': 'ring' });
+  assert.deepEqual(formsFor([repo()], {}), {}, 'no cached form is not an error');
 });
 
 test('a repo with no README gets the raw description without an LLM call', async () => {
