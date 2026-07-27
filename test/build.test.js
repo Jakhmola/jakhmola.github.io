@@ -29,48 +29,52 @@ before(async () => {
 });
 after(() => Promise.all(tmpDirs.map((d) => rm(d, { recursive: true, force: true }))));
 
-test('renders hero, about, skills strip, contact links, and resume link from Seed Content', () => {
-  assert.match(b.html, /\$ whoami/);
-  assert.match(b.html, /<h1>Shubham Jakhmola<\/h1>/);
-  assert.match(b.html, /AI Engineer/);
-  assert.match(b.html, /I build AI systems that do real work/);
-  assert.match(b.html, /cat about\.txt/);
-  assert.match(b.html, /ls skills\//);
-  assert.match(b.html, /<li>PyTorch<\/li>/);
+test('renders the four pages, name, epochs, and contact links from Seed Content', () => {
+  for (const id of ['pg-home', 'pg-exp', 'pg-proj', 'pg-contact']) {
+    assert.match(b.html, new RegExp(`id="${id}"`), `${id} section exists`);
+  }
+  assert.match(b.html, /<h1 class="name"><span class="mt">SHUBHAM<\/span><span class="mt">JAKHMOLA<\/span><\/h1>/);
+  assert.match(b.html, /AI ENGINEER — AGENTS · RAG · DEEP LEARNING/);
+  assert.match(b.html, /I build LLM systems that ship/);
+  assert.match(b.html, /Deep learning research/, 'experience epoch renders');
+  assert.match(b.html, /<li>PyTorch<\/li>/, 'epoch tags render');
+  assert.match(b.html, /Let&#39;s build/);
   assert.match(b.html, /href="resume\.pdf"/);
   assert.match(b.html, /mailto:j4khmola@gmail\.com/);
   assert.match(b.html, /https:\/\/github\.com\/Jakhmola/);
   assert.match(b.html, /https:\/\/www\.linkedin\.com\/in\/jakhmola/);
 });
 
-test('renders Featured Project Cards in rank order with repo links', () => {
+test('renders Featured Projects in rank order with source links', () => {
   const expected = [
     'career-ops',
     'coding_agent',
     'rag-search-engine',
     'Brain-Tumor-Segmentation',
-    'automated-ticketing-system',
     'interview-coach',
   ];
-  const positions = expected.map((n) => b.html.indexOf(`<h3><a href="https://github.com/Jakhmola/${n}">`));
+  const positions = expected.map((n) => b.html.indexOf(`<h3 class="mt pname">${n}</h3>`));
   for (const [i, pos] of positions.entries()) {
-    assert.ok(pos !== -1, `${expected[i]} has a Project Card`);
+    assert.ok(pos !== -1, `${expected[i]} has a project row`);
+    assert.match(b.html, new RegExp(`href="https://github\\.com/Jakhmola/${expected[i]}"`));
     if (i > 0) assert.ok(pos > positions[i - 1], `${expected[i]} renders after ${expected[i - 1]}`);
   }
 });
 
-test('skills strip includes languages/topics derived from Featured Projects', () => {
-  assert.match(b.html, /<li>medical imaging<\/li>/, 'featured topic surfaces, dashes humanized');
-  assert.match(b.html, /<li>Jupyter Notebook<\/li>/, 'featured language surfaces');
-});
-
-test('non-featured originals appear only in the compact rest-list; excluded repos nowhere', () => {
-  assert.match(b.html, /ls projects\/ --all/);
-  assert.match(b.html, /<li><a href="https:\/\/github\.com\/Jakhmola\/Super-Mario-AI">Super-Mario-AI<\/a>/);
-  assert.match(b.html, /behavioral-biometric-identification/);
+test('only Featured Projects reach the page; everything else is left to GitHub', () => {
+  assert.match(b.html, /all repos on github/, 'the outbound link stands in for the rest-list');
+  assert.ok(!b.html.includes('Super-Mario-AI'), 'ranked-out original not rendered');
+  assert.ok(!b.html.includes('automated-ticketing-system'), 'ranked-out original not rendered');
   assert.ok(!b.html.includes('freeCodeCamp-boilerplate'), 'fork never rendered');
   assert.ok(!b.html.includes('scratch-experiments'), 'portfolio-hide never rendered');
   assert.ok(!b.html.includes('Jakhmola/Jakhmola"'), 'profile repo never rendered');
+});
+
+test('the page is complete and calm without JS: no hidden-by-default content', () => {
+  assert.match(b.html, /document\.documentElement\.className='matter'/, 'mode probe present');
+  assert.ok(!/style="[^"]*(display:\s*none|opacity:\s*0)/.test(b.html), 'nothing inline-hidden');
+  assert.match(b.html, /class="copy about calm-only"/, 'long-form about survives for no-JS readers');
+  assert.match(b.html, /I&#39;m an AI engineer focused on the practical end/);
 });
 
 test('LLM unavailable (fixture mode): cards fall back to raw descriptions, build still succeeds', () => {
@@ -112,7 +116,7 @@ test('a portfolio-feature fork gets a Project Card end to end (amended fork rule
     return { ok: true, status: 200, json: async () => repos };
   };
   const built = await runBuild(fetchImpl);
-  assert.match(built.html, /<h3><a href="https:\/\/github\.com\/Jakhmola\/rescued-fork">/);
+  assert.match(built.html, /<h3 class="mt pname">rescued-fork<\/h3>/);
   assert.ok(!built.html.includes('freeCodeCamp-boilerplate'), 'untagged fork still excluded');
 });
 
@@ -135,14 +139,15 @@ test('a corrupted Summary cache degrades to a cold cache instead of failing the 
   assert.deepEqual(Object.keys(JSON.parse(await readFile(cachePath, 'utf8'))), [], 'cache rewritten valid');
 });
 
-test('dist/ ships style.css and resume.pdf alongside index.html', async () => {
+test('dist/ ships style.css, matter.js and resume.pdf alongside index.html', async () => {
   assert.ok((await stat(path.join(b.outDir, 'style.css'))).isFile());
+  assert.ok((await stat(path.join(b.outDir, 'matter.js'))).isFile());
   assert.ok((await stat(path.join(b.outDir, 'resume.pdf'))).size > 0);
 });
 
 test('page carries title, description, and Open Graph meta tags', () => {
   assert.match(b.html, /<title>Shubham Jakhmola &mdash; AI Engineer<\/title>/);
-  assert.match(b.html, /<meta name="description" content="I build AI systems/);
+  assert.match(b.html, /<meta name="description" content="I build LLM systems/);
   assert.match(b.html, /<meta property="og:title"/);
   assert.match(b.html, /<meta property="og:url" content="https:\/\/jakhmola\.github\.io"/);
   assert.match(b.html, /<link rel="icon" href="data:image\/svg\+xml,/);

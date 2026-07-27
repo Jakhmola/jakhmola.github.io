@@ -1,29 +1,42 @@
 {
   "name": "Shubham Jakhmola",
   "title": "AI Engineer",
+  "tagline": "AI ENGINEER — AGENTS · RAG · DEEP LEARNING",
   "githubUser": "Jakhmola",
   "siteUrl": "https://jakhmola.github.io",
-  "pitch": "I build AI systems that do real work: autonomous coding agents, RAG search engines, and deep-learning pipelines taken from raw data to deployed model. Right now I'm focused on LLM agents and retrieval systems that actually ship — this site is one of them, rebuilding itself nightly from my GitHub.",
+  "pitch": "I build LLM systems that ship — agents, retrieval pipelines, and the infrastructure behind them. This site rebuilds itself nightly from my repos; every glyph on screen is conserved matter, never created twice.",
   "about": "I'm an AI engineer focused on the practical end of the field — getting agents, retrieval systems, and neural networks to actually ship. I've built LLM agents that write and execute code, retrieval-augmented search over real document corpora, an automated support-ticketing system, and reinforcement-learning agents that play Super Mario. On the deep-learning side I've trained and compared U-Net, ResNet, and VGG architectures for medical image segmentation, and worked on behavioral-biometric identification. This site is itself a small example of how I like to work: it rebuilds itself nightly from my GitHub account via a scheduled pipeline, ranks my repos automatically, and summarizes them with an LLM — zero manual upkeep.",
   "email": "j4khmola@gmail.com",
   "github": "https://github.com/Jakhmola",
   "linkedin": "https://www.linkedin.com/in/jakhmola",
   "resume": "resume.pdf",
-  "skills": [
-    "Python",
-    "PyTorch",
-    "TensorFlow",
-    "LLM Agents",
-    "RAG",
-    "Claude API",
-    "LangChain",
-    "Reinforcement Learning",
-    "Computer Vision",
-    "scikit-learn",
-    "FastAPI",
-    "Docker",
-    "Git",
-    "Linux"
+  "contactHeadline": ["Let's build", "something real."],
+  "experience": [
+    {
+      "year": "2019",
+      "title": "Engineering foundations",
+      "body": "Full-stack and API engineering — RESTful services on WildFly, scraping pipelines, first computer-vision experiments.",
+      "tags": ["Java", "Python", "OpenCV"]
+    },
+    {
+      "year": "2021",
+      "title": "Deep learning research",
+      "body": "Brain-tumor segmentation on BraTS 2020 — U-Net vs ResNet vs VGG. Behavioral-biometric identification at 94.7% accuracy.",
+      "tags": ["PyTorch", "TensorFlow", "U-Net"]
+    },
+    {
+      "year": "2023",
+      "title": "Applied ML systems",
+      "body": "RL agents playing Super Mario, sentiment analysis at scale, live speech-to-text bots — models shipped as working systems.",
+      "tags": ["RL", "NLP", "FastAPI"]
+    },
+    {
+      "year": "NOW",
+      "title": "LLM agents & retrieval",
+      "body": "Autonomous coding agents, RAG search engines, AI ticket triage — LLM systems that actually ship. Including this site.",
+      "tags": ["LLM Agents", "RAG", "Claude API"],
+      "current": true
+    }
   ],
-  "featuredCount": 6
+  "featuredCount": 5
 }

@@ -82,10 +82,12 @@ export async function build({
   await cp(staticDir, outDir, { recursive: true });
   await writeFile(
     path.join(outDir, 'index.html'),
-    renderPage({ config, featured, rest, summaries, builtAt: new Date(now) }),
+    // `rest` is still ranked but no longer rendered: the four-page design has no
+    // room for it, and the Projects page links out to the full GitHub account.
+    renderPage({ config, featured, summaries, builtAt: new Date(now) }),
   );
 
-  log(`build: ${featured.length} featured, ${rest.length} listed -> ${outDir}`);
+  log(`build: ${featured.length} featured, ${rest.length} ranked out -> ${outDir}`);
   return { featured, rest, summaries };
 }
 

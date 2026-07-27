@@ -1,5 +1,10 @@
 // Renders the whole site as one static HTML page via template literals.
-// All content is present without JavaScript; semantic HTML5 throughout.
+//
+// Two readings of the same markup:
+//   - no JS / reduced motion / no WebGL -> a plain, calm, scrolling document.
+//   - otherwise -> matter.js adds `.matter` to <html> and the same sections
+//     become four fixed pages whose headings are built from GPU particles.
+// Everything a reader needs is in the HTML either way.
 
 export function escapeHtml(s) {
   return String(s)
@@ -15,53 +20,57 @@ const e = escapeHtml;
 const FAVICON =
   'data:image/svg+xml,' +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#0d1117"/><text x="5" y="22" font-family="monospace" font-size="15" fill="#7ee787">&gt;_</text></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#0a0c0e"/><path d="M16 5 6 5 16 15.4 26 5Zm0 22 10 0L16 16.6 6 27Z" fill="#67e8f9"/></svg>`,
   );
 
-/** Skills strip = Seed Content skills ∪ Featured Projects' languages and topics. */
-export function deriveSkills(config, featured) {
-  const skills = [...config.skills];
-  const seen = new Set(skills.map((s) => s.toLowerCase()));
-  const add = (raw) => {
-    if (!raw) return;
-    const label = raw.includes('-') ? raw.replaceAll('-', ' ') : raw;
-    if (seen.has(label.toLowerCase()) || seen.has(raw.toLowerCase())) return;
-    seen.add(label.toLowerCase());
-    skills.push(label);
-  };
-  for (const repo of featured) {
-    add(repo.language);
-    for (const topic of repo.topics || []) {
-      if (!topic.startsWith('portfolio-')) add(topic);
-    }
-  }
-  return skills;
+// Decides the calm/matter split before first paint, so the boot terminal and the
+// hidden headings never flash on machines that will never run the matter system.
+const MODE_PROBE = `try{
+if(innerWidth>820&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&document.createElement('canvas').getContext('webgl'))
+document.documentElement.className='matter';
+}catch(err){}`;
+
+const PAGES = [
+  { id: 'home', label: 'index' },
+  { id: 'exp', label: 'experience' },
+  { id: 'proj', label: 'projects' },
+  { id: 'contact', label: 'contact' },
+];
+
+function navLinks() {
+  return PAGES.map(
+    (p) =>
+      `        <a id="nl-${p.id}" href="#pg-${p.id}" data-nav="${p.id}" data-scramble>${p.label}</a>`,
+  ).join('\n');
 }
 
-function projectCard(repo, summary) {
-  const tags = [repo.language, ...(repo.topics || []).filter((t) => !t.startsWith('portfolio-'))]
-    .filter(Boolean)
-    .slice(0, 6);
-  return `<article class="card">
-        <h3><a href="${e(repo.html_url)}">${e(repo.name)}</a></h3>
-        <p class="summary">${e(summary || repo.description || 'See the repository for details.')}</p>
-        <ul class="tags">
-${tags.map((t) => `          <li>${e(t)}</li>`).join('\n')}
-        </ul>
-        <p class="card-links"><a href="${e(repo.html_url)}">view source &rarr;</a>${
-          repo.stargazers_count ? `<span class="stars">&#9733; ${repo.stargazers_count}</span>` : ''
-        }</p>
-      </article>`;
+function epoch(ep) {
+  return `        <article class="epoch${ep.current ? ' now' : ''}">
+          <div class="rule copy"></div>
+          <p class="mt year">${e(ep.year)}</p>
+          <div class="copy">
+            <h3>${e(ep.title)}</h3>
+            <p>${e(ep.body)}</p>
+            <ul class="tags">${(ep.tags || []).map((t) => `<li>${e(t)}</li>`).join('')}</ul>
+          </div>
+        </article>`;
 }
 
-function restItem(repo) {
-  return `        <li><a href="${e(repo.html_url)}">${e(repo.name)}</a>${
-    repo.description ? ` <span class="dim">&mdash; ${e(repo.description)}</span>` : ''
-  }</li>`;
+function projectRow(repo, summary, index) {
+  const n = String(index + 1).padStart(2, '0');
+  return `        <li class="project">
+          <span class="copy pnum">/${n}</span>
+          <span class="pbody">
+            <h3 class="mt pname">${e(repo.name)}</h3>
+            <span class="copy pdesc">${e(summary || repo.description || 'See the repository for details.')}</span>
+          </span>
+          <a class="copy psrc" href="${e(repo.html_url)}" data-scramble>source &rarr;</a>
+        </li>`;
 }
 
-export function renderPage({ config, featured, rest, summaries, builtAt = new Date() }) {
-  const skills = deriveSkills(config, featured);
+export function renderPage({ config, featured, summaries, builtAt = new Date() }) {
+  const [line1, line2] = config.contactHeadline;
+  const [first, ...surname] = config.name.split(' ');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,73 +83,104 @@ export function renderPage({ config, featured, rest, summaries, builtAt = new Da
   <meta property="og:description" content="${e(config.pitch)}">
   <meta property="og:url" content="${e(config.siteUrl)}">
   <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#0a0c0e">
   <link rel="canonical" href="${e(config.siteUrl)}">
   <link rel="icon" href="${FAVICON}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="style.css">
-  <script src="enhance.js" defer></script>
+  <script>${MODE_PROBE}</script>
+  <script src="matter.js" defer></script>
 </head>
 <body>
+  <div id="boot" aria-hidden="true">
+    <div class="boot-win">
+      <div class="boot-bar"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="boot-title">jakhmola.sys &mdash; v4</span></div>
+      <div id="boot-log"></div>
+    </div>
+    <p class="boot-hint">any input skips &#9654;</p>
+  </div>
+
+  <div class="vignette" aria-hidden="true"></div>
+  <canvas id="matter" aria-hidden="true"></canvas>
+  <canvas id="caret-cv" aria-hidden="true"></canvas>
+  <div id="hg-sigil" class="sigil" aria-hidden="true"></div>
+
+  <nav class="topnav" aria-label="Sections">
+    <a class="brand" href="#pg-home" data-nav="home" data-scramble>JAKHMOLA<span class="dim">.SYS</span></a>
+    <div class="navlinks">
+${navLinks()}
+    </div>
+  </nav>
+
+  <p class="hud" aria-hidden="true">
+    <span id="hud-clock">GMT+5:30 IN --:--:--</span>
+    <span id="hud-page">01 / 04 &mdash; INDEX</span>
+    <span>v4.0 &mdash; &#8727; MATTER IS CONSERVED</span>
+  </p>
+
   <main>
-    <header class="hero">
-      <div class="term">
-        <div class="term-bar" aria-hidden="true">
-          <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
-          <span class="term-title">shubham@jakhmola.github.io:~</span>
+    <section id="pg-home" class="page" aria-label="Home">
+      <div class="page-in">
+        <div class="home-top">
+          <div class="home-head">
+            <p class="mt tagline">${e(config.tagline)}</p>
+            <h1 class="name"><span class="mt">${e(first.toUpperCase())}</span><span class="mt">${e(surname.join(' ').toUpperCase())}</span></h1>
+          </div>
+          <div id="hg-home" class="sigil lg" aria-hidden="true"></div>
         </div>
-        <div class="term-body">
-          <p class="prompt" aria-hidden="true"><span class="cmd">$ whoami</span><span class="cursor"></span></p>
-          <h1>${e(config.name)}</h1>
-          <p class="role">${e(config.title)}</p>
-          <p class="pitch">${e(config.pitch)}</p>
-          <nav class="contact" aria-label="Contact">
-            <a class="btn" href="${e(config.resume)}">resume.pdf</a>
-            <a href="${e(config.github)}">github</a>
-            <a href="${e(config.linkedin)}">linkedin</a>
-            <a href="mailto:${e(config.email)}">${e(config.email)}</a>
-          </nav>
+        <div class="home-foot">
+          <p class="copy pitch">${e(config.pitch)}</p>
+          <p class="copy about calm-only">${e(config.about)}</p>
+          <p class="copy links">
+            <a href="${e(config.github)}" data-scramble>github &#8599;</a>
+            <a href="${e(config.linkedin)}" data-scramble>linkedin &#8599;</a>
+            <a href="${e(config.resume)}" data-scramble>resume.pdf &#8599;</a>
+          </p>
         </div>
       </div>
-    </header>
-
-    <section id="about">
-      <h2><span class="prompt" aria-hidden="true">$ </span><span class="cmd">cat about.txt</span></h2>
-      <p>${e(config.about)}</p>
     </section>
 
-    <section id="skills">
-      <h2><span class="prompt" aria-hidden="true">$ </span><span class="cmd">ls skills/</span></h2>
-      <ul class="tags skills">
-${skills.map((s) => `        <li>${e(s)}</li>`).join('\n')}
-      </ul>
-    </section>
-
-    <section id="projects">
-      <h2><span class="prompt" aria-hidden="true">$ </span><span class="cmd">ls projects/ --featured</span></h2>
-      <div class="cards">
-${featured.map((r) => projectCard(r, summaries[r.full_name])).join('\n')}
+    <section id="pg-exp" class="page" aria-label="Experience">
+      <div class="page-in">
+        <div class="page-head">
+          <h2 class="mt">Experience</h2>
+          <p class="copy accent">${config.experience.length} epochs &middot; ${e(config.experience[0].year)} &rarr; now</p>
+        </div>
+        <div class="epochs">
+${config.experience.map(epoch).join('\n')}
+        </div>
       </div>
     </section>
-${
-  rest.length
-    ? `
-    <section id="more">
-      <h2><span class="prompt" aria-hidden="true">$ </span><span class="cmd">ls projects/ --all</span></h2>
-      <ul class="rest">
-${rest.map(restItem).join('\n')}
-      </ul>
+
+    <section id="pg-proj" class="page" aria-label="Projects">
+      <div class="page-in">
+        <div class="page-head">
+          <h2 class="mt">Projects</h2>
+          <a class="copy" href="${e(config.github)}" data-scramble>all repos on github &rarr;</a>
+        </div>
+        <ul class="projects">
+${featured.map((r, i) => projectRow(r, summaries[r.full_name], i)).join('\n')}
+        </ul>
+      </div>
     </section>
-`
-    : ''
-}
-    <footer>
-      <nav class="contact" aria-label="Contact">
-        <a href="${e(config.resume)}">resume</a>
-        <a href="${e(config.github)}">github</a>
-        <a href="${e(config.linkedin)}">linkedin</a>
-        <a href="mailto:${e(config.email)}">email</a>
-      </nav>
-      <p class="dim">Generated ${builtAt.toISOString().slice(0, 10)} by a scheduled rebuild from the GitHub API &mdash; this site updates itself.</p>
-    </footer>
+
+    <section id="pg-contact" class="page" aria-label="Contact">
+      <div class="page-in center">
+        <h2 class="ct"><span class="mt">${e(line1)}</span><span class="mt accent">${e(line2)}</span></h2>
+        <a class="mt email" href="mailto:${e(config.email)}">${e(config.email)}</a>
+        <p class="copy links">
+          <a href="${e(config.github)}" data-scramble>github &#8599;</a>
+          <a href="${e(config.linkedin)}" data-scramble>linkedin &#8599;</a>
+          <a href="${e(config.resume)}" data-scramble>resume.pdf &#8599;</a>
+        </p>
+      </div>
+      <footer class="copy">
+        <span>&copy; ${builtAt.getUTCFullYear()} ${e(config.name)}</span>
+        <span class="accent">&#8631; rebuilt ${builtAt.toISOString().slice(0, 10)} from the GitHub API</span>
+      </footer>
+    </section>
   </main>
 </body>
 </html>

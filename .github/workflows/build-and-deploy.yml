@@ -72,4 +72,4 @@ jobs:
           status=$(curl -s -o page.html -w '%{http_code}' https://jakhmola.github.io)
           test "$status" = "200"
           grep -q 'Shubham Jakhmola' page.html
-          grep -q '\$ whoami' page.html
+          grep -q 'MATTER IS CONSERVED' page.html
