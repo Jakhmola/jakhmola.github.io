@@ -1186,5 +1186,21 @@ void main(){
     }
   }
 
-  new Matter().start();
+  // Width is decided here rather than in the head probe, because the viewport is
+  // not final at parse time: a tiling compositor resizes the window afterwards,
+  // and a point-in-time innerWidth test reads the pre-resize value. The media
+  // query is reactive, so a window that starts narrow and lands wide still runs.
+  // ponytail: one-way -- going narrow hands the session to the calm document for
+  // good. Widening back would need a full re-init, which no one does mid-visit.
+  const matter = new Matter();
+  if (NARROW.matches) {
+    const waitForWidth = (ev) => {
+      if (ev.matches) return;
+      NARROW.removeEventListener('change', waitForWidth);
+      matter.start();
+    };
+    NARROW.addEventListener('change', waitForWidth);
+  } else {
+    matter.start();
+  }
 })();

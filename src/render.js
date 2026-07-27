@@ -25,8 +25,14 @@ const FAVICON =
 
 // Decides the calm/matter split before first paint, so the boot terminal and the
 // hidden headings never flash on machines that will never run the matter system.
+//
+// Deliberately does NOT test width. The viewport is not final when a <head>
+// script runs -- a tiling compositor sizes the window after parsing begins, so
+// innerWidth reads the pre-resize value and the matter site would never start on
+// a machine that ends up plenty wide. Width is decided reactively instead, by
+// the same media query the stylesheet uses.
 const MODE_PROBE = `try{
-if(innerWidth>820&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&document.createElement('canvas').getContext('webgl'))
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&document.createElement('canvas').getContext('webgl'))
 document.documentElement.className='matter';
 }catch(err){}`;
 
