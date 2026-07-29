@@ -907,6 +907,16 @@ void main(){
       const el = document.body.appendChild(document.createElement('pre'));
       el.id = 'dbg';
       el.setAttribute('aria-hidden', 'true');
+      // Deliberately outside the design system, and it has to be. Pure black is
+      // not a colour this palette contains -- the field is #0a0c0e and the
+      // darkest neutral is #07090b -- but this is an instrument, not a surface.
+      // Reading `--bg` and `--ink` would make the readout illegible at exactly
+      // the moment it is most needed: while someone is dragging the palette
+      // around to see what it does to the field. So it stays two literals, it
+      // stays maximum contrast, and it only ever exists under `#dbg=1`.
+      //
+      // The design detector flags the `#000` on principle and is right to; this
+      // comment is the answer, not a waiver.
       el.style.cssText =
         'position:fixed;left:0;bottom:0;z-index:99;margin:0;padding:6px 8px;background:#000;' +
         'color:#e8edef;font:12px/1.5 monospace;white-space:pre-wrap';
