@@ -31,14 +31,42 @@ for (const pg of ['home', 'exp', 'proj', 'contact']) {
     const now = tg.el.getBoundingClientRect();
     const d = Math.round(now.top - tg.top);
     if (Math.abs(d) > Math.abs(out.worst)) out.worst = d;
+    // The ink box, not the layout box. A `nowrap; fit-content` span runs well
+    // past its last stroke, and coverage measured over that dead space is a
+    // measurement of the gap rather than of the word.
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    for (let k = 0; k < tg.n; k++) {
+      const px = tg.pts[k * 2];
+      const py = tg.pts[k * 2 + 1];
+      if (px < x0) x0 = px;
+      if (px > x1) x1 = px;
+      if (py < y0) y0 = py;
+      if (py > y1) y1 = py;
+    }
     return {
       t: (tg.el.textContent || '').trim().slice(0, 14),
       cut: Math.round(tg.top),
       now: Math.round(now.top),
       drift: d,
       n: tg.n,
+      box: [x0, y0, x1, y1].map(Math.round),
     };
   });
+  // The quietest real words on the page, as the floor every heading has to beat.
+  // Taken from the DOM rather than from the point cloud: the bar for matter is
+  // the site's own body text, not another piece of matter.
+  const copy = (M.copies[pg] || [])[0];
+  if (copy) {
+    const r = copy.getBoundingClientRect();
+    out.pages[pg].push({
+      t: 'copy:' + (copy.textContent || '').trim().slice(0, 10),
+      box: [r.left, r.top, r.right, r.bottom].map(Math.round),
+      n: 0,
+    });
+  }
   void sec;
 }
 return out;

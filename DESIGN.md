@@ -150,7 +150,9 @@ components:
 
 **Creative North Star: "Deliberate Machinery"**
 
-A system that conserves its own material and moves it with intent. Not decoration, not chaos. Cold, precise, slightly alive. The governing illusion is that the same matter has been on screen the whole time — grains are moved between letterforms, never created and never destroyed — and every visual decision either supports that illusion or is cut.
+A system that conserves its own material and moves it with intent. Not decoration, not chaos. Cold, precise, slightly alive. The governing illusion is that the same matter has been on screen the whole time — and every visual decision either supports that illusion or is cut.
+
+The illusion is now told as destruction rather than as transport. Matter does not fly from one page's letterforms into the next: the caret sweeps a page and everything it passes over **burns out as a code character**, and it sweeps the next page **typing each slot back into existence** — a character that licks through a few glyphs and settles into flesh. The conservation claim is unchanged and still literally true, because the grain that manifests into a slot is the same buffer entry that vacated it. What changed is which of the two truths the visitor is shown: a machine writing, rather than a courier carrying.
 
 The surface is almost entirely absent. One near-black field, one cyan, and type. There are no images, no illustrations, no gradients on content, no decorative shapes; the only things that move are the particles, the caret that drives them, and copy fading in behind it. This is not minimalism as a style choice — image and video generation are unavailable to this project, so everything must be computed in the browser or authored by hand. The restraint is a production fact that became the identity.
 
@@ -160,7 +162,7 @@ The register is instrumentation rather than editorial. Monospace carries everyth
 
 - Exactly one chromatic value in the entire system
 - Square by default; the boot window is the only rounded surface
-- No shadows on content — depth comes from a radial vignette and additive particle glow
+- No shadows on content — depth comes from a radial vignette and from the matter's own lit surface
 - Type is either large enough to be built from matter (≥26px) or small enough to be DOM text; nothing sits in between
 - Every page fills the viewport exactly once and never scrolls
 - Every value in this document is a control a visitor can move — see The Tweak Layer. What is written here is the **default** state of the system, and defaults are the part that was measured
@@ -194,17 +196,38 @@ A single cold cyan against a near-black instrument field, with every other value
 
 **The One Hue Rule.** The system has exactly one chromatic value. Every other color is a neutral or an alpha of the ink. A second hue breaks the claim that all matter on screen is the same matter. The rule has no exceptions, including borrowed chrome: the boot window quotes an OS titlebar, but its three dots are ink alphas (`--dim`, `--dimmer`, `--line`), not red/amber/green. They are window furniture, not status lights, and they are the first thing a visitor sees — a saturated trio there would spend the single-cyan reveal before the site has drawn a single grain.
 
-**The Additive Ceiling Rule.** Signal Cyan is `rgb(0.404, 0.910, 0.976)` in linear terms, and particles are drawn with `blendFunc(SRC_ALPHA, ONE)`. Green and blue therefore saturate after roughly one layer while red keeps climbing, so anywhere grains stack past about **2.4× coverage the field cores out to achromatic white** — which breaks the One Hue Rule in the rendered output even though every value in the stylesheet is compliant. Density is the lever that has to be held: the name rests at `alpha 0.82`, and every matter heading is re-measured after any change to grain count, size, or alpha — measured, not reasoned about.
+**The Specular Ceiling Rule**, which replaces The Additive Ceiling Rule. Signal Cyan is `rgb(0.404, 0.910, 0.976)`, so red is the channel with room to climb: push a grain's luminance past roughly 2.4 and red reaches green, and the pixel stops being cyan. The One Hue Rule breaks in the rendered output while every value in the stylesheet still complies.
 
-Last measured at 1440×900: name 0.02%, Experience 0.00%, Projects 0.09%, contact statement 0.01–0.03%, year markers 0.00%. The idle sigil measures 0.88%, down from 1.67% but still the only element with a visible achromatic core; it remains the one open violation, and it is the decoration rather than a word.
+What changed is where that pressure comes from. Under `blendFunc(SRC_ALPHA, ONE)` it came from **stacking**, and density was the lever that had to be held. The blend is now `SRC_ALPHA, ONE_MINUS_SRC_ALPHA`: a grain occludes the grains behind it instead of adding to them, so no amount of crowding can core the field out. The only thing that can now is a **specular highlight** on a single grain — ambient plus diffuse plus specular plus rim, on one sprite, exceeding the ceiling on its own.
 
-Note that **coverage is not the same lever as brightness.** The name previously measured 30.4% lit and read as a smear; it now measures 21.1% and reads as discrete matter. Coverage bought past the point where sprites merge buys blur, not legibility — see The Grain Ratio Rule.
+That is a different rule with a different remedy. Density is no longer the lever; `spec`, `shin`, `rim` and `bright` are. And unlike stacking, a small amount of it is correct: a lit solid with no blown highlight anywhere does not read as lit.
 
-**The Name Reads First Rule.** The name is the one heading a visitor must be able to read, and it is held to that by measurement, not intent. It is exempt from budget thinning and rests at a larger grain than anything else — the settings are commented at the `heroG` branch in `matter.js`. The bar is **lit coverage inside its own bounding box**, which must stay above the site's real DOM body text.
+Last measured at 1440×900 (`node tools/coverage.mjs`), share of each heading's ink box that has gone achromatic: `SHUBHAM` 0.62%, `JAKHMOLA` 0.59%, Experience 0.13%, the year markers 0.18–0.45%, `NOW` 1.20%, Projects 0.24%, the contact statement 0.20–0.23%. `NOW` is the highest because it is the smallest box and one highlight is a larger share of it. Nothing here is a violation; the figure to watch is whether any heading crosses ~2%, which would mean the key light, not the density, has been pushed too far.
 
-Measured at 1440×900 against the tagline's 11.33%: `SHUBHAM` 23.06%, `JAKHMOLA` 22.24%, whole name box 21.08%. The idle sigil sits at 8.06%, so the decoration no longer out-measures the name — which it did, at 19.59:1 contrast against the name's 1.04:1, before this rule existed.
+Note that **coverage is not the same lever as brightness**, and note also that the coverage numbers themselves changed meaning when the blend did. Under additive blending "lit" measured accumulated glow, and the name's 21% was a smear at 30%. Under solid alpha it measures **painted area** — so the name's 48% today is not comparable to that 21%, and is not a regression. See The Name Reads First Rule for what the number has to clear now.
 
-**Coverage alone was never the bar, and reading it as one is how the name got smeared.** Held to coverage only, the answer was to grow the sprite until the letterform filled in; at `2.2 × baseS` on a 3px grid each grain spanned four to eight grid cells and the strokes closed into cotton wool that measured 30.4% and read as nothing. The bar is coverage *and* The Grain Ratio Rule together.
+**The Name Reads First Rule.** The name is the one heading a visitor must be able to read, and it is held to that by measurement, not intent. It rests at a larger grain than anything else (`heroS`, against every other heading's `restS`), and the sampler never thins it when the budget gets tight. The bar is **lit coverage inside its own ink box**, which must stay above the site's own body copy on the same page.
+
+Measured at 1440×900 with `node tools/coverage.mjs`, every heading against the first block of copy on its page:
+
+| page | heading | grains | lit | its page's copy |
+| --- | --- | --- | --- | --- |
+| home | `SHUBHAM` | 2,121 | 48.4% | tagline 5.8% |
+| home | `JAKHMOLA` | 2,140 | 44.1% | tagline 5.8% |
+| exp | Experience | 996 | 21.7% | 5.1% |
+| exp | year markers | 269–298 | 32.4–44.5% | 5.1% |
+| proj | Projects | 802 | 20.7% | 7.8% |
+| contact | Let's build | 2,005 | 29.7% | — |
+| contact | something real. | 3,183 | 26.1% | — |
+
+The measurement is taken over the **ink box** — the extent of the sampled point cloud — not the layout box, because a `nowrap; fit-content` span runs well past its last stroke and coverage over that dead space measures the gap rather than the word.
+
+Two live findings this table exposes, both open:
+
+- **The contact statement has no quiet copy to beat.** The first `.copy` block on that page is the email address, set large in Signal Cyan at 26.1% — level with the statement above it. The rule's floor is not violated so much as unavailable there; the email is a deliberate second focus, not body text.
+- **Projects carries 802 grains against home's 4,261.** Only `.mt` headings are matter, and that page has exactly one. It is not a regression and not a bug, but it is the page where the system's own claim is least visible.
+
+**Coverage alone was never the bar, and reading it as one is how the name got smeared once already.** Held to coverage only, the answer is always to grow the sprite until the letterform fills in — and at that point the strokes close into cotton wool that measures higher and reads as nothing. The bar is coverage *and* The Grain Ratio Rule, together, checked on the rendered page.
 
 **The Monochrome Matter Rule.** Every particle is drawn with the same uniform color. An `.accent` class on Matter Text has no effect in the matter reading — it only colors the calm reading. Never design a variant whose idea depends on two colors of matter.
 
@@ -240,15 +263,23 @@ Everything at or above 26px is built from matter; everything below it is DOM tex
 
 **The Closed Ramp Rule.** The ramp above is the complete set of sizes in the system — 22 steps, every one of them in use. A new size is a system change, not a local decision: add it to `typography.scale` in this file's frontmatter or reuse an existing rung. The design hook enforces this, so an undocumented literal will be flagged on the next edit.
 
-**The Contour Rule.** Every heading samples on the same **2px grid**, keeps its whole contour, and thins only the interior — to 37%. The grid used to scale with font size (`fontSize / 14`, clamped 3–6px) and that spent the budget exactly backwards: a 54px heading got a 4px grid and 280 grains, too few to resolve into a word, while the name got a 3px grid and enough sprite overlap to close shut. Size is not what decides how many grains a letterform needs.
+**The Contour Rule.** Every heading keeps its whole contour and thins only the interior — to 69%. A silhouette is what makes a letterform legible; the fill is only weight, and weight is the cheap thing to buy back with grain size. When a page outgrows the budget it is the interior that is cut, never the outline, and never the name at all.
 
-A silhouette is what makes a letterform legible; the fill is only weight, and weight is the cheap thing to buy back with grain size. Contour-first costs about a third of a solid 2px grid, so every page fits the same 9,000-grain budget: home 6,265, contact 3,888, experience 1,881, projects 675. Measured lift at 1440×900 — Experience 3.81% → 16.89%, Projects 3.34% → 15.98%, "something real." 2.56% → 19.04%, the year markers roughly tripled.
+**The lattice is per heading, derived from its own size:** `clamp(round(fontSize / gridk), 2, 8)`, at `gridk` 36. So the name at 114px samples on a 3px grid and a 54px heading on a 2px one, and both land at a comparable number of grains across their own strokes — measured at 5.3 for Archivo at either size, and 2.5–3.5 for JetBrains Mono, which is lower because its strokes really are thinner. The grid answers to ink, not to point size.
 
-The cost is paid by the idle hourglass, which now gets 2,735 grains on the home page instead of 4,414 and measures 8.06% against its old 11.62%. That is the correct direction: the decoration must not out-measure the name.
+This replaced one uniform 2px grid for the whole page, which was itself a fix for `fontSize / 14`. The uniform grid was right about the failure it was fixing — size is not what decides how many grains a letterform *needs* — and wrong to conclude that size therefore should not enter at all. What a stroke needs is a fixed number of grains across its width; the font size is how you find that, not what you spend.
 
-**The Grain Ratio Rule.** A grain sprite must stay near its sample spacing. Much past ~2× and neighbouring sprites merge before the eye resolves either, so the letterform reads as a brush stroke rather than as matter, and the extra coverage is spent on a halo outside the stroke. `GRAIN`, `HERO_S` and `REST_S` in `matter.js` are the three constants that set this, and they are only meaningful relative to the 2px grid The Contour Rule fixes. Change one and re-measure the rendered page; do not re-derive it.
+Floored at 2 because below that the sprite falls under a device pixel at any grain size that keeps The Grain Ratio Rule, and the row renders as a smudge rather than as grains.
 
-**The 26px Floor.** Type below roughly 26px cannot be built from matter: a 2px grid leaves no room under its own strokes. Anything smaller must be DOM text. This is a hard constraint of the renderer, not a preference — and CSS specificity is the usual way it gets violated, since any rule that shrinks a Matter Text element below the floor silently dissolves it.
+Per-page grain counts at 1440×900 and the default 9,000 budget: home 4,261, contact 5,188, experience 2,136, projects 802. Nothing is held back any more — the idle hourglass that used to reserve 380 of them no longer exists, and grains a page has no room for simply stay gone.
+
+**The Grain Ratio Rule.** A grain sprite must stay near its sample spacing. Push it much past ~2× and neighbouring sprites merge before the eye resolves either, so the letterform reads as a brush stroke rather than as matter, and the extra coverage is spent on a halo outside the stroke.
+
+The ratio is now maintained by construction rather than by discipline: a slot carries the lattice it was cut on, and a grain landing there takes its sprite size from that lattice. So a heading sampled at 2px and one sampled at 3px wear proportionally sized grains automatically, and the three knobs — `grain`, `heroS`, `restS` — scale that relationship rather than setting it. Before this, the name on a 3px grid wore sprites sized for a 2px one and rendered as a skeleton.
+
+Measured on the name: a 3px lattice, `baseS` 2.55–3.75, `heroS` 1.05, `grain` 1.75 and near-gain ~1.14 give a sprite of roughly **6.6px on a 3px grid — 2.2×**, right at the documented edge. It reads as discrete matter rather than as a stroke, and the reason it survives the edge is that the lit forms do not fill their own sprite: the `surface` form falls off from 0.55 of the radius, and the `chip` is a bowtie inside a square. A hard disc at 2.2× would merge. Change any of the three and re-measure the rendered page; do not re-derive it.
+
+**The 26px Floor.** Type below roughly 26px cannot be built from matter: the lattice floors at 2px, and a stroke that thin leaves no room under it. Anything smaller must be DOM text. This is a hard constraint of the renderer, not a preference — and CSS specificity is the usual way it gets violated, since any rule that shrinks a Matter Text element below the floor silently dissolves it.
 
 **The Two Faces Rule.** Archivo speaks as Shubham; JetBrains Mono speaks as the machine. A third face is never added, and neither face crosses into the other's role.
 
@@ -289,11 +320,15 @@ Below 820px the whole model is abandoned. The calm reading takes over: static po
 
 ## Elevation & Depth
 
-The system is flat on content. No card has a shadow, no surface is lifted, and no element uses a background lighter than the page to suggest a plane. Depth is atmospheric instead: a fixed two-stop radial vignette darkens the frame and lifts the centre, and the particles themselves are drawn with additive blending so density reads as luminosity. Where grains crowd — the hourglass waist, a letter's stem — the field brightens on its own.
+The system is flat on content. No card has a shadow, no surface is lifted, and no element uses a background lighter than the page to suggest a plane. Depth is atmospheric on the page and literal in the matter: a fixed two-stop radial vignette darkens the frame and lifts the centre, and the letterforms are lit solids.
 
-**The matter field itself has thickness.** Every grain carries a fixed depth in [-1, 1] — a property of the grain, not of the page it currently spells, so the same slab re-forms through every transition. One factor derived from it drives grain size (±36%), brightness (far grains dim to 81%), and a parallax shear that follows the pointer across the viewport. Nothing else in the system is three-dimensional; this is not a plane being tilted but the only depth the design has, and it is why the name reads as a quantity of material rather than as a stencil.
+**A letterform is a lit slab, not a stencil.** At sample time the heading's occupancy is blurred into a height field, three box passes wide. Its **gradient** is the letterform's own surface normal at each grain; its **value** is depth into the stroke, 0 at the contour and 1 at the spine. Those two numbers are real geometry rather than decoration, and one field feeds all of it: extrusion, camera parallax, near-gain, rim light and crevice shade. Four floats a grain, and no per-frame geometry at all.
 
-**The Smallest Mark Bounds the Parallax Rule.** One uniform shears every grain, so the shear is bounded by the *smallest* thing built from matter, never the largest. At 3.6px it was 0.4% of the name's width and 13% of the 28px corner sigil, and it visibly wobbled the wordmark's companion mark. It is 2.6px.
+Everything the material does follows from them. Diffuse and specular are computed once per grain in the vertex stage — 1/40th the work of doing it per fragment, and the normal is constant across a 3px sprite anyway. Rim light fires only on steep normals, so a contour catches light while the spine stays matte, which is the cheapest honest signal that a form has thickness. The camera leans across the extruded depth, so spine and contour separate by parallax — the one cue a flat sticker can never produce.
+
+Depth is scaled by the type size it came from (`shade × fontSize / 120`), because a 42px figure and a 114px name cannot be extruded by the same pixel count without the small one separating into two ghosts of itself.
+
+**The Smallest Mark Bounds the Parallax Rule.** Extrusion and camera lean are single uniforms applied to every grain, so their budget is set by the *smallest* thing built from matter, never the largest. The depth scaling above is what buys the headroom: because the shear a grain receives is proportional to the size of the heading it belongs to, the corner mark and the year figures cannot be wobbled by a value chosen for the name.
 
 Exactly one real shadow exists in the system, and it belongs to the boot terminal.
 
@@ -305,7 +340,7 @@ Exactly one real shadow exists in the system, and it belongs to the boot termina
 
 **The One Shadow Rule.** The boot window is the only elevated surface. Content is flat, always. Adding a shadow to a project row or an epoch card is a system violation, not a refinement.
 
-**The Glow Is Earned Rule.** Brightness comes from particle density under additive blending, never from a CSS glow, blur, or filter on content.
+**The Glow Is Earned Rule.** Brightness is a property of the material — a lit surface catching a key light — never a CSS glow, blur, or filter on content. It was previously earned by particle density under additive blending; under solid alpha a grain occludes rather than adds, so density now reads as **weight** and the light does the brightening. Both readings satisfy the rule; neither permits a `filter`.
 
 ## Shapes
 
@@ -313,7 +348,11 @@ Square by default. Content has no corner radius at all — project rows, epoch c
 
 Three exceptions, each earned: tech tags are full pills (20px) because they are labels rather than surfaces; the boot window is softly rounded (10px) because it is a terminal quoting an OS convention; and the boot-bar dots are circles (50%).
 
-The one recurring silhouette is the hourglass — two triangles meeting at a slight waist. It is the site's mark, drawn from particles at 180×260 on the home page and 28×40 in the corner everywhere else, and rendered as a CSS clip-path in the calm reading. It is never an image file.
+The one recurring silhouette is the hourglass — two triangles meeting at a slight waist. It is the site's mark, at 180×260 on the home page and 28×40 in the corner everywhere else, and it is a CSS clip-path in **both** readings. It is never an image file.
+
+It used to be traced by whichever grains were idle between pages, and that state no longer exists — matter burns out and re-manifests in place rather than being parked anywhere. That is the better trade twice over: the particle hourglass was the one element that ever measured brighter than the name, and the CSS mark was already authored for the calm reading.
+
+**Its fill alpha is not scale-invariant, and it gets two knobs for that reason.** The corner mark reads as a wordmark companion at 28%; the home mark is forty times the area, and the same fill there is a slab of Signal Cyan roughly a third the size of the name — exactly what The Name Reads First Rule exists to stop. It is 16%.
 
 ### Named Rules
 
@@ -357,7 +396,7 @@ The one recurring silhouette is the hourglass — two triangles meeting at a sli
 ### Tweak Panel
 
 - **Tab:** A hairline tab pinned to the right edge at 50% height, mono 10px uppercase with 0.18em tracking, set vertically (`writing-mode: vertical-rl`). It sits at z-index 95 — above the HUD, under the boot terminal, so it never appears before the site does. Below 820px it becomes a horizontal chip at the bottom right.
-- **Panel:** `min(340px, 100vw)`, full height, Panel Slate at 96% with a 14px blur, one hairline left border, square. Six `<details>` groups, first open. Full-width on a phone.
+- **Panel:** `min(340px, 100vw)`, full height, Panel Slate at 96% with a 14px blur, one hairline left border, square. Eleven `<details>` groups, first open. Full-width on a phone.
 - **Rows:** Label at Ink 62%, live value readout in Signal Cyan with tabular figures, control below spanning the row. `accent-color: var(--accent)` on the native range and checkbox — no custom slider is drawn.
 - **Header:** `save` (cyan outline), `reset`, close. An unsaved change lights a 5px cyan dot next to the wordmark; Save clears it and flips its own label to `saved` for a beat.
 - **Presets:** Eight pills — Default, Amber, Phosphor, Bone, Dense, Sparse, Loud, Quiet. A preset is a whole state, not a patch: keys it omits go back to their default, so picking two in a row gives the second rather than a mixture.
@@ -367,13 +406,21 @@ The one recurring silhouette is the hourglass — two triangles meeting at a sli
 
 The read/write head that drives every transition, drawn as the thing it actually is: a text caret. A Signal Cyan bar on a 2D canvas above the particle field, spanning the full height of the type it is working on (`h × 2`, where `h` is roughly half the line) and `h × 0.12` wide, so it scales with the heading rather than sitting at one size. It tilts into its own horizontal velocity. Solid while it consumes, travels or emits; parked, it step-blinks on a 1s cycle at 55% duty — the same blink as the `▮` in the boot log. When idle it parks 14px past the last stroke of the last heading, like a caret at the end of a line.
 
-The bar carries no grain-flow indicator. The particles streaming into or out of it already say which direction the work is going, and a second signal on a 4px bar is noise.
+**It schedules rather than carries.** Nothing follows it across the viewport. Sweeping a heading, it hands every slot it passes over a time to burn out; sweeping the next page's heading, it hands every slot a time to be typed back in. The choreography is therefore entirely in the timeline, not in the physics, and the transition costs no per-frame work beyond one comparison per grain.
+
+It also stops being responsible for finishing. The last few characters go on settling into flesh behind it after it has parked, which is what the tail of a sentence being typed looks like.
+
+The bar carries no grain-flow indicator. The characters burning out or manifesting under it already say which direction the work is going, and a second signal on a 4px bar is noise.
 
 **The mouse pointer is the system arrow.** No custom cursor canvas, no `cursor: none`. The Caret is the only drawn pointer on this site; a second one competing with it is one pointer too many.
 
 ## The Tweak Layer
 
-Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 84 controls over six groups: Palette, Type, Matter, Motion, Layout, System. Save writes to `localStorage`; Reset restores exactly what this document describes.
+Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 122 controls over eleven groups, in the order the material is understood in:
+
+**Palette · Type · Matter · Material · Life · Reach · Throw · Return · Motion · Layout · System**
+
+— what it is made of, what it is made of visually, what it does when nobody is there, what it does when a hand is near, what a hand does to it, how it comes back, the page change, the page, the machine. Save writes to `localStorage`; Reset restores exactly what this document describes.
 
 **`SCHEMA` in tweak.js is the source of truth for every default in the system, and this file is its prose.** A control declares its key, its type, the custom property or data attribute it writes, and which expensive thing matter.js has to redo when it moves (`uniform`, `atlas`, `resample`, `count`, `blend`, `dpr`, `font`, `reload`). Adding a knob is one line; the storage, the row, the live preview and the re-measure are already there.
 
@@ -383,7 +430,13 @@ The panel is instrumentation, not a second design: it borrows the site's own tok
 
 **The Every Knob Rule.** Anything added to this system ships with its control in the same change. A hard-coded literal in `static/style.css` or `static/matter.js` is now a defect on its own — not because the value is wrong, but because it is the one value a visitor cannot reach. Colors, sizes, weights, tracking, leading, radii, rhythm, durations, particle counts, grain sizes, blend modes, glyph sets: each one is either a token in `:root` that the schema writes, or a key in `T` that the frame loop reads.
 
-**The Defaults Are The Measured Set Rule.** The One Hue Rule, the Additive Ceiling, The Grain Ratio Rule and The Name Reads First Rule were all established by measuring the rendered page, and they hold at the defaults. The panel can leave all four behind — a second hue is one color picker away, and `grain` at 6 on a 1px grid is cotton wool. That is the point of it, and it is not a licence to ship a new default without re-measuring. **A default changes only with a fresh measurement; a slider changes with a drag.**
+**The Defaults Are The Measured Set Rule.** The One Hue Rule, The Specular Ceiling, The Grain Ratio Rule and The Name Reads First Rule were all established by measuring the rendered page, and they hold at the defaults. The panel can leave all four behind — a second hue is one color picker away, and `grain` at 6 on a 1px lattice is cotton wool. That is the point of it, and it is not a licence to ship a new default without re-measuring. **A default changes only with a fresh measurement; a slider changes with a drag.**
+
+The measurement is a command, not a judgement call: `node tools/coverage.mjs` screenshots every page and reports lit and cored coverage per heading, and `node tools/bench.mjs probe dist/index.html tools/probes/fill.js` reports what the frame costs. Anything imported from elsewhere has to be re-measured *here* — the reach radius arrived from the lab at 5 and had to be cut to 2.2, because on this page 5 radii is the entire name and the word vanished under its own filaments.
+
+**The Reach Is The Fill Rate Rule.** The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.33, page change 1.71, mid-throw 2.55; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.
+
+That is inside what the adaptive downscale can rescue — a first transition that misses ~48fps caps the pixel ratio at 1 and takes four fifths of the cost back — but it is the number to watch, and it lives in the Reach group. Doubling `sreach` roughly quadruples the worst case. Re-measure with `tools/probes/fill.js` after any change there, not after a change to `count`.
 
 **The Reload-Free Rule.** A control takes effect on the frame after it moves. Three cannot: the reading (`auto`/`matter`/`calm`) and the boot terminal are decided before the panel exists, so they persist and reload. Everything else — including the particle budget, which is why the buffer is allocated once at a 22,000-grain ceiling and drawn to a live `NP` — resolves live.
 
@@ -408,7 +461,7 @@ The panel is instrumentation, not a second design: it borrows the site's own tok
 
 - **Don't** add a shadow to content. The boot window is the only elevated surface in the system.
 - **Don't** introduce a corner radius on a content surface; square is the default and the three exceptions are already spent.
-- **Don't** use a CSS glow, blur, or `filter` to brighten something. Luminosity is earned through particle density under additive blending.
+- **Don't** use a CSS glow, blur, or `filter` to brighten something. Brightness belongs to the material — a lit surface catching a key light — and is earned there.
 - **Don't** add a third typeface, or move a role from one face to the other.
 - **Don't** rely on a color difference *within* matter — every particle renders in the same uniform color regardless of the element's CSS.
 - **Don't** introduce an image, illustration, gradient fill, or texture. Generated assets are unavailable to this project and the identity is built on that absence.

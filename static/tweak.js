@@ -131,55 +131,6 @@
       ],
     },
     {
-      g: 'Reach',
-      note:
-        'A share of the word reaches for a hand near it without letting go, and the filament ' +
-        'between the two ends is drawn by the grain’s own sprite rather than by extra geometry. ' +
-        'That sprite is square, so a long diagonal capsule costs its length squared in fragments — ' +
-        'this group, not the particle budget, is where the GPU cost of the system actually lives.',
-      c: [
-        { k: 'str', t: 'range', d: 0.55, min: 0, max: 1, step: 0.02, fx: 'uniform', l: 'Reach' },
-        { k: 'svel', t: 'range', d: 0.44, min: 0, max: 2, step: 0.02, l: 'Flight streak' },
-        { k: 'stail', t: 'range', d: 0.4, min: 0, max: 1, step: 0.02, fx: 'uniform', l: 'Filament opacity' },
-        { k: 'ftaper', t: 'range', d: 0.25, min: 0.02, max: 1, step: 0.01, fx: 'uniform', l: 'Filament taper' },
-        { k: 'ergy', t: 'range', d: 1.25, min: 0, max: 2, step: 0.05, fx: 'uniform', l: 'Strain glow' },
-        { k: 'salign', t: 'bool', d: true, fx: 'uniform', l: 'Reaching marks aim at the hand' },
-      ],
-    },
-    {
-      g: 'Throw',
-      note:
-        'What a moving hand does. A parked hand does nothing at all — that is the aura’s job, in ' +
-        'Life. Below the gate speed nothing tears; above it, matter is dragged along with the hand ' +
-        'rather than popped away from it, and the radial push only clears it out of the way.',
-      c: [
-        { k: 'repelR', t: 'range', d: 76, min: 0, max: 320, step: 4, u: 'px', l: 'Wound radius' },
-        { k: 'minv', t: 'range', d: 900, min: 100, max: 3000, step: 50, u: 'px/s', l: 'Gate speed' },
-        { k: 'carry', t: 'range', d: 0.7, min: 0, max: 2, step: 0.02, l: 'Carry' },
-        { k: 'push', t: 'range', d: 300, min: 0, max: 1200, step: 10, l: 'Radial push' },
-        { k: 'drag', t: 'range', d: 2.1, min: 0.2, max: 8, step: 0.1, l: 'Air drag' },
-        { k: 'spin', t: 'range', d: 1.2, min: 0, max: 4, step: 0.05, l: 'Tumble' },
-      ],
-    },
-    {
-      g: 'Return',
-      note:
-        'The return, in two destructive halves: a loose grain burns out as a code character, and ' +
-        'the slot it left re-types in place. The same buffer entry both times — the matter is ' +
-        'conserved in the machine even while the story on screen is destruction. A page change ' +
-        'runs this same lifecycle, scheduled in bulk off the caret instead of one grain at a time.',
-      c: [
-        { k: 'delay', t: 'range', d: 1.37, min: 0.1, max: 4, step: 0.05, u: 's', l: 'Loose for' },
-        { k: 'seam', t: 'range', d: 0.5, min: 0, max: 1, step: 0.02, l: 'Knit from the rim' },
-        { k: 'burn', t: 'range', d: 0.45, min: 0.1, max: 1.5, step: 0.05, u: 's', l: 'Burn-out' },
-        { k: 'mgap', t: 'range', d: 0.12, min: 0, max: 1.5, step: 0.02, u: 's', l: 'Gone for' },
-        { k: 'mgrow', t: 'range', d: 0.55, min: 0.1, max: 2, step: 0.05, u: 's', l: 'Manifest' },
-        { k: 'msize', t: 'range', d: 2.2, min: 1, max: 6, step: 0.1, u: '×', l: 'Manifest · swell' },
-        { k: 'mflash', t: 'range', d: 1.2, min: 0, max: 4, step: 0.05, l: 'Manifest · flash' },
-        { k: 'mflick', t: 'range', d: 80, min: 20, max: 400, step: 5, u: 'ms', l: 'Glyph cycle' },
-      ],
-    },
-    {
       g: 'Material',
       note:
         'A letterform is a lit slab, not a stencil. The height field cut at sample time drives ' +
@@ -221,9 +172,61 @@
         { k: 'sheen', t: 'range', d: 0.4, min: 0, max: 1.5, step: 0.02, l: 'Sheen' },
         { k: 'sheenT', t: 'range', d: 4, min: 1.5, max: 16, step: 0.5, u: 's', l: 'Sheen · period' },
         { k: 'sheenW', t: 'range', d: 90, min: 20, max: 400, step: 5, u: 'px', l: 'Sheen · band width' },
-        { k: 'aura', t: 'range', d: 0.58, min: 0, max: 1.5, step: 0.02, l: 'Cursor aura' },
-        { k: 'sreach', t: 'range', d: 2.2, min: 0.5, max: 8, step: 0.1, u: '×', l: 'Cursor aura · reach' },
+        { k: 'aura', t: 'range', d: 0.58, min: 0, max: 1.5, step: 0.02, l: 'Hand · aura' },
+        { k: 'sreach', t: 'range', d: 2.2, min: 0.5, max: 8, step: 0.1, u: '×', l: 'Hand · felt within' },
         { k: 'sway', t: 'range', d: 0.5, min: 0, max: 1.5, step: 0.02, l: 'Light sway' },
+      ],
+    },
+    {
+      g: 'Reach',
+      note:
+        'A share of the word reaches for a hand near it without letting go, and the filament ' +
+        'between the two ends is drawn by the grain’s own sprite rather than by extra geometry. ' +
+        'It is felt inside the same radius as the aura above. That sprite is square, so a long ' +
+        'diagonal capsule costs its length squared in fragments — this group, not the particle ' +
+        'budget, is where the GPU cost of the system actually lives, and the lab’s 5-radius reach ' +
+        'is the one value that did not survive the move here: at that size it is the whole name, ' +
+        'and the word vanishes under its own filaments.',
+      c: [
+        { k: 'str', t: 'range', d: 0.55, min: 0, max: 1, step: 0.02, fx: 'uniform', l: 'Reach' },
+        { k: 'svel', t: 'range', d: 0.44, min: 0, max: 2, step: 0.02, l: 'Flight streak' },
+        { k: 'stail', t: 'range', d: 0.4, min: 0, max: 1, step: 0.02, fx: 'uniform', l: 'Filament opacity' },
+        { k: 'ftaper', t: 'range', d: 0.25, min: 0.02, max: 1, step: 0.01, fx: 'uniform', l: 'Filament taper' },
+        { k: 'ergy', t: 'range', d: 1.25, min: 0, max: 2, step: 0.05, fx: 'uniform', l: 'Strain glow' },
+        { k: 'salign', t: 'bool', d: true, fx: 'uniform', l: 'Reaching marks aim at the hand' },
+      ],
+    },
+    {
+      g: 'Throw',
+      note:
+        'What a moving hand does. A parked hand does nothing at all — that is the aura’s job, in ' +
+        'Life. Below the gate speed nothing tears; above it, matter is dragged along with the hand ' +
+        'rather than popped away from it, and the radial push only clears it out of the way.',
+      c: [
+        { k: 'repelR', t: 'range', d: 76, min: 0, max: 320, step: 4, u: 'px', l: 'Wound radius' },
+        { k: 'minv', t: 'range', d: 900, min: 100, max: 3000, step: 50, u: 'px/s', l: 'Gate speed' },
+        { k: 'carry', t: 'range', d: 0.7, min: 0, max: 2, step: 0.02, l: 'Carry' },
+        { k: 'push', t: 'range', d: 300, min: 0, max: 1200, step: 10, l: 'Radial push' },
+        { k: 'drag', t: 'range', d: 2.1, min: 0.2, max: 8, step: 0.1, l: 'Air drag' },
+        { k: 'spin', t: 'range', d: 1.2, min: 0, max: 4, step: 0.05, l: 'Tumble' },
+      ],
+    },
+    {
+      g: 'Return',
+      note:
+        'The return, in two destructive halves: a loose grain burns out as a code character, and ' +
+        'the slot it left re-types in place. The same buffer entry both times — the matter is ' +
+        'conserved in the machine even while the story on screen is destruction. A page change ' +
+        'runs this same lifecycle, scheduled in bulk off the caret instead of one grain at a time.',
+      c: [
+        { k: 'delay', t: 'range', d: 1.37, min: 0.1, max: 4, step: 0.05, u: 's', l: 'Loose for' },
+        { k: 'seam', t: 'range', d: 0.5, min: 0, max: 1, step: 0.02, l: 'Knit from the rim' },
+        { k: 'burn', t: 'range', d: 0.45, min: 0.1, max: 1.5, step: 0.05, u: 's', l: 'Burn-out' },
+        { k: 'mgap', t: 'range', d: 0.12, min: 0, max: 1.5, step: 0.02, u: 's', l: 'Gone for' },
+        { k: 'mgrow', t: 'range', d: 0.55, min: 0.1, max: 2, step: 0.05, u: 's', l: 'Manifest' },
+        { k: 'msize', t: 'range', d: 2.2, min: 1, max: 6, step: 0.1, u: '×', l: 'Manifest · swell' },
+        { k: 'mflash', t: 'range', d: 1.2, min: 0, max: 4, step: 0.05, l: 'Manifest · flash' },
+        { k: 'mflick', t: 'range', d: 80, min: 20, max: 400, step: 5, u: 'ms', l: 'Glyph cycle' },
       ],
     },
     {
@@ -286,12 +289,17 @@
   const PRESETS = {
     Default: {},
     Amber: { accent: '#ffb35c', bg: '#0c0a08', ink: '#f0e8dd', glint: 0.75 },
-    Phosphor: { accent: '#7dfaa3', bg: '#060a07', ink: '#e2f2e6', rim: 1.2 },
-    Bone: { accent: '#f4f4f2', bg: '#101012', ink: '#f6f6f4', glint: 0.2, bright: 0.8 },
-    Dense: { count: 18000, grain: 1.4, fill: 0.9, gridk: 26, restS: 0.6, heroS: 0.85, bright: 0.95 },
-    Sparse: { count: 4200, grain: 2.6, fill: 0.3, gridk: 52, restS: 1, heroS: 1.4, glint: 0.9 },
-    Loud: { fs: 1.18, kDisplay: 1.15, wdth: 138, trDisplay: -0.035, ext: 30, cam: 0.9, wob: 2.4, glint: 1.1 },
-    Quiet: { fs: 0.92, kDisplay: 0.85, wdth: 100, vig: 1.4, bright: 0.85, ext: 9, cam: 0.3, wob: 0.4, trFull: 2.6 },
+    Phosphor: { accent: '#7dfaa3', bg: '#060a07', ink: '#e2f2e6', rim: 1.2, ember: 0.9 },
+    Bone: { accent: '#f4f4f2', bg: '#101012', ink: '#f6f6f4', glint: 0.2, bright: 0.8, sheen: 0.15 },
+    Dense: { count: 18000, grain: 1.4, fill: 0.9, gridk: 26, restS: 0.6, heroS: 0.85, bright: 0.95,
+      str: 0.34, rdens: 0.28 },
+    Sparse: { count: 4200, grain: 2.6, fill: 0.3, gridk: 52, restS: 1, heroS: 1.4, glint: 0.9,
+      rsize: 1.5, rdens: 0.7, str: 0.8 },
+    Loud: { fs: 1.18, kDisplay: 1.15, wdth: 138, trDisplay: -0.035, ext: 30, cam: 0.9, wob: 2.4,
+      glint: 1.1, sheen: 0.85, ember: 0.9, flow: 7, ergy: 1.9, msize: 3.4, mflash: 2.2 },
+    Quiet: { fs: 0.92, kDisplay: 0.85, wdth: 100, vig: 1.4, bright: 0.85, ext: 9, cam: 0.3, wob: 0.4,
+      trFull: 2.6, sheen: 0.14, ember: 0.2, flow: 1.6, sway: 0.18, str: 0.2, stail: 0.18,
+      msize: 1.4, mflash: 0.5 },
   };
 
   /* -------------------------------------------------------------- values -- */
