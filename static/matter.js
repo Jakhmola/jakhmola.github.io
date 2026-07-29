@@ -52,7 +52,6 @@
   // a page reload -- and conservation still holds over the live set.
   const MAXN = 22000;
   let NP = Math.max(400, Math.min(MAXN, T.count | 0));
-  const LAGS = [0.006, 0.016, 0.026, 0.036, 0.048, 0.062, 0.078, 0.096];
   const NARROW = matchMedia('(max-width: 820px)');
   // A grain sprite must stay near its sample spacing (The Grain Ratio Rule), so
   // `grain`, `heroS`, `restS` and `grid` are only meaningful relative to each
@@ -65,6 +64,11 @@
   // walking through the words. Its width and strength are knobs; the angle is
   // the composition's, and it moves when the layout does, not when a slider does.
   const SHEEN = [0.94, 0.34];
+  // Which of the eight atlas cells a grain shows at a given tick. Two odd
+  // multiplies and a shift: a dying or manifesting grain cycles characters
+  // deterministically, with no per-grain glyph state to store and no random
+  // number drawn per frame per grain.
+  const glyphOf = (c, k) => (Math.imul(c, 2654435761) ^ Math.imul(k, 40503)) >>> 29;
 
   const $ = (id) => document.getElementById(id);
 
@@ -492,8 +496,9 @@ void main(){
       this.dead = false;
       this.mx = -9999;
       this.my = -9999;
-      this.mvx = 0;
-      this.mvy = 0;
+      this.pvx = 0;
+      this.pvy = 0;
+      this.pt = 0;
       // Where the light and the camera sit when no pointer has been seen: the
       // lab's resting key, up and to the left. Starting at 0 would sweep the
       // highlight across the field on the first frame after boot.
@@ -541,8 +546,7 @@ void main(){
       this.t = 0;
       this.sampleAll();
       this.ancT = this.want === 'home' ? this.ancHome : this.ancSigil;
-      this.anc = Object.assign({}, this.ancT);
-      this.seedLoop();
+      this.seedGone();
       this.startTr(this.want, true);
       this.scrub();
     }
@@ -574,6 +578,7 @@ void main(){
       this.tg = {};
       this.copies = {};
       this.sweep = {};
+      this.slots = {};
       for (const pg of PAGES) {
         const sec = $('pg-' + pg);
         const list = [];
@@ -698,6 +703,7 @@ void main(){
           delete tg.loc;
         });
         this.tg[pg] = list;
+        this.slots[pg] = this.tableOf(list);
         // `.calm-only` copy is display:none on this reading, so it measures at
         // 0x0 and sorts to the top -- which spent the first beat of the reveal
         // schedule fading in something nobody can see.
@@ -735,41 +741,39 @@ void main(){
       const A = (this.A = {
         pos: new Float32Array(MAXN * 2),
         vel: new Float32Array(MAXN * 2),
+        // 0 settled · 1 loose · 4 burning out · 5 gone · 6 manifesting.
+        // Numbered, not named, because the debug census prints them as a row and
+        // the harness asserts on that row without knowing what they mean.
         st: new Uint8Array(MAXN),
         homeX: new Float32Array(MAXN),
         homeY: new Float32Array(MAXN),
-        u: new Float32Array(MAXN),
-        uspd: new Float32Array(MAXN),
-        kind: new Uint8Array(MAXN),
-        rank: new Float32Array(MAXN),
-        uox: new Float32Array(MAXN),
-        uoy: new Float32Array(MAXN),
-        otg: new Int16Array(MAXN),
-        oxf: new Float32Array(MAXN),
-        // 1 while a grain spells part of the name -- the one heading held to the
-        // v3 hero's legibility, so it rests as a glyph rather than a soft dot.
-        heroG: new Uint8Array(MAXN),
-        nHero: new Uint8Array(MAXN),
-        tC: new Float32Array(MAXN),
-        tL: new Float32Array(MAXN),
-        lagB: new Uint8Array(MAXN),
-        ld: new Uint8Array(MAXN),
+        // The slot's own normal, kept apart from the one being drawn: a loose
+        // grain's normal tumbles with it, and has to find its way back.
         nhX: new Float32Array(MAXN),
         nhY: new Float32Array(MAXN),
-        after: new Uint8Array(MAXN),
-        nTg: new Int16Array(MAXN),
-        nXf: new Float32Array(MAXN),
-        // The slot's letterform geometry, held until the grain actually lands on
-        // it -- a grain in flight is still lit as the matter it currently is.
-        nNx: new Float32Array(MAXN),
-        nNy: new Float32Array(MAXN),
-        nSh: new Float32Array(MAXN),
-        nZ: new Float32Array(MAXN),
-        dX: new Float32Array(MAXN),
-        dY: new Float32Array(MAXN),
+        // When this grain entered its state, and when it leaves. Both absolute
+        // seconds on the same clock the pointer wound uses, so a page change is
+        // nothing but a very large scheduled wound.
+        hT: new Float32Array(MAXN),
+        hAt: new Float32Array(MAXN),
+        spin: new Float32Array(MAXN),
+        // The decode flash: brightness a grain carries for a moment after its
+        // character changes. Drives both the burn-out and the manifest.
+        lead: new Float32Array(MAXN),
+        rank: new Float32Array(MAXN),
+        // 1 while a grain spells part of the name -- the one heading held to
+        // The Name Reads First Rule, so it rests at a larger grain.
+        heroG: new Uint8Array(MAXN),
+        // Per-grain scatter on the sprite its slot asks for, so a word does not
+        // read as one printed pattern. Seeded once, never re-rolled.
+        sj: new Float32Array(MAXN),
         baseS: new Float32Array(MAXN),
         baseA: new Float32Array(MAXN),
         rest: new Float32Array(MAXN),
+        // When the caret is going to type this grain back in. Held apart from
+        // hAt because it is set at scheduling time and consumed two states
+        // later, when the burn-out finishes.
+        mAt: new Float32Array(MAXN),
         aArr: new Float32Array(MAXN),
         sArr: new Float32Array(MAXN),
         cArr: new Float32Array(MAXN),
@@ -780,16 +784,13 @@ void main(){
         shArr: new Float32Array(MAXN),
         nArr: new Float32Array(MAXN * 2),
       });
-      A.tC.fill(9); // 9 = "not taking part in this transition"
-      // Seeded across the whole allocation, not just the live prefix: raising the
-      // budget then wakes grains that already have a depth, a phase and a place
-      // on the hourglass, so they drift in instead of arriving from the origin.
+      // Seeded across the whole allocation, not just the live prefix: raising
+      // the budget then wakes grains that already have a size, a phase and a
+      // character, so they manifest like everything else rather than appearing.
       for (let i = 0; i < MAXN; i++) {
-        A.kind[i] = Math.random() < 0.3 ? 0 : 1; // 0 = traces the hourglass outline
         A.rank[i] = Math.random();
-        A.u[i] = Math.random();
-        A.uspd[i] = 0.07 + Math.random() * 0.08;
-        A.baseS[i] = 2.6 + Math.random() * 2.2;
+        A.sj[i] = 0.85 + Math.random() * 0.4;
+        A.baseS[i] = 3 * A.sj[i];
         A.baseA[i] = 0.6 + Math.random() * 0.4;
         A.gArr[i] = Math.floor(Math.random() * 8);
         // Each chip sits at its own slight angle, so a word of them reads as
@@ -800,9 +801,7 @@ void main(){
         // is not currently part of a stroke has no surface to be lit as, so it
         // takes the neutral one -- flat, facing front, no crevice.
         A.shArr[i] = 1;
-        const P = this.outlineP(A.u[i]);
-        A.uox[i] = P[0];
-        A.uoy[i] = P[1];
+        A.st[i] = 5;
       }
 
       const canvas = $('matter');
@@ -822,18 +821,21 @@ void main(){
 
       this.caret = $('caret-cv');
       this.cctx = this.caret.getContext('2d');
-      this.lbx = new Float32Array(8);
-      this.lby = new Float32Array(8);
 
       this.onResize();
       addEventListener('resize', () => this.onResize());
       addEventListener('pointermove', (ev) => {
-        // Pointer velocity, not just position: a grain shoved by a fast swipe
-        // travels with the hand instead of only away from it.
+        // Velocity in px/s, not per-event deltas: what tears matter loose is how
+        // fast the hand is travelling, and that has to mean the same thing on a
+        // 60Hz trackpad and a 144Hz mouse. Clamped because the first event after
+        // a pause reports a dt of nothing and would read as an infinite swipe.
+        const now = performance.now();
+        const d = CLAMP((now - this.pt) / 1000, 0.008, 0.1);
         if (this.mx > -9000) {
-          this.mvx += (ev.clientX - this.mx) * 0.6;
-          this.mvy += (ev.clientY - this.my) * 0.6;
+          this.pvx = (ev.clientX - this.mx) / d;
+          this.pvy = (ev.clientY - this.my) / d;
         }
+        this.pt = now;
         this.mx = ev.clientX;
         this.my = ev.clientY;
       });
@@ -949,9 +951,8 @@ void main(){
         if (this.dead) return false;
         this.r.refreshAtlas();
         this.sampleAll();
-        this.anc = Object.assign({}, this.ancHome);
         this.ancT = this.ancHome;
-        this.seedLoop();
+        this.seedGone();
         this.seeded = true;
         // The race above can lose, and then the point cloud is cut against the
         // wrong metrics. watchLayout is what notices.
@@ -1045,45 +1046,108 @@ void main(){
       }
     }
 
-    /** Hourglass perimeter in unit space: two triangles meeting at a slight waist.
-     *  v walks the outline; each half runs A(-1,s) -> B(1,s) -> C(0,0.05s) -> A. */
-    outlineP(v) {
-      const s = v < 0.5 ? -1 : 1; // -1 = upper bulb
-      const w = (v < 0.5 ? v : v - 0.5) * 2;
-      const t1 = 0.413; // A->B is the flat outer edge
-      const t2 = 0.706; // B->C dives to the waist
-      if (w < t1) return [-1 + 2 * (w / t1), s];
-      if (w < t2) {
-        const p = (w - t1) / (t2 - t1);
-        return [1 - p, s + (s * 0.05 - s) * p];
-      }
-      const p = (w - t2) / (1 - t2);
-      return [-p, s * 0.05 + (s - s * 0.05) * p];
-    }
-
-    seedLoop() {
+    /** Everything gone: no matter anywhere, every slot open. What the field
+     *  boots into, and what a capture re-aims from. Nothing is destroyed by it
+     *  -- a gone grain is a buffer entry at zero size waiting for its cue. */
+    seedGone() {
       const A = this.A;
-      const anc = this.anc;
       for (let i = 0; i < MAXN; i++) {
-        A.st[i] = 0;
-        const [ux, uy] = this.loopPoint(i);
-        A.pos[i * 2] = anc.x + ux * anc.w * 0.5;
-        A.pos[i * 2 + 1] = anc.y + uy * anc.h * 0.5;
+        A.st[i] = 5;
+        A.hAt[i] = Infinity;
+        A.mAt[i] = Infinity;
         A.aArr[i] = 0;
-        A.sArr[i] = A.baseS[i] * 0.7;
+        A.sArr[i] = 0;
         A.cArr[i] = 0;
         A.gyArr[i] = 0;
+        A.lead[i] = 0;
+        A.vel[i * 2] = 0;
+        A.vel[i * 2 + 1] = 0;
       }
       this.r.markGeom();
     }
 
-    /** Where an idling grain belongs: outline tracers vs. the falling stream. */
-    loopPoint(i) {
+    /** The two halves of the destructive return.
+     *
+     *  A grain that dies leaves its slot open; the grain that later manifests
+     *  into that slot is the same buffer entry, so the matter is conserved in
+     *  the machine even while the story on screen is destruction. Nothing is
+     *  ever created: `MAXN` entries exist from boot and the same `NP` of them
+     *  are simulated whatever the page says. */
+    die(i, flash) {
       const A = this.A;
-      if (A.kind[i] === 0) return [A.uox[i], A.uoy[i]];
-      const th = A.u[i] * 6.2832;
-      const c = Math.cos(th);
-      return [Math.sin(2 * th) * 0.55 * (0.1 + 0.9 * Math.abs(c)), -c * 0.9];
+      const j = i * 2;
+      A.st[i] = 4;
+      A.hT[i] = this.t;
+      A.lead[i] = flash;
+      A.vel[j] *= 0.3;
+      A.vel[j + 1] *= 0.3;
+    }
+
+    manifest(i) {
+      const A = this.A;
+      const S = this.slots[this.slotPg];
+      // Past this page's slot count there is nothing to be part of. The grain
+      // stays gone -- still allocated, still counted, simply not this page.
+      if (!S || i >= S.n) {
+        A.hAt[i] = Infinity;
+        return;
+      }
+      const j = i * 2;
+      A.st[i] = 6;
+      A.hT[i] = this.t;
+      A.hAt[i] = Infinity;
+      A.lead[i] = 1;
+      A.homeX[i] = S.x[i];
+      A.homeY[i] = S.y[i];
+      A.nhX[i] = S.nx[i];
+      A.nhY[i] = S.ny[i];
+      A.shArr[i] = S.sh[i];
+      A.zArr[i] = S.z[i];
+      A.heroG[i] = S.hero[i];
+      A.baseS[i] = S.size[i] * A.sj[i];
+      A.pos[j] = S.x[i];
+      A.pos[j + 1] = S.y[i];
+      A.vel[j] = 0;
+      A.vel[j + 1] = 0;
+      // It arrives as a character and settles into flesh, so it starts at full
+      // glyph, zero size: a mark typed into place rather than one faded up.
+      A.gyArr[i] = 1;
+      A.sArr[i] = 0;
+      A.aArr[i] = 0;
+      A.gArr[i] = (Math.random() * 8) | 0;
+      this.r.markGeom();
+    }
+
+    /** A hand moving fast enough through settled matter throws it loose.
+     *
+     *  A parked cursor does nothing at all, which is both physically right and
+     *  what stops a stationary pointer quietly boiling a hole in the name. */
+    wound(cx, cy, vx, vy, radius, gain) {
+      const A = this.A;
+      const R2 = radius * radius;
+      const sp = Math.hypot(vx, vy);
+      for (let i = 0; i < NP; i++) {
+        if (A.st[i] !== 0) continue;
+        const j = i * 2;
+        const dx = A.pos[j] - cx;
+        const dy = A.pos[j + 1] - cy;
+        const d2 = dx * dx + dy * dy;
+        if (d2 > R2) continue;
+        const d = Math.sqrt(d2) || 0.001;
+        const g = (1 - d / radius) * gain;
+        A.st[i] = 1;
+        // Carry dominates: a grain is dragged along with the hand, not popped
+        // away from it. The radial push only clears it out of the hand's path.
+        A.vel[j] = vx * T.carry * g + (dx / d) * T.push * g + (Math.random() - 0.5) * sp * 0.18;
+        A.vel[j + 1] = vy * T.carry * g + (dy / d) * T.push * g + (Math.random() - 0.5) * sp * 0.18;
+        A.spin[i] = (Math.random() - 0.5) * sp * 0.012 * T.spin;
+        // Seam closes the hole from its rim inward, which is what makes it read
+        // as knitting shut rather than as every grain independently remembering
+        // to come home.
+        const rim = 1 - CLAMP(d / radius, 0, 1);
+        A.hAt[i] = this.t + T.delay * (T.seam * rim * 2 + (1 - T.seam) * (0.7 + Math.random() * 0.6));
+        A.mAt[i] = -Infinity; // no caret is scheduling this one; mgap rules
+      }
     }
 
     /* --------------------------------------------------------- transition -- */
@@ -1135,7 +1199,7 @@ void main(){
       const from =
         oldTgs && oldTgs.length
           ? sweep(oldTgs, c0, c1, 'consume', cw)
-          : { x: this.anc.x, y: this.anc.y };
+          : { x: this.ancT.x, y: this.ancT.y };
       const first = newTgs[0];
       const dist = Math.hypot(first.l - from.x, first.cy - from.y);
       segs.push({
@@ -1154,22 +1218,24 @@ void main(){
       return { segs, cw, ew, tw0: t0, tw1: t1, e0, e1 };
     }
 
-    /** Every vacancy in a page's letterforms, in the order they must be drawn.
+    /** Every vacancy in a page's letterforms as one flat table, in the order
+     *  they must be drawn.
      *
-     *  The lab sorts its point cloud once at seed time and never again, because
-     *  there a grain owns one slot for the life of the page. Here a grain takes
-     *  a new slot at every navigation, so the sort has to happen at handout --
-     *  and handout runs in buffer order, which is draw order. Sorting the slots
-     *  contour-first is therefore the whole of the back-to-front compositing the
-     *  lit slab needs: the contour lays down first, the spine paints over it.
+     *  Cut at sample time and not at navigation, for two reasons. A transition
+     *  may not allocate -- that is the named performance constraint -- and the
+     *  order is load-bearing: grain p takes slot p, handout runs in buffer
+     *  order, and buffer order is draw order. Sorting the slots contour-first
+     *  here is therefore the whole of the back-to-front compositing the lit slab
+     *  needs, for free: the contour lays down first and the spine paints over
+     *  it. It stops being free the day a grain may choose a slot for itself.
      *
-     *  Free, because it is only the iteration order. It stops being free the day
-     *  a grain is allowed to choose a slot for itself. */
-    slotsOf(page) {
-      const out = [];
-      for (const tg of this.tg[page] || []) {
-        for (let k = 0; k < tg.n; k++) {
-          out.push({
+     *  The objects below are garbage the moment they are packed. They exist so
+     *  the sort can be written as a sort. */
+    tableOf(list) {
+      const raw = [];
+      for (const tg of list) {
+        for (let k = 0; k < tg.n && raw.length < MAXN; k++) {
+          raw.push({
             x: tg.pts[k * 2],
             y: tg.pts[k * 2 + 1],
             xf: tg.xf[k],
@@ -1182,33 +1248,43 @@ void main(){
             z: tg.shd[k] * (tg.fs / 120),
             ti: tg.idx,
             hero: tg.hero ? 1 : 0,
+            // The lattice this slot was cut on. A grain wears the sprite its own
+            // slot's spacing asks for, or The Grain Ratio Rule breaks the moment
+            // two headings sample differently: the name on a 3px grid wearing
+            // sprites sized for a 2px one is a skeleton.
             g: tg.g,
           });
         }
       }
-      out.sort((a, b) => a.sh - b.sh);
-      return out;
-    }
-
-    /** Park a slot on a grain. Consumed by landP when the grain arrives. */
-    aimAt(i, s) {
-      const A = this.A;
-      A.nhX[i] = s.x;
-      A.nhY[i] = s.y;
-      A.nTg[i] = s.ti;
-      A.nXf[i] = s.xf;
-      A.nHero[i] = s.hero;
-      A.nNx[i] = s.nx;
-      A.nNy[i] = s.ny;
-      A.nSh[i] = s.sh;
-      A.nZ[i] = s.z;
-      A.after[i] = 1;
-      // The sprite follows the lattice it is landing on, or The Grain Ratio
-      // Rule breaks the moment two headings sample at different spacings: the
-      // name on a 3px grid wearing sprites sized for a 2px one is a skeleton.
-      // Taken now rather than at landing, so a grain flies at the size it is
-      // about to be.
-      A.baseS[i] = s.g * (0.85 + Math.random() * 0.4);
+      raw.sort((a, b) => a.sh - b.sh);
+      const n = raw.length;
+      const S = {
+        n,
+        x: new Float32Array(n),
+        y: new Float32Array(n),
+        nx: new Float32Array(n),
+        ny: new Float32Array(n),
+        sh: new Float32Array(n),
+        z: new Float32Array(n),
+        size: new Float32Array(n),
+        xf: new Float32Array(n),
+        ti: new Int16Array(n),
+        hero: new Uint8Array(n),
+      };
+      for (let k = 0; k < n; k++) {
+        const s = raw[k];
+        S.x[k] = s.x;
+        S.y[k] = s.y;
+        S.nx[k] = s.nx;
+        S.ny[k] = s.ny;
+        S.sh[k] = s.sh;
+        S.z[k] = s.z;
+        S.size[k] = s.g;
+        S.xf[k] = s.xf;
+        S.ti[k] = s.ti;
+        S.hero[k] = s.hero;
+      }
+      return S;
     }
 
     startTr(page, first) {
@@ -1216,63 +1292,51 @@ void main(){
       const rnd = Math.random;
       // The transition is the thing people come back to watch, so a deliberate
       // return always gets the full choreography. Only a rapid burst of nav
-      // flies direct, so hammering the arrow keys stays responsive.
+      // goes direct, so hammering the arrow keys stays responsive.
       const full = first || performance.now() - this.lastNavAt > T.fullGate;
       const oldPg = this.cur;
-      A.tC.fill(9);
-      A.ld.fill(0);
-
       const ntgs = this.tg[page] || [];
-      const slots = this.slotsOf(page);
-      // Grains are taken in buffer order, so buffer order stays depth order.
-      // 340 held back for the idle hourglass -- the sampler already caps a page
-      // well under that, so the min only bites if the name alone outgrows the
-      // budget, and then it truncates the spine and keeps the silhouette, which
-      // is the right thing to lose. See The Contour Rule.
-      const M = Math.min(slots.length, Math.max(0, NP - 340));
-
+      const sl = this.slots[page];
+      // The table the grains' slot indices currently point into. Read before it
+      // is moved on, because the consume sweep is timed off the old page.
+      const osl = this.slots[this.slotPg];
       const sd = this.buildSegs(full, oldPg && full ? this.tg[oldPg] : null, ntgs);
       const dur = full ? (first ? T.trFirst : T.trFull) : T.trQuick;
-      for (let p = 0; p < M; p++) {
-        const s = slots[p];
-        const srcLoop = A.st[p] !== 1;
-        if (full) {
-          if (srcLoop) A.tC[p] = sd.tw0 + rnd() * (sd.tw1 - sd.tw0) * 0.9;
-          else {
-            const w = sd.cw[A.otg[p]] || [0.05, 0.4];
-            A.tC[p] = w[0] + (w[1] - w[0]) * A.oxf[p];
-          }
-          const e = sd.ew[s.ti] || [sd.e0, sd.e1];
-          A.tL[p] = Math.max(A.tC[p] + 0.08, e[0] + (e[1] - e[0]) * s.xf);
-        } else {
-          A.tC[p] = 0.02 + rnd() * 0.25;
-          A.tL[p] = A.tC[p] + 0.45 + rnd() * 0.25;
-          A.dX[p] = A.pos[p * 2];
-          A.dY[p] = A.pos[p * 2 + 1];
+      const t0 = this.t;
+      // Grain p takes slot p, so buffer order stays depth order. Past the
+      // budget the table is simply truncated, which cuts the spine and keeps
+      // the silhouette -- the right thing to lose. See The Contour Rule.
+      const M = Math.min(sl.n, NP);
+      // Where in `[lo, hi]` the caret is when it passes over this slot. The
+      // per-heading window when the caret actually sweeps that heading, the
+      // whole span when it does not (a page with no old text to consume).
+      const mark = (w, lo, hi, xf) => (w ? w[0] + (w[1] - w[0]) * xf : lo + (hi - lo) * xf);
+
+      for (let i = 0; i < NP; i++) {
+        // Consume. What burns a grain out is the caret passing over the slot it
+        // is standing on; a grain that is already gone has nothing to burn, and
+        // simply waits for its cue on the other side.
+        const st = A.st[i];
+        if (st !== 4 && st !== 5) {
+          A.hAt[i] =
+            t0 +
+            dur *
+              (full && osl && i < osl.n
+                ? mark(sd.cw[osl.ti[i]], sd.tw0, sd.tw1, osl.xf[i])
+                : 0.02 + rnd() * 0.25);
         }
-        this.aimAt(p, s);
-        A.lagB[p] = (rnd() * 8) | 0;
+        // Emit. What types a grain back in is the caret passing over the slot it
+        // is about to stand on. Ordering needs no guard: the burn-out hands its
+        // own exit the later of this time and its own, so a grain can never
+        // manifest into a slot it has not finished vacating.
+        A.mAt[i] =
+          i < M
+            ? t0 +
+              dur * (full ? mark(sd.ew[sl.ti[i]], sd.e0, sd.e1, sl.xf[i]) : 0.45 + rnd() * 0.4)
+            : Infinity;
+        if (st === 5) A.hAt[i] = A.mAt[i];
       }
-      // Surplus grains from the old page: consumed, then returned to the loop.
-      // Everything past M that was already idling simply stays where it is.
-      for (let p = M; p < NP; p++) {
-        if (A.st[p] !== 1) continue;
-        if (full) {
-          const w = sd.cw[A.otg[p]] || [0.05, 0.4];
-          A.tC[p] = w[0] + (w[1] - w[0]) * A.oxf[p];
-          A.tL[p] = Math.max(A.tC[p] + 0.1, sd.tw0 + 0.05 + rnd() * (sd.tw1 - sd.tw0));
-        } else {
-          A.tC[p] = 0.02 + rnd() * 0.2;
-          A.tL[p] = A.tC[p];
-        }
-        A.after[p] = 0;
-        A.u[p] = rnd();
-        A.kind[p] = rnd() < 0.25 ? 0 : 1;
-        const P = this.outlineP(A.u[p]);
-        A.uox[p] = P[0];
-        A.uoy[p] = P[1];
-        A.lagB[p] = (rnd() * 8) | 0;
-      }
+      this.slotPg = page;
 
       for (const el of oldPg ? this.copies[oldPg] : []) el.style.opacity = '0';
       const newCopies = this.copies[page] || [];
@@ -1318,38 +1382,12 @@ void main(){
       return { x: s.x1, y: s.y1, h: s.h, mode: s.mode };
     }
 
-    landP(i) {
-      const A = this.A;
-      A.ld[i] = 1;
-      if (A.after[i] === 1) {
-        A.st[i] = 1;
-        A.homeX[i] = A.nhX[i];
-        A.homeY[i] = A.nhY[i];
-        A.otg[i] = A.nTg[i];
-        A.oxf[i] = A.nXf[i];
-        A.heroG[i] = A.nHero[i];
-        // The letterform's own geometry arrives with the grain, not before it:
-        // matter in flight is still lit as the matter it currently is.
-        A.nArr[i * 2] = A.nNx[i];
-        A.nArr[i * 2 + 1] = A.nNy[i];
-        A.shArr[i] = A.nSh[i];
-        A.zArr[i] = A.nZ[i];
-      } else {
-        A.st[i] = 0;
-        // Back to the loop: no stroke to be part of, so no surface, no
-        // thickness and no crevice.
-        A.nArr[i * 2] = 0;
-        A.nArr[i * 2 + 1] = 0;
-        A.shArr[i] = 1;
-        A.zArr[i] = 0;
-      }
-      this.r.markGeom();
-    }
-
     endTr() {
       const tr = this.tr;
-      const A = this.A;
-      for (let i = 0; i < NP; i++) if (A.tC[i] < 9 && !A.ld[i]) this.landP(i);
+      // Nothing is forced to finish here any more. The caret's job ended when
+      // it left the page; the last few characters go on settling into flesh
+      // behind it, on their own clock, which is what the tail of a sentence
+      // being typed actually looks like.
       for (const p of PAGES) {
         const sec = $('pg-' + p);
         const on = p === tr.page;
@@ -1404,22 +1442,34 @@ void main(){
       };
     }
 
-    /** Re-seat grains onto a page's glyphs with no animation (used after resize).
-     *  Same handout as a transition, so the depth order buffer order carries is
-     *  the same one -- a resize must not leave the slab compositing backwards. */
+    /** Re-seat grains onto a page's glyphs with no animation, after the layout
+     *  the point clouds were cut from has moved. Same handout as a transition,
+     *  so the depth order buffer order carries is the same one -- a resize must
+     *  not leave the slab compositing backwards. */
     assignInstant(page) {
       const A = this.A;
-      const slots = this.slotsOf(page);
-      const M = Math.min(slots.length, Math.max(0, NP - 340));
-      for (let p = 0; p < M; p++) {
-        this.aimAt(p, slots[p]);
-        this.landP(p);
+      const S = this.slots[page];
+      this.slotPg = page;
+      for (let i = 0; i < NP; i++) {
+        if (i < S.n) {
+          this.manifest(i);
+          // No manifest to watch: the word was already there, it has only moved.
+          A.st[i] = 0;
+          A.hAt[i] = Infinity;
+          A.gyArr[i] = 0;
+          A.sArr[i] = A.baseS[i] * (A.heroG[i] ? T.heroS : T.restS);
+          A.aArr[i] = A.baseA[i];
+          A.rArr[i] = A.rest[i];
+          A.nArr[i * 2] = A.nhX[i];
+          A.nArr[i * 2 + 1] = A.nhY[i];
+        } else {
+          A.st[i] = 5;
+          A.hAt[i] = Infinity;
+          A.aArr[i] = 0;
+          A.sArr[i] = 0;
+        }
       }
-      for (let p = M; p < NP; p++) {
-        if (A.st[p] === 1) A.u[p] = Math.random();
-        A.after[p] = 0;
-        this.landP(p);
-      }
+      this.r.markGeom();
     }
 
     /* ------------------------------------------------------------- frame -- */
@@ -1430,28 +1480,12 @@ void main(){
       this.t += dt;
       const t = this.t;
       const A = this.A;
-      const anc = this.anc;
-      const ancT = this.ancT;
-      anc.x += (ancT.x - anc.x) * 0.07 * f;
-      anc.y += (ancT.y - anc.y) * 0.07 * f;
-      anc.w += (ancT.w - anc.w) * 0.07 * f;
-      anc.h += (ancT.h - anc.h) * 0.07 * f;
 
       const tr = this.tr;
-      const LBx = this.lbx;
-      const LBy = this.lby;
       if (tr) {
         tr.T = Math.min(1.02, tr.T + dt / tr.dur);
         tr.frames++;
         tr.acc += dt;
-        if (tr.full && tr.segs.length) {
-          // Eight lag bands trailing the caret, so grains stream rather than snap.
-          for (let b = 0; b < 8; b++) {
-            const c = this.caretPos(Math.max(0, Math.min(1, tr.T) - LAGS[b]));
-            LBx[b] = c.x;
-            LBy[b] = c.y;
-          }
-        }
         for (const r of tr.rv) {
           if (!r.done && tr.T >= r.at) {
             r.done = true;
@@ -1461,15 +1495,9 @@ void main(){
         }
       }
 
-      const big = anc.w > 110;
-      // The idle hourglass is the one decoration in the system, and the one thing
-      // that measured brighter than the name before The Contour Rule. Off means
-      // the grains still idle there, invisibly -- they are never destroyed.
-      const visCut = T.idle ? (big ? 2 : T.idleDens) : 0;
-      const ss = 0.55 + 0.45 * Math.min(1, anc.w / 180);
       const mx = this.mx;
       const my = this.my;
-      const damp = Math.pow(T.damp, f);
+      const seen = mx > -9000;
 
       // One key light for the whole field, and a camera that leans across the
       // extruded depth. Both follow the pointer: the highlight travels over the
@@ -1477,9 +1505,7 @@ void main(){
       // parallax, which is the one cue a flat sticker can never produce.
       //
       // Smoothed rather than read straight off the pointer, because a light and
-      // a camera that snap when the hand jumps read as a glitch. The camera also
-      // drifts on its own, so an idle page still has weather over it.
-      const seen = mx > -9000;
+      // a camera that snap when the hand jumps read as a glitch.
       this.parX += ((seen ? (mx / this.ccw - 0.5) * 2 : -0.4) - this.parX) * 0.05 * f;
       this.parY += ((seen ? (my / this.cch - 0.5) * 2 : -0.5) - this.parY) * 0.05 * f;
       // The key also sways on its own, so a page nobody is pointing at still has
@@ -1495,76 +1521,58 @@ void main(){
         (-0.34 + this.parY * 0.5) * T.cam + Math.cos(t * 0.23) * T.orbit * 0.6,
       );
 
-      const mdamp = Math.pow(0.8, f);
-      this.mvx *= mdamp;
-      this.mvy *= mdamp;
-      const mvx = this.mvx;
-      const mvy = this.mvy;
-      // A fast swipe disturbs a wider field than a slow one.
-      const R = T.repelR + Math.min(Math.hypot(mvx, mvy), 110) * 1.5 * (T.repelR > 0 ? 1 : 0);
-      const R2 = R * R;
-      const chip = T.mat === 'chip' ? 1 : 0;
+      // Pointer velocity in px/s, decayed rather than zeroed: the browser stops
+      // sending events the instant the hand stops, and a throw that ended on the
+      // last event should die out over a few frames rather than at one.
+      const pdec = Math.pow(0.02, dt);
+      this.pvx *= pdec;
+      this.pvy *= pdec;
+      const speed = Math.hypot(this.pvx, this.pvy);
+      // A hand moving faster than the gate tears matter loose. Below it, nothing
+      // -- see the aura, which is what a slow or parked hand does instead. Never
+      // during a transition: the caret owns the field while it is working.
+      if (seen && !tr && speed > T.minv) {
+        this.wound(mx, my, this.pvx, this.pvy, T.repelR, CLAMP((speed - T.minv) / 600, 0.15, 1));
+      }
 
+      const chip = T.mat === 'chip' ? 1 : 0;
+      const drag = Math.exp(-T.drag * dt);
       // The band's position on this page's own travel, and the falloff that
       // gives it a soft edge. Hoisted: both are the same for every grain.
-      const sw = this.sweep[this.cur] || [0, 1];
+      const sw = this.sweep[this.slotPg] || [0, 1];
       const shPos = sw[0] + ((t / T.sheenT) % 1) * (sw[1] - sw[0]);
       const shInv = 1 / (2 * T.sheenW * T.sheenW);
       // Far enough out that a hand resting anywhere near a word is felt by all
       // of it, rather than only by the grains directly under the cursor.
       const auraR = T.repelR * T.sreach;
       const auraR2 = auraR * auraR;
+      // How much larger a loose or dying grain draws its character, so a mark
+      // the size of a grain is legible as the symbol it always was.
+      const sym1 = T.ssize - 1;
 
       for (let i = 0; i < NP; i++) {
         const j = i * 2;
         let st = A.st[i];
-        let follow = false;
-        let kinematic = false;
-        if (tr && A.tC[i] < 9 && !A.ld[i]) {
-          if (tr.T >= A.tL[i]) {
-            this.landP(i);
-            st = A.st[i];
-          } else if (tr.T >= A.tC[i]) follow = true;
+        // One clock for the whole lifecycle. A page change schedules it in bulk
+        // off the caret; a wound schedules it one grain at a time. Neither the
+        // burn-out nor the gap can be interrupted, which is why they are the two
+        // states this does not reach.
+        if (st !== 4 && st !== 5 && t >= A.hAt[i]) {
+          this.die(i, 0.8);
+          st = 4;
         }
-        let tx;
-        let ty;
-        let k = T.spring;
-        let aT;
-        let sT;
-        // The two material axes: cT is surface -> chip, gT is either of those
-        // -> the character the grain is made of. The old glyph -> dot axis is
-        // gone with the dot: a settled grain is now lit geometry, and `surface`
-        // is what a soft round grain became once it had a normal.
-        let cT;
-        let gT;
-        if (follow) {
-          if (tr.full) {
-            const b = A.lagB[i];
-            tx = LBx[b] + Math.sin(t * 7 + i * 1.3) * 5;
-            ty = LBy[b] + Math.cos(t * 6.1 + i * 2.1) * 5 + (b - 3.5) * 1.4;
-            k = 0.26;
-          } else {
-            kinematic = true;
-            const p = Math.min(1, (tr.T - A.tC[i]) / Math.max(0.01, A.tL[i] - A.tC[i]));
-            const sm = p * p * (3 - 2 * p);
-            tx = A.dX[i] + (A.nhX[i] - A.dX[i]) * sm;
-            ty = A.dY[i] + (A.nhY[i] - A.dY[i]) * sm - Math.sin(p * Math.PI) * (26 + (i % 9) * 7);
-          }
-          aT = 1;
-          sT = A.baseS[i] * 1.1;
-          // In flight a grain shows what it is made of. The caret carries
-          // characters across the viewport, not anonymous specks.
-          cT = chip;
-          gT = 1;
-        } else if (st === 1) {
-          // Settled matter is never quite still, and none of what follows
-          // accumulates: every term is an offset from home or a multiplier on
-          // rest, so a word left alone for an hour is exactly where it started.
+
+        if (st === 0) {
+          /* -------------------------------------------- settled: the word -- */
+          // None of what follows accumulates: every term is an offset from home
+          // or a multiplier on rest, so a word left alone for an hour is exactly
+          // where it started. Position is assigned rather than sprung, because
+          // settled matter has no momentum -- the moment it does, it is loose.
           const ph = A.rank[i] * 6.2832;
           const hx = A.homeX[i];
           const hy = A.homeY[i];
-          tx = hx + Math.sin(t * 1.3 + ph) * T.wob;
-          ty = hy + Math.cos(t * 1.1 + ph * 2) * T.wob;
+          let px = hx + Math.sin(t * 1.3 + ph) * T.wob;
+          let py = hy + Math.cos(t * 1.1 + ph * 2) * T.wob;
           let amp = 1;
           // Flow: the contour drifts along its own stroke. The tangent is the
           // letterform's surface normal turned a quarter, and the normal is the
@@ -1574,8 +1582,8 @@ void main(){
           // whole word sliding.
           if (T.flow > 0) {
             const w = Math.sin(t * 0.8 + ph * 3) * T.flow;
-            tx += -A.nArr[j + 1] * w;
-            ty += A.nArr[j] * w;
+            px += -A.nhY[i] * w;
+            py += A.nhX[i] * w;
           }
           // Ember: two sines per grain whose periods do not divide, so grains
           // smoulder on their own phase instead of the field breathing in step.
@@ -1595,7 +1603,7 @@ void main(){
           //
           // heroS/restS still keep the sprite near its own sample grid, which is
           // The Grain Ratio Rule and is about legibility, not about brightness.
-          sT = A.baseS[i] * (A.heroG[i] ? T.heroS : T.restS);
+          let size = A.baseS[i] * (A.heroG[i] ? T.heroS : T.restS);
           // Aura: the field acknowledges a hand that has not touched it. Near
           // grains lean toward the cursor, swell and brighten -- the whole word
           // reacting to a hand near it, before anything is disturbed.
@@ -1607,70 +1615,120 @@ void main(){
               const ad = Math.sqrt(a2) || 1;
               const fa = (1 - ad / auraR) * (1 - ad / auraR) * T.aura;
               amp += fa * 0.55;
-              sT *= 1 + fa * 0.5;
-              tx += (ax / ad) * fa * 7;
-              ty += (ay / ad) * fa * 7;
+              size *= 1 + fa * 0.5;
+              px += (ax / ad) * fa * 7;
+              py += (ay / ad) * fa * 7;
             }
           }
-          aT = A.baseA[i] * amp;
-          cT = chip;
-          gT = 0;
-        } else {
-          if (A.kind[i] !== 0) {
-            // Ease through the waist, linger at the bulbs.
-            const th0 = A.u[i] * 6.2832;
-            A.u[i] = (A.u[i] + dt * A.uspd[i] * (0.55 + 1.6 * (1 - Math.abs(Math.cos(th0))))) % 1;
+          A.pos[j] = px;
+          A.pos[j + 1] = py;
+          A.nArr[j] = A.nhX[i];
+          A.nArr[j + 1] = A.nhY[i];
+          A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt * 4);
+          A.sArr[i] += (size - A.sArr[i]) * Math.min(1, dt * 8);
+          A.aArr[i] = A.baseA[i] * amp;
+          A.cArr[i] += (chip - A.cArr[i]) * Math.min(1, dt * 5);
+          A.gyArr[i] += (0 - A.gyArr[i]) * Math.min(1, dt * 6);
+        } else if (st === 1) {
+          /* ---------------------------------------------- loose: thrown -- */
+          A.vel[j] *= drag;
+          A.vel[j + 1] *= drag;
+          A.pos[j] += A.vel[j] * dt;
+          A.pos[j + 1] += A.vel[j + 1] * dt;
+          // A loose grain no longer belongs to a surface, so its normal tumbles
+          // with it: what was lit as a stroke is now lit as a solid.
+          A.rArr[i] += A.spin[i] * dt;
+          A.nArr[j] = Math.cos(A.rArr[i]) * 0.55;
+          A.nArr[j + 1] = Math.sin(A.rArr[i]) * 0.55;
+          // Loose is where a mark finally has room to be something. A symbol at
+          // grain size is a dot, and so is a cube: detached matter grows to a
+          // legible mark and pays for the area in alpha, so a wound reads as
+          // scatter rather than as the field getting brighter.
+          A.cArr[i] += (chip - A.cArr[i]) * Math.min(1, dt * 8);
+          A.gyArr[i] += (1 - A.gyArr[i]) * Math.min(1, dt * 7);
+          const sym = 1 + sym1 * Math.max(A.gyArr[i], A.cArr[i]);
+          A.sArr[i] += (A.baseS[i] * sym - A.sArr[i]) * Math.min(1, dt * 6);
+          A.aArr[i] += (A.baseA[i] / Math.sqrt(sym) - A.aArr[i]) * Math.min(1, dt * 6);
+        } else if (st === 4) {
+          /* ------------------------------- burning out: becomes a symbol -- */
+          // The grain becomes the character it was made of, flickers, and burns
+          // down to nothing where it lies. The slot it left stays open.
+          const p = Math.min(1, (t - A.hT[i]) / T.burn);
+          A.vel[j] *= drag;
+          A.vel[j + 1] *= drag;
+          A.pos[j] += A.vel[j] * dt;
+          A.pos[j + 1] += (A.vel[j + 1] - 24) * dt;
+          A.gyArr[i] += (1 - A.gyArr[i]) * Math.min(1, dt * 14);
+          A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt * 8);
+          const gk = glyphOf(i, ((t * 1000) / T.mflick + A.rank[i] * 9) | 0);
+          if (gk !== A.gArr[i]) {
+            A.gArr[i] = gk;
+            A.lead[i] = Math.max(A.lead[i], 0.8);
           }
-          const [ux, uy] = this.loopPoint(i);
-          tx = anc.x + ux * anc.w * 0.5 + Math.sin(t * 1.7 + i) * T.wob;
-          ty = anc.y + uy * anc.h * 0.5 + Math.cos(t * 1.3 + i * 0.7) * T.wob;
-          k = T.spring * 0.64; // the loop is looser than settled matter, always
-          const vis = A.rank[i] < visCut;
-          // Idle matter is unformed: no stroke to be a chip of, so it rests as
-          // the plain lit surface.
-          cT = 0;
-          gT = 0;
-          if (A.kind[i] === 0) {
-            aT = vis ? 0.8 : 0;
-            sT = A.baseS[i] * 0.62 * ss;
-          } else {
-            aT = vis ? 0.5 + 0.22 * Math.sin(t * 2 + i) : 0;
-            sT = A.baseS[i] * 0.82 * ss;
+          A.lead[i] *= Math.exp(-dt * 8);
+          // It burns down from symbol size, not from grain size -- it was
+          // already a character, and a shrink-then-swell would read as a pop.
+          const dsym = 1 + sym1 * A.gyArr[i];
+          A.sArr[i] = A.baseS[i] * dsym * (1 + T.msize * 0.4 * Math.sin(p * Math.PI)) * (1 - p * p);
+          A.aArr[i] = (A.baseA[i] / Math.sqrt(dsym)) * (1 - p * p) * (1 + A.lead[i] * 1.4);
+          if (p >= 1) {
+            A.st[i] = 5;
+            A.sArr[i] = 0;
+            A.aArr[i] = 0;
+            A.gyArr[i] = 0;
+            // Whichever is later: the gap this grain owes, or the moment the
+            // caret is due over the slot it is going to take. This is the only
+            // place the two schedules meet, and it is what makes it impossible
+            // to manifest into a slot that has not finished being vacated.
+            A.hAt[i] = Math.max(t + T.mgap + A.rank[i] * 0.2, A.mAt[i]);
+          }
+        } else if (st === 5) {
+          /* ----------------------------------------------------- gone -- */
+          if (t >= A.hAt[i]) this.manifest(i);
+        } else {
+          /* ------------------------------ manifesting: typed back in -- */
+          // A character appears at the site, licks through a few glyphs, and
+          // settles into flesh. The word closes as tissue, not as rain.
+          const p = Math.min(1, (t - A.hT[i]) / T.mgrow);
+          const km = Math.min(1, dt * 14);
+          A.pos[j] += (A.homeX[i] - A.pos[j]) * km;
+          A.pos[j + 1] += (A.homeY[i] - A.pos[j + 1]) * km;
+          const gk = glyphOf(i * 7 + 3, ((t * 1000) / T.mflick) | 0);
+          if (gk !== A.gArr[i] && p < 0.7) {
+            A.gArr[i] = gk;
+            A.lead[i] = 1;
+          }
+          A.lead[i] *= Math.exp(-dt * 9);
+          // Flash decoupled from swell: msize is the size envelope, mflash the
+          // brightness one. Coupling them through the decode leader is what
+          // piled hot oversized sprites into an achromatic smear at the climax.
+          const msym = 1 + sym1 * A.gyArr[i];
+          A.sArr[i] =
+            A.baseS[i] *
+            Math.min(1, p * 4) *
+            msym *
+            (1 + (T.msize - 1) * Math.sin(p * Math.PI) * (0.35 + 0.65 * A.rank[i]));
+          A.aArr[i] +=
+            ((A.baseA[i] * (1 + A.lead[i] * T.mflash)) / Math.sqrt(msym) - A.aArr[i]) *
+            Math.min(1, dt * 16);
+          A.gyArr[i] = p < 0.55 ? 1 : Math.max(0, A.gyArr[i] - dt * 5);
+          A.cArr[i] += (chip - A.cArr[i]) * Math.min(1, dt * 5);
+          A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt * 8);
+          A.nArr[j] += (A.nhX[i] - A.nArr[j]) * Math.min(1, dt * 6);
+          A.nArr[j + 1] += (A.nhY[i] - A.nArr[j + 1]) * Math.min(1, dt * 6);
+          if (p >= 1) {
+            A.st[i] = 0;
+            A.vel[j] = 0;
+            A.vel[j + 1] = 0;
+            A.pos[j] = A.homeX[i];
+            A.pos[j + 1] = A.homeY[i];
+            A.nArr[j] = A.nhX[i];
+            A.nArr[j + 1] = A.nhY[i];
+            A.sArr[i] = A.baseS[i];
+            A.gyArr[i] = 0;
+            A.rArr[i] = A.rest[i];
           }
         }
-
-        const x = A.pos[j];
-        const y = A.pos[j + 1];
-        if (kinematic) {
-          A.pos[j] = tx;
-          A.pos[j + 1] = ty;
-          A.vel[j] = 0;
-          A.vel[j + 1] = 0;
-        } else {
-          if (!tr && st === 1) {
-            // Settled glyphs scatter away from the pointer and brighten.
-            const dx = x - mx;
-            const dy = y - my;
-            const d2 = dx * dx + dy * dy;
-            if (d2 < R2 && d2 > 0.01) {
-              const dist = Math.sqrt(d2);
-              const g = (1 - dist / R) * (1 - dist / R);
-              A.vel[j] += (dx / dist) * g * T.repelF + mvx * g * 0.5;
-              A.vel[j + 1] += (dy / dist) * g * T.repelF + mvy * g * 0.5;
-              // Touch reveals that the grain was a symbol all along.
-              gT = Math.max(gT, g);
-              sT *= 1 + g * 0.9;
-            }
-          }
-          A.vel[j] = (A.vel[j] + (tx - x) * k * f) * damp;
-          A.vel[j + 1] = (A.vel[j + 1] + (ty - y) * k * f) * damp;
-          A.pos[j] = x + A.vel[j] * f;
-          A.pos[j + 1] = y + A.vel[j + 1] * f;
-        }
-        A.aArr[i] += (aT - A.aArr[i]) * 0.16 * f;
-        A.sArr[i] += (sT - A.sArr[i]) * 0.16 * f;
-        A.cArr[i] += (cT - A.cArr[i]) * 0.14 * f;
-        A.gyArr[i] += (gT - A.gyArr[i]) * 0.14 * f;
       }
 
       this.r.draw();

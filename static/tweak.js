@@ -124,12 +124,40 @@
         { k: 'bright', t: 'range', d: 1.25, min: 0.2, max: 2.5, step: 0.05, fx: 'uniform', l: 'Brightness' },
         { k: 'glint', t: 'range', d: 0.5, min: 0, max: 2, step: 0.05, fx: 'uniform', l: 'Chip edge glint' },
         { k: 'blend', t: 'select', d: 'soft', fx: 'blend', l: 'Blend', opts: [{ v: 'add', l: 'Additive (v3)' }, { v: 'soft', l: 'Solid (lit)' }] },
-        { k: 'spring', t: 'range', d: 0.14, min: 0.03, max: 0.5, step: 0.01, l: 'Spring' },
-        { k: 'damp', t: 'range', d: 0.82, min: 0.5, max: 0.97, step: 0.01, l: 'Damping' },
-        { k: 'repelR', t: 'range', d: 76, min: 0, max: 320, step: 4, u: 'px', l: 'Pointer radius' },
-        { k: 'repelF', t: 'range', d: 2.6, min: 0, max: 9, step: 0.1, l: 'Pointer force' },
-        { k: 'idle', t: 'bool', d: true, l: 'Idle hourglass' },
-        { k: 'idleDens', t: 'range', d: 0.085, min: 0, max: 1, step: 0.005, l: 'Hourglass · corner density' },
+        { k: 'ssize', t: 'range', d: 3, min: 1, max: 8, step: 0.1, u: '×', l: 'Symbol size' },
+      ],
+    },
+    {
+      g: 'Throw',
+      note:
+        'What a moving hand does. A parked hand does nothing at all — that is the aura’s job, in ' +
+        'Life. Below the gate speed nothing tears; above it, matter is dragged along with the hand ' +
+        'rather than popped away from it, and the radial push only clears it out of the way.',
+      c: [
+        { k: 'repelR', t: 'range', d: 76, min: 0, max: 320, step: 4, u: 'px', l: 'Wound radius' },
+        { k: 'minv', t: 'range', d: 900, min: 100, max: 3000, step: 50, u: 'px/s', l: 'Gate speed' },
+        { k: 'carry', t: 'range', d: 0.7, min: 0, max: 2, step: 0.02, l: 'Carry' },
+        { k: 'push', t: 'range', d: 300, min: 0, max: 1200, step: 10, l: 'Radial push' },
+        { k: 'drag', t: 'range', d: 2.1, min: 0.2, max: 8, step: 0.1, l: 'Air drag' },
+        { k: 'spin', t: 'range', d: 1.2, min: 0, max: 4, step: 0.05, l: 'Tumble' },
+      ],
+    },
+    {
+      g: 'Return',
+      note:
+        'The return, in two destructive halves: a loose grain burns out as a code character, and ' +
+        'the slot it left re-types in place. The same buffer entry both times — the matter is ' +
+        'conserved in the machine even while the story on screen is destruction. A page change ' +
+        'runs this same lifecycle, scheduled in bulk off the caret instead of one grain at a time.',
+      c: [
+        { k: 'delay', t: 'range', d: 1.37, min: 0.1, max: 4, step: 0.05, u: 's', l: 'Loose for' },
+        { k: 'seam', t: 'range', d: 0.5, min: 0, max: 1, step: 0.02, l: 'Knit from the rim' },
+        { k: 'burn', t: 'range', d: 0.45, min: 0.1, max: 1.5, step: 0.05, u: 's', l: 'Burn-out' },
+        { k: 'mgap', t: 'range', d: 0.12, min: 0, max: 1.5, step: 0.02, u: 's', l: 'Gone for' },
+        { k: 'mgrow', t: 'range', d: 0.55, min: 0.1, max: 2, step: 0.05, u: 's', l: 'Manifest' },
+        { k: 'msize', t: 'range', d: 2.2, min: 1, max: 6, step: 0.1, u: '×', l: 'Manifest · swell' },
+        { k: 'mflash', t: 'range', d: 1.2, min: 0, max: 4, step: 0.05, l: 'Manifest · flash' },
+        { k: 'mflick', t: 'range', d: 80, min: 20, max: 400, step: 5, u: 'ms', l: 'Glyph cycle' },
       ],
     },
     {
@@ -212,6 +240,8 @@
         { k: 'sigilW', t: 'range', d: 28, min: 10, max: 72, step: 1, u: 'px', css: '--sigil-w', fx: 'resample', l: 'Corner mark · width' },
         { k: 'sigilH', t: 'range', d: 40, min: 14, max: 100, step: 1, u: 'px', css: '--sigil-h', fx: 'resample', l: 'Corner mark · height' },
         { k: 'sigilLg', t: 'range', d: 1, min: 0.2, max: 2.4, step: 0.02, css: '--sigil-lg', fx: 'resample', l: 'Home mark · scale' },
+        { k: 'sigilA', t: 'range', d: 28, min: 0, max: 100, step: 1, u: '%', css: '--sigil-a', l: 'Corner mark · fill' },
+        { k: 'sigilLgA', t: 'range', d: 16, min: 0, max: 100, step: 1, u: '%', css: '--sigil-lg-a', l: 'Home mark · fill' },
         { k: 'rWindow', t: 'range', d: 10, min: 0, max: 32, step: 1, u: 'px', css: '--r-window', l: 'Radius · window' },
         { k: 'rPill', t: 'range', d: 20, min: 0, max: 32, step: 1, u: 'px', css: '--r-pill', l: 'Radius · tags' },
         { k: 'hud', t: 'bool', d: true, attr: 'hud', l: 'HUD strip' },

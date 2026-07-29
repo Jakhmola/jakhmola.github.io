@@ -29,6 +29,8 @@
   --quiet-a: 55%;
   --dimmer-a: 40%;
   --line-a: 14%;
+  --sigil-a: 28%;
+  --sigil-lg-a: 16%;
   --ink85: color-mix(in srgb, var(--ink) var(--ink-a), transparent);
   --ink65: color-mix(in srgb, var(--ink) var(--link-a), transparent);
   --dim: color-mix(in srgb, var(--ink) var(--dim-a), transparent);
@@ -194,8 +196,17 @@ ul {
   content: '';
   position: absolute;
   inset: 2px 0;
-  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  background: color-mix(in srgb, var(--accent) var(--sigil-a), transparent);
   clip-path: polygon(0 0, 100% 0, 50% 48%, 100% 100%, 0 100%, 50% 52%);
+}
+
+/* Alpha is not scale-invariant. The corner mark is 28x40 and reads as a
+ * wordmark companion at 28%; the home mark is 180x260, and the same fill there
+ * is a slab of signal cyan roughly a third the area of the name — which is the
+ * thing The Name Reads First Rule exists to stop. It gets its own knob rather
+ * than a fraction of the other one, because they are two design decisions. */
+.sigil.lg::before {
+  background: color-mix(in srgb, var(--accent) var(--sigil-lg-a), transparent);
 }
 
 .sigil::after {
@@ -606,12 +617,13 @@ h2.mt {
   z-index: 40;
 }
 
-/* Sigils become bare anchor boxes: the particle loop draws the hourglass. */
-.matter .sigil::before,
-.matter .sigil::after {
-  display: none;
-}
-
+/* The hourglass is drawn by CSS in both readings.
+ *
+ * It used to be traced by whichever grains were idle between pages, and that
+ * state no longer exists: matter now burns out and re-manifests in place rather
+ * than being parked anywhere. Which is the better trade twice over — the
+ * particle hourglass was the one element that measured brighter than the name,
+ * and the mark was already authored here for the calm reading. */
 .matter #hg-sigil {
   display: block;
   position: fixed;

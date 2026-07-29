@@ -29,8 +29,8 @@ const n = 4000;
 function run(mx, my) {
   M.mx = mx;
   M.my = my;
-  M.mvx = 0;
-  M.mvy = 0;
+  M.pvx = 0;
+  M.pvy = 0;
   let aLo = Infinity;
   let aHi = -Infinity;
   let drift = 0;
@@ -41,7 +41,7 @@ function run(mx, my) {
   for (let step = 0; step < 720; step++) {
     M.tick(1 / 60);
     for (let i = 0; i < n; i++) {
-      if (A.st[i] !== 1) continue;
+      if (A.st[i] !== 0) continue;
       if (step === 0) settled++;
       if (A.aArr[i] < aLo) aLo = A.aArr[i];
       if (A.aArr[i] > aHi) aHi = A.aArr[i];
@@ -60,8 +60,48 @@ function run(mx, my) {
   };
 }
 
+// A hand sweeping through the name fast enough to tear it, then the field left
+// alone to knit itself shut. What must come back is exactly what went loose:
+// the same buffer entries, the same count, back on the same slots.
+function throwAndHeal() {
+  const tg = M.tg[M.cur][0];
+  const before = [];
+  for (let i = 0; i < n; i++) before.push(A.st[i] === 0 ? A.homeX[i] : NaN);
+  let peak = 0;
+  // Six frames of a 3000px/s sweep across the word, then nobody there at all.
+  for (let k = 0; k < 6; k++) {
+    M.mx = tg.l + ((tg.r - tg.l) * k) / 5;
+    M.my = tg.cy;
+    M.pvx = 3000;
+    M.pvy = 0;
+    M.tick(1 / 60);
+    let loose = 0;
+    for (let i = 0; i < n; i++) if (A.st[i] !== 0) loose++;
+    if (loose > peak) peak = loose;
+  }
+  M.mx = -9999;
+  M.my = -9999;
+  M.pvx = 0;
+  M.pvy = 0;
+  // Long enough for loose -> burn-out -> gone -> manifest at any sane setting.
+  let quiet = -1;
+  for (let k = 0; k < 1200 && quiet < 0; k++) {
+    M.tick(1 / 60);
+    let busy = 0;
+    for (let i = 0; i < n; i++) if (A.st[i] !== 0) busy++;
+    if (!busy) quiet = k;
+  }
+  let moved = 0;
+  for (let i = 0; i < n; i++) {
+    if (!Number.isNaN(before[i]) && A.homeX[i] !== before[i]) moved++;
+  }
+  return { tore: peak, healedAfterFrames: quiet, slotsChanged: moved };
+}
+
 // The name's own middle, and a point 200px above it -- outside the pointer's
 // own radius, inside the aura's.
 const tg = M.tg[M.cur][0];
 const cx = (tg.l + tg.r) / 2;
-return { untouched: run(-9999, -9999), aura: run(cx, tg.cy - 200) };
+const untouched = run(-9999, -9999);
+const aura = run(cx, tg.cy - 200);
+return { untouched, aura, wound: throwAndHeal() };
