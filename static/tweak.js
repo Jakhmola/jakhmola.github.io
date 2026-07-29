@@ -125,6 +125,25 @@
         { k: 'glint', t: 'range', d: 0.5, min: 0, max: 2, step: 0.05, fx: 'uniform', l: 'Chip edge glint' },
         { k: 'blend', t: 'select', d: 'soft', fx: 'blend', l: 'Blend', opts: [{ v: 'add', l: 'Additive (v3)' }, { v: 'soft', l: 'Solid (lit)' }] },
         { k: 'ssize', t: 'range', d: 3, min: 1, max: 8, step: 0.1, u: '×', l: 'Symbol size' },
+        { k: 'rsym', t: 'bool', d: true, l: 'Characters at rest' },
+        { k: 'rdens', t: 'range', d: 0.46, min: 0, max: 1, step: 0.02, l: 'Characters at rest · share' },
+        { k: 'rsize', t: 'range', d: 1, min: 0.5, max: 3, step: 0.05, u: '×', l: 'Characters at rest · size' },
+      ],
+    },
+    {
+      g: 'Reach',
+      note:
+        'A share of the word reaches for a hand near it without letting go, and the filament ' +
+        'between the two ends is drawn by the grain’s own sprite rather than by extra geometry. ' +
+        'That sprite is square, so a long diagonal capsule costs its length squared in fragments — ' +
+        'this group, not the particle budget, is where the GPU cost of the system actually lives.',
+      c: [
+        { k: 'str', t: 'range', d: 0.55, min: 0, max: 1, step: 0.02, fx: 'uniform', l: 'Reach' },
+        { k: 'svel', t: 'range', d: 0.44, min: 0, max: 2, step: 0.02, l: 'Flight streak' },
+        { k: 'stail', t: 'range', d: 0.4, min: 0, max: 1, step: 0.02, fx: 'uniform', l: 'Filament opacity' },
+        { k: 'ftaper', t: 'range', d: 0.25, min: 0.02, max: 1, step: 0.01, fx: 'uniform', l: 'Filament taper' },
+        { k: 'ergy', t: 'range', d: 1.25, min: 0, max: 2, step: 0.05, fx: 'uniform', l: 'Strain glow' },
+        { k: 'salign', t: 'bool', d: true, fx: 'uniform', l: 'Reaching marks aim at the hand' },
       ],
     },
     {
@@ -203,7 +222,7 @@
         { k: 'sheenT', t: 'range', d: 4, min: 1.5, max: 16, step: 0.5, u: 's', l: 'Sheen · period' },
         { k: 'sheenW', t: 'range', d: 90, min: 20, max: 400, step: 5, u: 'px', l: 'Sheen · band width' },
         { k: 'aura', t: 'range', d: 0.58, min: 0, max: 1.5, step: 0.02, l: 'Cursor aura' },
-        { k: 'sreach', t: 'range', d: 5, min: 0.5, max: 8, step: 0.1, u: '×', l: 'Cursor aura · reach' },
+        { k: 'sreach', t: 'range', d: 2.2, min: 0.5, max: 8, step: 0.1, u: '×', l: 'Cursor aura · reach' },
         { k: 'sway', t: 'range', d: 0.5, min: 0, max: 1.5, step: 0.02, l: 'Light sway' },
       ],
     },

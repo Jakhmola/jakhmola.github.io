@@ -43,6 +43,11 @@
   const QS = new URLSearchParams(location.hash.slice(1));
   const DBG = QS.has('dbg');
   const T0 = +(QS.get('t0') || 0);
+  // `#mx=300&my=320` parks a hand there for the whole capture. Half of what the
+  // material does is a response to a pointer, and a headless browser has none --
+  // so without this every screenshot of the aura and the reach is a screenshot
+  // of the field with nobody in the room.
+  const MX = QS.has('mx') ? +QS.get('mx') : null;
 
   const PAGES = ['home', 'exp', 'proj', 'contact'];
   const LABELS = { home: 'INDEX', exp: 'EXPERIENCE', proj: 'PROJECTS', contact: 'CONTACT' };
@@ -339,6 +344,10 @@ void main(){
     // slot every navigation -- which the lab, with one page, never had to do.
     const attrs = [
       ['aPos', arrays.pos, 2, 'frame'],
+      // The far end of this grain's own capsule: where it is reaching, or the
+      // point it is streaking away from. Equal to aPos whenever nothing is
+      // pulling, and then the sprite degenerates to the plain form exactly.
+      ['aHome', arrays.anch, 2, 'frame'],
       ['aSize', arrays.sArr, 1, 'frame'],
       ['aAlpha', arrays.aArr, 1, 'frame'],
       ['aChip', arrays.cArr, 1, 'frame'],
@@ -355,15 +364,6 @@ void main(){
       const loc = gl.getAttribLocation(prog, name);
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
-      // Nothing pulls a grain off its anchor yet, so the stretch capsule reads
-      // the position buffer as both ends and degenerates to zero length. One
-      // buffer, two pointers -- the split costs an upload, and buys nothing
-      // until the stretch task gives the two ends different values.
-      if (name === 'aPos') {
-        const hl = gl.getAttribLocation(prog, 'aHome');
-        gl.enableVertexAttribArray(hl);
-        gl.vertexAttribPointer(hl, 2, gl.FLOAT, false, 0, 0);
-      }
       return { buf, data, size, when };
     });
     const perFrame = attrs.filter((a) => a.when === 'frame');
@@ -392,19 +392,18 @@ void main(){
     gl.uniform1i(U('uAtlas'), 0);
     gl.uniform2f(u.uCam, 0, 0);
     gl.uniform3f(u.uLight, -0.55, -0.6, 0.55);
-    // The stretch rig is compiled in but inert: nothing reaches for the pointer
-    // until the stretch task, and until then these are the values that make the
-    // capsule collapse onto the grain. ponytail: they become knobs when they
-    // can do something, not before.
-    gl.uniform1f(u.uStretch, 0);
-    gl.uniform1f(u.uTail, 0);
-    gl.uniform1f(u.uAlign, 0);
-    gl.uniform1f(u.uTaper, 0.25);
-    gl.uniform1f(u.uErg, 0);
 
     // Everything the panel can move in one call, so a change is one re-push
     // rather than a per-knob code path.
     const sync = () => {
+      // uStretch is a master switch, not an amount: how far a grain reaches is
+      // carried in the distance between its two ends, so this only says whether
+      // the fragment stage should draw a capsule between them at all.
+      gl.uniform1f(u.uStretch, T.str > 0 ? 1 : 0);
+      gl.uniform1f(u.uTail, T.stail);
+      gl.uniform1f(u.uAlign, T.salign ? 1 : 0);
+      gl.uniform1f(u.uTaper, T.ftaper);
+      gl.uniform1f(u.uErg, T.ergy);
       gl.uniform1f(u.uSize, T.grain);
       gl.uniform1f(u.uBright, T.bright);
       gl.uniform1f(u.uPersp, T.persp);
@@ -533,6 +532,10 @@ void main(){
      *  same URL lands on the same frame on any machine. A capture aims here and
      *  never at a wall-clock instant. Nothing at all without `#t0=`. */
     scrub() {
+      if (MX !== null) {
+        this.mx = MX;
+        this.my = +QS.get('my');
+      }
       for (let k = 0; k < T0 * 60; k++) this.tick(1 / 60);
     }
 
@@ -740,6 +743,7 @@ void main(){
     initGL() {
       const A = (this.A = {
         pos: new Float32Array(MAXN * 2),
+        anch: new Float32Array(MAXN * 2),
         vel: new Float32Array(MAXN * 2),
         // 0 settled · 1 loose · 4 burning out · 5 gone · 6 manifesting.
         // Numbered, not named, because the debug census prints them as a row and
@@ -1062,6 +1066,8 @@ void main(){
         A.lead[i] = 0;
         A.vel[i * 2] = 0;
         A.vel[i * 2 + 1] = 0;
+        A.anch[i * 2] = A.pos[i * 2];
+        A.anch[i * 2 + 1] = A.pos[i * 2 + 1];
       }
       this.r.markGeom();
     }
@@ -1107,6 +1113,8 @@ void main(){
       A.baseS[i] = S.size[i] * A.sj[i];
       A.pos[j] = S.x[i];
       A.pos[j + 1] = S.y[i];
+      A.anch[j] = S.x[i];
+      A.anch[j + 1] = S.y[i];
       A.vel[j] = 0;
       A.vel[j + 1] = 0;
       // It arrives as a character and settles into flesh, so it starts at full
@@ -1462,6 +1470,8 @@ void main(){
           A.rArr[i] = A.rest[i];
           A.nArr[i * 2] = A.nhX[i];
           A.nArr[i * 2 + 1] = A.nhY[i];
+          A.anch[i * 2] = A.pos[i * 2];
+          A.anch[i * 2 + 1] = A.pos[i * 2 + 1];
         } else {
           A.st[i] = 5;
           A.hAt[i] = Infinity;
@@ -1549,6 +1559,11 @@ void main(){
       // How much larger a loose or dying grain draws its character, so a mark
       // the size of a grain is legible as the symbol it always was.
       const sym1 = T.ssize - 1;
+      // Whether anything is allowed to pull a grain off its own centre at all.
+      // At zero the two ends of every capsule coincide and the shader's stretch
+      // path degenerates to the plain form, so it costs a compare, not a branch
+      // in the fragment stage.
+      const stretch = T.str > 0;
 
       for (let i = 0; i < NP; i++) {
         const j = i * 2;
@@ -1604,31 +1619,63 @@ void main(){
           // heroS/restS still keep the sprite near its own sample grid, which is
           // The Grain Ratio Rule and is about legibility, not about brightness.
           let size = A.baseS[i] * (A.heroG[i] ? T.heroS : T.restS);
-          // Aura: the field acknowledges a hand that has not touched it. Near
-          // grains lean toward the cursor, swell and brighten -- the whole word
-          // reacting to a hand near it, before anything is disturbed.
-          if (T.aura > 0 && seen && !tr) {
+          // Aura and reach: the field acknowledges a hand it has not been
+          // struck by. Near grains lean toward it, swell and brighten; a share
+          // of them reach for it without letting go of the word, and the
+          // filament between the two ends is drawn by the sprite itself.
+          let reach = 0;
+          let rdx = 0;
+          let rdy = 0;
+          if (seen && !tr && (T.aura > 0 || stretch)) {
             const ax = mx - hx;
             const ay = my - hy;
             const a2 = ax * ax + ay * ay;
             if (a2 < auraR2) {
               const ad = Math.sqrt(a2) || 1;
-              const fa = (1 - ad / auraR) * (1 - ad / auraR) * T.aura;
-              amp += fa * 0.55;
-              size *= 1 + fa * 0.5;
-              px += (ax / ad) * fa * 7;
-              py += (ay / ad) * fa * 7;
+              const fq = 1 - ad / auraR;
+              if (T.aura > 0) {
+                const fa = fq * fq * T.aura;
+                amp += fa * 0.55;
+                size *= 1 + fa * 0.5;
+                px += (ax / ad) * fa * 7;
+                py += (ay / ad) * fa * 7;
+              }
+              // The share and the reach are one knob. `fq*fq*0.5` peaks at a
+              // third of the radius out and falls to nothing at both ends, so
+              // the longest capsule in the field is ~23px at the defaults --
+              // which is the whole fill-rate budget of this effect, since a
+              // square sprite pays for a diagonal segment by its length squared.
+              if (stretch && A.rank[i] < T.str) {
+                reach = fq * fq * 0.5 * T.str;
+                rdx = ax;
+                rdy = ay;
+              }
             }
           }
+          // Symbols where the story needs them. A reaching grain turns into its
+          // character, because a stretched disc reads as goo rather than as
+          // code; and the settled word holds a fixed share of characters on its
+          // own, which is what makes it legible as something written.
+          const gt = reach > 0 || (T.rsym && A.rank[i] < T.rdens) ? 1 : 0;
+          A.gyArr[i] += (gt - A.gyArr[i]) * Math.min(1, dt * 6);
+          size *= 1 + (T.rsize - 1) * A.gyArr[i];
+          if (reach > 0) {
+            size *= 1 + reach * (T.ssize - 1);
+            // A reaching character aims at the hand, so its symbol is upright
+            // along the line of strain rather than lying across it.
+            if (T.salign) A.rArr[i] = Math.atan2(my - py, mx - px) + A.rest[i] * 0.35;
+          } else A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt * 4);
           A.pos[j] = px;
           A.pos[j + 1] = py;
+          A.anch[j] = px + rdx * reach;
+          A.anch[j + 1] = py + rdy * reach;
           A.nArr[j] = A.nhX[i];
           A.nArr[j + 1] = A.nhY[i];
-          A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt * 4);
           A.sArr[i] += (size - A.sArr[i]) * Math.min(1, dt * 8);
-          A.aArr[i] = A.baseA[i] * amp;
+          // Area is paid for in opacity, so a word holding characters does not
+          // read as the same word turned brighter.
+          A.aArr[i] = (A.baseA[i] * amp) / Math.sqrt(1 + (T.rsize - 1) * A.gyArr[i]);
           A.cArr[i] += (chip - A.cArr[i]) * Math.min(1, dt * 5);
-          A.gyArr[i] += (0 - A.gyArr[i]) * Math.min(1, dt * 6);
         } else if (st === 1) {
           /* ---------------------------------------------- loose: thrown -- */
           A.vel[j] *= drag;
@@ -1636,10 +1683,37 @@ void main(){
           A.pos[j] += A.vel[j] * dt;
           A.pos[j + 1] += A.vel[j + 1] * dt;
           // A loose grain no longer belongs to a surface, so its normal tumbles
-          // with it: what was lit as a stroke is now lit as a solid.
-          A.rArr[i] += A.spin[i] * dt;
+          // with it: what was lit as a stroke is now lit as a solid -- unless it
+          // is aiming at the hand, and then so is its light.
+          if (stretch && T.salign && seen) {
+            A.rArr[i] = Math.atan2(my - A.pos[j + 1], mx - A.pos[j]) + A.rest[i] * 0.35;
+          } else A.rArr[i] += A.spin[i] * dt;
           A.nArr[j] = Math.cos(A.rArr[i]) * 0.55;
           A.nArr[j + 1] = Math.sin(A.rArr[i]) * 0.55;
+          // Reach for the hand while it is near, streak with the flight when it
+          // is not: a thrown grain leaves a trail behind its own travel, which
+          // is the one cue that says how hard it was thrown.
+          let anx = A.pos[j];
+          let any = A.pos[j + 1];
+          if (stretch) {
+            const dxm = mx - A.pos[j];
+            const dym = my - A.pos[j + 1];
+            const dm2 = dxm * dxm + dym * dym;
+            if (seen && dm2 < auraR2) {
+              const fr = (1 - Math.sqrt(dm2) / auraR) * T.str;
+              anx += dxm * fr;
+              any += dym * fr;
+            } else if (T.svel > 0) {
+              const sp2 = Math.hypot(A.vel[j], A.vel[j + 1]);
+              if (sp2 > 40) {
+                const L = Math.min(70, sp2 * 0.07) * T.svel;
+                anx -= (A.vel[j] / sp2) * L;
+                any -= (A.vel[j + 1] / sp2) * L;
+              }
+            }
+          }
+          A.anch[j] = anx;
+          A.anch[j + 1] = any;
           // Loose is where a mark finally has room to be something. A symbol at
           // grain size is a dot, and so is a cube: detached matter grows to a
           // legible mark and pays for the area in alpha, so a wound reads as
@@ -1671,6 +1745,9 @@ void main(){
           const dsym = 1 + sym1 * A.gyArr[i];
           A.sArr[i] = A.baseS[i] * dsym * (1 + T.msize * 0.4 * Math.sin(p * Math.PI)) * (1 - p * p);
           A.aArr[i] = (A.baseA[i] / Math.sqrt(dsym)) * (1 - p * p) * (1 + A.lead[i] * 1.4);
+          // Nothing is holding on to it any more, so nothing is stretched.
+          A.anch[j] = A.pos[j];
+          A.anch[j + 1] = A.pos[j + 1];
           if (p >= 1) {
             A.st[i] = 5;
             A.sArr[i] = 0;
@@ -1716,12 +1793,16 @@ void main(){
           A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt * 8);
           A.nArr[j] += (A.nhX[i] - A.nArr[j]) * Math.min(1, dt * 6);
           A.nArr[j + 1] += (A.nhY[i] - A.nArr[j + 1]) * Math.min(1, dt * 6);
+          A.anch[j] = A.pos[j];
+          A.anch[j + 1] = A.pos[j + 1];
           if (p >= 1) {
             A.st[i] = 0;
             A.vel[j] = 0;
             A.vel[j + 1] = 0;
             A.pos[j] = A.homeX[i];
             A.pos[j + 1] = A.homeY[i];
+            A.anch[j] = A.homeX[i];
+            A.anch[j + 1] = A.homeY[i];
             A.nArr[j] = A.nhX[i];
             A.nArr[j + 1] = A.nhY[i];
             A.sArr[i] = A.baseS[i];
