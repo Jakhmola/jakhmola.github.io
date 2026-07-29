@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "fira code",
+        "createdAt": "2026-07-29T14:05:13.730Z",
+        "reason": "Lab symbol-font candidate, explicitly requested by user in lab-blend.html"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "ibm plex mono",
+        "createdAt": "2026-07-29T14:05:13.769Z",
+        "reason": "Lab symbol-font candidate, explicitly requested by user in lab-blend.html"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "space mono",
+        "createdAt": "2026-07-29T14:05:13.806Z",
+        "reason": "Lab symbol-font candidate, explicitly requested by user in lab-blend.html"
+      }
+    ]
+  }
+}

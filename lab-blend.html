@@ -1,0 +1,1599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Matter lab · throw grains, manifest return</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..700&family=JetBrains+Mono:wght@400;500;700&family=Fira+Code:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c0e; --ink:#e8edef; --accent:#67e8f9; --panel:#0a0d10;
+    --dim:rgba(232,237,239,.62); --quiet:rgba(232,237,239,.55);
+    --dimmer:rgba(232,237,239,.4); --line:rgba(232,237,239,.14);
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+    --ease:cubic-bezier(.16,1,.3,1);
+    --panel-w:326px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  /* crosshair departs from the site's "pointer is the system arrow" doctrine
+     on purpose: this is a lab instrument, and the doctrine resumes at graduation. */
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 12px/1.4 var(--mono);
+    overflow:hidden;cursor:crosshair}
+  body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:radial-gradient(ellipse 120% 90% at 42% 48%,transparent 34%,rgba(0,0,0,.6) 100%)}
+  canvas{position:fixed;inset:0;width:100%;height:100%;z-index:1}
+
+  /* The measuring DOM. Every role the real site builds from matter, at the size
+     it actually computes to at 1440px, so legibility is judged across the ramp
+     rather than on the one heading that was always going to work. */
+  #src{position:fixed;left:5vw;top:50%;translate:0 -50%;z-index:0;visibility:hidden;
+    width:min(1180px,72vw)}
+  #src .mt{display:block;white-space:nowrap;width:fit-content;
+    font-family:'Archivo',system-ui,sans-serif;font-weight:700}
+  #src .r{margin:0 0 40px}
+  .t-display  {font-size:120px;font-stretch:expanded;line-height:1.02;letter-spacing:-.02em}
+  .t-statement{font-size:84px;font-stretch:expanded;line-height:1.05;letter-spacing:-.03em}
+  .t-headline {font-size:54px;line-height:1.1;letter-spacing:-.02em}
+  .t-figure   {font-family:'JetBrains Mono',monospace;font-size:42px;line-height:1}
+  .t-title    {font-family:'JetBrains Mono',monospace;font-size:27px;line-height:1.2}
+
+  /* The role labels are real DOM text on top of the field, since they are the
+     one thing here that must stay readable no matter what the matter is doing. */
+  #labels{position:fixed;inset:0;z-index:3;pointer-events:none}
+  #labels div{font:400 10px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+    color:var(--quiet);position:absolute;white-space:nowrap}
+
+  /* Vessel walls: DOM hairlines moved by transform only, under the vignette. */
+  #fx{position:fixed;inset:0;z-index:2;pointer-events:none}
+  #fx .vessel{position:absolute;border:1px solid var(--accent);opacity:0}
+
+  #hud{position:fixed;z-index:4;left:0;top:0;display:flex;gap:14px;align-items:center;
+    padding:14px 3.2vw;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--quiet);pointer-events:none}
+  #hud b{color:var(--accent);font-weight:500}
+  #hud i{font-style:normal;font-variant-numeric:tabular-nums}
+  /* The wound gate made visible: the velocity readout lights when a gesture
+     actually cleared the threshold, so a silent slow sweep explains itself. */
+  #hud i.hot{color:var(--accent)}
+  #hud button{pointer-events:auto;font:400 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--quiet);background:none;border:1px solid var(--line);padding:4px 8px;cursor:pointer}
+  #hud button:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+  #hud button[aria-pressed=true]{color:var(--accent);border-color:var(--accent)}
+  #hud button:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
+  #hud button kbd{border:none;padding:0;color:inherit}
+
+  #panel{position:fixed;z-index:4;right:0;top:0;bottom:0;width:var(--panel-w);display:flex;
+    flex-direction:column;background:color-mix(in srgb,var(--panel) 94%,transparent);
+    border-left:1px solid var(--line);backdrop-filter:blur(14px);overflow-y:auto;
+    overscroll-behavior:contain}
+  #panel h1{margin:0;padding:10px 14px;border-bottom:1px solid var(--line);
+    font:700 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+    position:sticky;top:0;z-index:1;background:var(--panel);
+    display:flex;align-items:center;justify-content:space-between}
+  #panel h1 .btns{display:flex;gap:6px}
+  #panel h1 button{font:400 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--quiet);background:none;border:1px solid var(--line);padding:4px 8px;cursor:pointer}
+  #panel h1 button:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+  #panel h1 button:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
+  .grp{border-bottom:1px solid var(--line);padding:11px 14px}
+  .grp>p{margin:0 0 9px;font-size:11px;line-height:1.55;color:var(--quiet)}
+  .grp>p b{color:var(--dim);font-weight:400}
+  .grp>p.note{margin:9px 0 0}
+  .grp>p.sub{margin:12px 0 0;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--quiet)}
+  /* Section names outrank the controls they govern, and pin under the title
+     while their own section scrolls, so mid-panel you always know where you are. */
+  .grp>h2{position:sticky;top:40px;z-index:1;margin:-11px -14px 9px;padding:11px 14px 8px;
+    background:var(--panel);font:700 10.5px/1 var(--mono);letter-spacing:.18em;
+    text-transform:uppercase;color:var(--dim)}
+  .grp>h2 kbd{float:right;color:var(--quiet);text-transform:none;
+    border:1px solid var(--line);padding:0 4px}
+
+  .opts{display:flex;flex-direction:column;gap:6px}
+  .opts button{display:block;width:100%;text-align:left;padding:8px 10px;cursor:pointer;
+    border:1px solid var(--line);background:none;color:var(--quiet);
+    font:400 11px/1.35 var(--mono);transition:color .18s var(--ease),border-color .18s var(--ease)}
+  .opts button:hover:not(:disabled){border-color:color-mix(in srgb,var(--accent) 55%,transparent);color:var(--ink)}
+  .opts button:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
+  .opts button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+  .opts button i{display:block;font-style:normal;font-size:10px;line-height:1.5;
+    color:var(--dim);margin-top:4px}
+  .opts button[aria-pressed=true] i{color:var(--dim)}
+  .opts kbd{float:right;color:var(--quiet);font:inherit}
+
+  .row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:6px 0}
+  .row label{font-size:11px;color:var(--dim)}
+  .row output{font-size:11px;color:var(--accent);text-align:right;font-variant-numeric:tabular-nums}
+  .row input[type=range]{grid-column:1/-1;width:100%;height:16px;margin:0;
+    accent-color:var(--accent);background:none;cursor:pointer}
+  .row input:focus-visible{outline:1px solid var(--accent);outline-offset:2px}
+  .row.bool{align-items:center}
+  .row input[type=checkbox]{width:15px;height:15px;margin:0;accent-color:var(--accent);cursor:pointer}
+  .row i{grid-column:1/-1;font-style:normal;font-size:10px;line-height:1.5;color:var(--dim)}
+
+  #keys{margin:auto 0 0;padding:11px 14px;border-top:1px solid var(--line);
+    font-size:10px;line-height:1.8;color:var(--quiet)}
+  #keys kbd{color:var(--quiet);border:1px solid var(--line);padding:1px 4px}
+
+  /* Reduced motion stills the chrome only. The sim is exempt on purpose: this
+     is an internal rig whose subject IS motion; the site itself serves the calm
+     reading under this preference. */
+  @media (prefers-reduced-motion:reduce){.opts button{transition:none}}
+</style>
+</head>
+<body>
+
+<div id="src">
+  <div class="r"><span class="mt t-display">SHUBHAM</span><span class="mt t-display">JAKHMOLA</span></div>
+  <div class="r"><span class="mt t-statement">something real.</span></div>
+  <div class="r"><span class="mt t-headline">Experience &nbsp; Projects</span></div>
+  <div class="r"><span class="mt t-figure">2021 &nbsp; 2023 &nbsp; 2025</span></div>
+  <div class="r"><span class="mt t-title">portfolio-website &nbsp; rag-eval &nbsp; tensor-notes</span></div>
+</div>
+
+<canvas id="cv"></canvas>
+<div id="fx"></div>
+<div id="labels"></div>
+
+<div id="hud">
+  <span>matter lab</span><span>·</span>
+  <b id="hud-mat">cubes</b><span>·</span>
+  <b id="hud-cont">off</b>
+  <span>·</span><i id="hud-n">—</i>
+  <span>·</span><i id="hud-fps">—</i>
+  <span>·</span><i id="hud-vel">—</i>
+  <button type="button" id="hud-demo" aria-pressed="false">auto-sweep <kbd>d</kbd></button>
+</div>
+
+<aside id="panel">
+  <h1>matter lab <span class="btns"><button type="button" id="i-copy">copy state</button><button
+    type="button" id="i-reset">reset</button></span></h1>
+
+  <div class="grp">
+    <p><b>Locked in:</b> the unit is a thrown grain; a loose grain burns out as a
+      code character and its slot re-manifests in place. Blend is alpha: the
+      word is judged as a lit slab. A grain that stretches or detaches stays the
+      symbol it is made of; it never smears into a disc. Everything below
+      refines this one behaviour.</p>
+  </div>
+
+  <div class="grp opts" id="mats">
+    <h2>Material</h2>
+    <p>What a settled grain is drawn as. This is the main legibility trade.</p>
+    <button type="button" data-v="0"><kbd>1</kbd>Cubes
+      <i>Every grain is a small lit cube. Dimensional and rich, but below ~56px type the cubes and the letterform compete for the same pixels.</i></button>
+    <button type="button" data-v="1"><kbd>2</kbd>Surface
+      <i>Grains stay small and are shaded by the letterform's own surface, so the word reads as one extruded solid. The most legible option at every size.</i></button>
+    <button type="button" data-v="2"><kbd>3</kbd>Surface · cubes when loose
+      <i>Solid surface while the word is intact; a grain becomes a cube only while it flies. Legible at rest, dimensional in motion.</i></button>
+    <button type="button" data-v="3"><kbd>4</kbd>Symbols
+      <i>The word never condenses: every grain stays the code character it is made of, settled or loose. The premise at full strength; judge its legibility here.</i></button>
+  </div>
+
+  <div class="grp">
+    <h2>Matter</h2>
+    <p>How the text is sampled into grains. The first two re-seed the field.</p>
+    <div class="row"><label for="i-gridk">Density</label><output id="o-gridk"></output>
+      <input id="i-gridk" type="range" min="10" max="80" step="1">
+      <i>Grain spacing, derived from each heading's own font size. Higher packs more grains into the same stroke, at every size on the ramp.</i></div>
+    <div class="row"><label for="i-fill">Interior fill</label><output id="o-fill"></output>
+      <input id="i-fill" type="range" min="0.05" max="1" step="0.02">
+      <i>Share of inside-the-stroke samples kept. The contour is always kept; this is only the word's weight.</i></div>
+    <div class="row"><label for="i-grain">Grain size</label><output id="o-grain"></output>
+      <input id="i-grain" type="range" min="0.4" max="4" step="0.05">
+      <i>Drawn size of every grain. Bigger closes gaps but blurs the letterform.</i></div>
+    <div class="row"><label for="i-bright">Brightness</label><output id="o-bright"></output>
+      <input id="i-bright" type="range" min="0.2" max="2.2" step="0.05">
+      <i>Overall intensity of the whole field.</i></div>
+  </div>
+
+  <div class="grp">
+    <h2>Symbols</h2>
+    <p>The premise: the text is made of code. These decide where that shows.</p>
+    <div class="row bool"><label for="i-reveal">Symbols while loose</label>
+      <input id="i-reveal" type="checkbox">
+      <i>A grain knocked out of the word becomes the character it is made of, instead of a dot.</i></div>
+    <div class="row"><label for="i-ssize">Loose symbol size</label><output id="o-ssize"></output>
+      <input id="i-ssize" type="range" min="1" max="6" step="0.1">
+      <i>How much a loose grain grows so its character is readable. It pays for the area in opacity, so a wound reads as scatter, not as extra light.</i></div>
+    <div class="row bool"><label for="i-rsym">Symbols in the settled word</label>
+      <input id="i-rsym" type="checkbox">
+      <i>Off: the settled word is pure material (cubes or surface), nothing mixed in. On: a share of settled grains stay code characters at grain size. This is the legibility experiment.</i></div>
+    <div class="row"><label for="i-rdens">Settled symbol share</label><output id="o-rdens"></output>
+      <input id="i-rdens" type="range" min="0" max="1" step="0.02">
+      <i>Fraction of settled grains drawn as characters while the toggle above is on. Higher = more code texture, thinner word.</i></div>
+    <div class="row"><label for="i-rsize">Settled symbol scale</label><output id="o-rsize"></output>
+      <input id="i-rsize" type="range" min="1" max="3" step="0.1">
+      <i>Extra size for characters sitting in the settled word. Pays for the area in opacity; past ~2× neighbouring characters start to overlap.</i></div>
+    <p>Symbol face: one atlas feeds every character on screen, settled or loose.</p>
+    <div class="opts" id="sfonts">
+      <button type="button" data-v="0">JetBrains Mono
+        <i>The site's own mono. Squarish and engineered; matches the HUD and labels.</i></button>
+      <button type="button" data-v="1">Fira Code
+        <i>Rounder code face with distinctive dollar and bracket forms.</i></button>
+      <button type="button" data-v="2">IBM Plex Mono
+        <i>Sharper terminals and higher stroke contrast, crisper at small sizes.</i></button>
+      <button type="button" data-v="3">Space Mono
+        <i>Quirky display mono. The most character, the least neutral.</i></button>
+    </div>
+    <div class="row bool"><label for="i-sbold">Bold symbols</label>
+      <input id="i-sbold" type="checkbox">
+      <i>700 fills more of each cell and survives distance; 400 reads finer and airier.</i></div>
+    <div class="row"><label for="i-gscale">Glyph size in cell</label><output id="o-gscale"></output>
+      <input id="i-gscale" type="range" min="0.5" max="1.1" step="0.05">
+      <i>How much of its atlas cell each character fills: the stroke weight of every symbol everywhere.</i></div>
+  </div>
+
+  <div class="grp">
+    <h2>Stretch</h2>
+    <p>How matter near the hand reaches for it. A reaching grain stays the
+      symbol it is made of (the stretched-disc streak is gone), and its reach
+      hangs behind it as a thin tapered tail.</p>
+    <div class="row"><label for="i-str">Reach</label><output id="o-str"></output>
+      <input id="i-str" type="range" min="0" max="1" step="0.02">
+      <i>Share of near grains that lean out toward the cursor, and how far they lean. 0 turns reaching off entirely.</i></div>
+    <div class="row"><label for="i-sreach">Reach radius</label><output id="o-sreach"></output>
+      <input id="i-sreach" type="range" min="0.5" max="5" step="0.1">
+      <i>How far around the cursor the reach and the idle aura are felt, in wound radii.</i></div>
+    <div class="row"><label for="i-stail">Tail</label><output id="o-stail"></output>
+      <input id="i-stail" type="range" min="0" max="1" step="0.05">
+      <i>Opacity of the filament a reaching or flying symbol trails. 0 = clean symbols, no tails.</i></div>
+    <div class="row"><label for="i-ftaper">Tail taper</label><output id="o-ftaper"></output>
+      <input id="i-ftaper" type="range" min="0.02" max="0.9" step="0.01">
+      <i>Width of the tail at its far end, relative to the symbol. Lower = sharper point.</i></div>
+    <div class="row"><label for="i-svel">Flight streak</label><output id="o-svel"></output>
+      <input id="i-svel" type="range" min="0" max="1" step="0.02">
+      <i>A fast-flying grain trails the same tail along its own path. 0 = no motion streaks.</i></div>
+    <div class="row bool"><label for="i-salign">Symbols aim at the hand</label>
+      <input id="i-salign" type="checkbox">
+      <i>Loose and reaching symbols rotate to face the cursor. Off, they tumble on their own spin.</i></div>
+  </div>
+
+  <div class="grp">
+    <h2>Wound</h2>
+    <p>What a moving cursor does. A parked cursor does nothing: the throw is the
+      cursor's actual velocity, in px/s.</p>
+    <div class="row"><label for="i-r">Radius</label><output id="o-r"></output>
+      <input id="i-r" type="range" min="16" max="220" step="2">
+      <i>How far from the cursor's path grains are struck.</i></div>
+    <div class="row"><label for="i-carry">Carry</label><output id="o-carry"></output>
+      <input id="i-carry" type="range" min="0" max="1.4" step="0.02">
+      <i>How much of the cursor's velocity a struck grain inherits. This is the thrown feel.</i></div>
+    <div class="row"><label for="i-push">Push</label><output id="o-push"></output>
+      <input id="i-push" type="range" min="0" max="700" step="10">
+      <i>Extra shove straight away from the cursor, clearing its path.</i></div>
+    <div class="row"><label for="i-minv">Speed threshold</label><output id="o-minv"></output>
+      <input id="i-minv" type="range" min="0" max="900" step="10">
+      <i>Cursor speed below which nothing is disturbed: slow, deliberate pointing leaves the word whole. The HUD readout shows each gesture against this gate.</i></div>
+    <div class="row"><label for="i-drag">Air drag</label><output id="o-drag"></output>
+      <input id="i-drag" type="range" min="0.2" max="6" step="0.05">
+      <i>Resistance on flying grains. Higher stops the scatter sooner.</i></div>
+    <div class="row"><label for="i-g">Gravity</label><output id="o-g"></output>
+      <input id="i-g" type="range" min="0" max="2000" step="20">
+      <i>Downward pull on loose grains: what makes matter fall and pool.</i></div>
+    <div class="row"><label for="i-spin">Tumble</label><output id="o-spin"></output>
+      <input id="i-spin" type="range" min="0" max="3" step="0.05">
+      <i>Rotation a thrown grain picks up. Visible on cubes and on symbols that are not aiming at the hand.</i></div>
+  </div>
+
+  <div class="grp">
+    <h2>Manifest</h2>
+    <p>The return, in two destructive halves: a loose grain burns out as a
+      flickering character where it lies, and its home slot later re-types
+      itself. Nothing in this section moves until matter is loose: sweep fast,
+      press <kbd>space</kbd>, or run auto-sweep.</p>
+    <p class="sub">Burn-out · dying in place</p>
+    <div class="row"><label for="i-delay">Loose life</label><output id="o-delay"></output>
+      <input id="i-delay" type="range" min="0.05" max="2" step="0.01">
+      <i>How long a grain stays loose before it burns out.</i></div>
+    <div class="row"><label for="i-burn">Burn-out</label><output id="o-burn"></output>
+      <input id="i-burn" type="range" min="0.1" max="1.5" step="0.05">
+      <i>How long the burn-out takes: character, flicker, gone.</i></div>
+    <div class="row"><label for="i-mflick">Flicker rate</label><output id="o-mflick"></output>
+      <input id="i-mflick" type="range" min="30" max="220" step="10">
+      <i>How fast dying and manifesting characters cycle through glyphs.</i></div>
+    <p class="sub">Regrow · the slot re-types</p>
+    <div class="row"><label for="i-mgap">Regrow lag</label><output id="o-mgap"></output>
+      <input id="i-mgap" type="range" min="0" max="1.5" step="0.05">
+      <i>Dead time between a grain's burn-out and its slot re-typing. The visible length of the wound.</i></div>
+    <div class="row"><label for="i-mgrow">Manifest time</label><output id="o-mgrow"></output>
+      <input id="i-mgrow" type="range" min="0.15" max="1.5" step="0.05">
+      <i>How long a manifesting character takes to settle into the word.</i></div>
+    <div class="row"><label for="i-msize">Manifest size</label><output id="o-msize"></output>
+      <input id="i-msize" type="range" min="1" max="10" step="0.5">
+      <i>How large the manifesting character swells before settling.</i></div>
+    <div class="row"><label for="i-mflash">Manifest flash</label><output id="o-mflash"></output>
+      <input id="i-mflash" type="range" min="0" max="2" step="0.05">
+      <i>Brightness kick the moment a character appears.</i></div>
+    <p class="sub">Memory · what healing leaves behind</p>
+    <div class="row"><label for="i-flux">Flux</label><output id="o-flux"></output>
+      <input id="i-flux" type="range" min="0" max="1" step="0.02">
+      <i>Chance a returning grain takes the nearest empty slot instead of its own, so material redistributes instead of rewinding.</i></div>
+    <div class="row"><label for="i-seam">Seam</label><output id="o-seam"></output>
+      <input id="i-seam" type="range" min="0" max="1" step="0.02">
+      <i>Orders regrowth from the wound's rim inward, so the hole knits shut instead of refilling at random.</i></div>
+    <div class="row"><label for="i-scar">Scar</label><output id="o-scar"></output>
+      <input id="i-scar" type="range" min="0" max="1.5" step="0.02">
+      <i>Healed grains come back brighter, leaving a record of where the cursor has been.</i></div>
+    <div class="row"><label for="i-scarlife">Scar life</label><output id="o-scarlife"></output>
+      <input id="i-scarlife" type="range" min="0.5" max="30" step="0.5">
+      <i>How long a scar takes to fade back to normal.</i></div>
+  </div>
+
+  <div class="grp opts" id="conts">
+    <h2>Vessel <kbd>b</kbd></h2>
+    <p>Invisible walls that keep thrown matter near the text; a wall shows
+      itself only where it is struck. Pooling at the floor needs gravity.</p>
+    <button type="button" data-v="0">Off
+      <i>Matter flies as far as the throw carries it.</i></button>
+    <button type="button" data-v="1">Word
+      <i>Each heading keeps its own jar; its matter pools under its own baseline.</i></button>
+    <button type="button" data-v="2">Field
+      <i>One jar around the whole composition; everything pools at the common floor.</i></button>
+    <div class="row"><label for="i-cpad">Wall distance</label><output id="o-cpad"></output>
+      <input id="i-cpad" type="range" min="20" max="260" step="5">
+      <i>How far outside the text the walls sit.</i></div>
+    <div class="row"><label for="i-cbounce">Bounce</label><output id="o-cbounce"></output>
+      <input id="i-cbounce" type="range" min="0" max="0.95" step="0.05">
+      <i>Energy kept on a wall hit. 0 is a dead thud, 0.95 is rubber.</i></div>
+    <div class="row"><label for="i-cpile">Pool depth</label><output id="o-cpile"></output>
+      <input id="i-cpile" type="range" min="2" max="40" step="1">
+      <i>Depth of the sand-pile grains settle into at the floor.</i></div>
+    <div class="row"><label for="i-cglow">Impact flash</label><output id="o-cglow"></output>
+      <input id="i-cglow" type="range" min="0" max="2" step="0.05">
+      <i>How brightly a grain flashes when it strikes a wall.</i></div>
+  </div>
+
+  <div class="grp">
+    <h2>Idle</h2>
+    <p>Life in the resting word. Every layer is an offset from home, so nothing
+      accumulates or drifts.</p>
+    <div class="row"><label for="i-isheen">Sheen</label><output id="o-isheen"></output>
+      <input id="i-isheen" type="range" min="0" max="1" step="0.02">
+      <i>A band of light that sweeps across the whole composition.</i></div>
+    <div class="row"><label for="i-isheenT">Sheen period</label><output id="o-isheenT"></output>
+      <input id="i-isheenT" type="range" min="2" max="16" step="0.5">
+      <i>Seconds per sweep.</i></div>
+    <div class="row"><label for="i-iember">Ember</label><output id="o-iember"></output>
+      <input id="i-iember" type="range" min="0" max="1" step="0.02">
+      <i>Single grains smoulder brighter and dimmer on their own rhythm.</i></div>
+    <div class="row"><label for="i-iflow">Flow</label><output id="o-iflow"></output>
+      <input id="i-iflow" type="range" min="0" max="6" step="0.1">
+      <i>The outline drifts along its own stroke, like a slow current; the interior barely moves.</i></div>
+    <div class="row"><label for="i-iaura">Aura</label><output id="o-iaura"></output>
+      <input id="i-iaura" type="range" min="0" max="1" step="0.02">
+      <i>Grains near the cursor swell and lean toward it before it ever strikes.</i></div>
+    <div class="row"><label for="i-iwob">Wobble</label><output id="o-iwob"></output>
+      <input id="i-iwob" type="range" min="0" max="3" step="0.1">
+      <i>Tiny per-grain jitter. The word breathes.</i></div>
+    <div class="row"><label for="i-ilight">Light sway</label><output id="o-ilight"></output>
+      <input id="i-ilight" type="range" min="0" max="1" step="0.02">
+      <i>The key light sways on its own, so an untouched word still has moving shade.</i></div>
+  </div>
+
+  <div class="grp">
+    <h2>Form &amp; light</h2>
+    <p>What makes the word a lit slab instead of a flat sticker. The rest of the
+      light rig is locked at its measured values.</p>
+    <div class="row"><label for="i-ext">Extrusion</label><output id="o-ext"></output>
+      <input id="i-ext" type="range" min="0" max="90" step="1">
+      <i>How far the stroke's depth is pushed toward the viewer.</i></div>
+    <div class="row"><label for="i-cam">Camera lean</label><output id="o-cam"></output>
+      <input id="i-cam" type="range" min="0" max="1.2" step="0.02">
+      <i>How much the camera leans with the pointer, separating spine from contour by parallax.</i></div>
+    <div class="row"><label for="i-rim">Rim light</label><output id="o-rim"></output>
+      <input id="i-rim" type="range" min="0" max="2" step="0.05">
+      <i>Light caught on the letterform's contour: the cheapest cue that it has thickness.</i></div>
+    <div class="row"><label for="i-spec">Specular</label><output id="o-spec"></output>
+      <input id="i-spec" type="range" min="0" max="2" step="0.05">
+      <i>Highlight strength on grain surfaces.</i></div>
+    <div class="row"><label for="i-amb">Ambient</label><output id="o-amb"></output>
+      <input id="i-amb" type="range" min="0" max="0.8" step="0.01">
+      <i>Floor light on faces turned away from the key.</i></div>
+    <div class="row"><label for="i-track">Light follows pointer</label><output id="o-track"></output>
+      <input id="i-track" type="range" min="0" max="1" step="0.02">
+      <i>How much the key light travels with the cursor across the field.</i></div>
+    <div class="row"><label for="i-ergy">Strain glow</label><output id="o-ergy"></output>
+      <input id="i-ergy" type="range" min="0" max="2" step="0.05">
+      <i>Stretched and flying matter holds its own light: energy put in reads as luminosity.</i></div>
+  </div>
+
+  <p id="keys">
+    <kbd>1</kbd>–<kbd>4</kbd> material · <kbd>b</kbd> vessel · <kbd>space</kbd> shatter<br>
+    <kbd>d</kbd> auto-sweep · <kbd>r</kbd> reseed<br>
+    park the cursor by a word, then sweep through it: slowly, then fast
+  </p>
+</aside>
+
+<script>
+(() => {
+'use strict';
+
+/* ------------------------------------------------------------------ state -- */
+
+const P = {
+  mat: 0, cont: 0,
+  // Locked decisions, sliderless but hash-settable: alpha blend and the
+  // measured light rig. ponytail: re-add sliders only if a decision reopens.
+  blend: 1, lz: 0.55, shin: 22, bump: 1.35, orbit: 0.14, persp: 0.34,
+  rimp: 3.2, ao: 0.45, chit: 140, cfric: 4,
+  gridk: 36, fill: 0.69, grain: 1.75, bright: 1.25,
+  reveal: 1, ssize: 3, rsym: 1, rdens: 0.46, rsize: 1,
+  sfont: 0, sbold: 1, gscale: 1,
+  str: 0.82, sreach: 5, svel: 0.44, salign: 1, stail: 0.4, ftaper: 0.25,
+  r: 76, carry: 0.7, push: 300, minv: 900, drag: 2.1, g: 0, spin: 1.2,
+  delay: 1.37, burn: 1, mgap: 0.75, mgrow: 0.7, msize: 4, mflash: 1.5, mflick: 80,
+  flux: 0, seam: 0.5, scar: 0, scarlife: 8,
+  cpad: 90, cbounce: 0.5, cpile: 12, cglow: 0.8,
+  isheen: 0.4, isheenT: 4, iember: 0.56, iflow: 4, iaura: 0.58, iwob: 0.8, ilight: 0.5,
+  ext: 18, cam: 0.58, rim: 0.85, spec: 1, amb: 0.3, track: 0.44, ergy: 1.25,
+  demo: 0,
+};
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// The defaults above are the measured set; DEF is what reset restores and what
+// the hash writer diffs against. Hash in, hash out: enums are clamped to their
+// range here, sliders to their input's min/max at wiring time, and every
+// non-default key is written back on input -- the URL is the tuned state, which
+// is the lab's actual deliverable.
+const DEF = Object.assign({}, P);
+const ENUM = {mat: 3, cont: 2, reveal: 1, salign: 1, rsym: 1, sfont: 3, sbold: 1, demo: 1};
+for (const [k, v] of new URLSearchParams(location.hash.slice(1))) {
+  if (!(k in P)) continue;
+  const n = +v;
+  if (!Number.isFinite(n)) continue;
+  P[k] = k in ENUM ? clamp(Math.round(n), 0, ENUM[k]) : n;
+}
+const MAXN = 34000;
+const ACCENT = [0.404, 0.910, 0.976];
+
+/* ---------------------------------------------------------------- shaders -- */
+
+// aN is the letterform's own surface normal at this grain, taken from the
+// gradient of a blurred occupancy field at sample time. aZ is the same field's
+// value: depth into the stroke, which is real geometry, so it drives extrusion,
+// parallax, near-gain and crevice shade all at once for two floats.
+const VERT = `
+attribute vec2 aPos; attribute vec2 aHome; attribute float aSize; attribute float aAlpha;
+attribute float aChip; attribute float aGlyph; attribute float aRot;
+attribute float aZ; attribute float aShade; attribute vec2 aN; attribute float aGly;
+uniform vec2 uRes; uniform float uDpr; uniform float uSize;
+uniform float uPersp; uniform vec2 uCam; uniform float uExt;
+uniform float uBright; uniform float uBump; uniform float uAo;
+uniform vec3 uLight; uniform float uAmb; uniform float uSpec; uniform float uShin;
+uniform float uRim; uniform float uRimP; uniform float uStretch;
+uniform float uFace;
+varying float vA; varying float vG; varying float vC; varying float vR;
+varying float vS; varying float vLit; varying float vSpc; varying float vGly;
+varying float vE; varying float vW; varying vec2 vDir; varying float vPs;
+varying vec3 vFace; varying float vTspec;
+void main(){
+  // aShade is depth into the stroke, 0 at the contour and 1 at the spine.
+  // aZ is that same depth already scaled by the type size it came from, because
+  // a 27px row and a 120px name cannot be extruded by the same number of pixels
+  // without the small one separating into two ghosts of itself.
+  float near = 1.0 + aShade * uPersp;
+  vA = aAlpha * uBright;
+  vG = aGlyph; vC = aChip; vR = aRot; vGly = aGly;
+  // Crevice shade is the same field read the other way: the contour sits back.
+  vS = mix(1.0 - uAo, 1.0, aShade);
+
+  // Surface shading, computed once per grain per frame in the vertex stage --
+  // 1/40th the work of doing it per fragment, and the normal is constant across
+  // a 3px sprite anyway.
+  vec2 n2 = aN * uBump;
+  float nz = sqrt(max(0.04, 1.0 - min(0.96, dot(n2, n2))));
+  vec3 N = normalize(vec3(n2, nz));
+  vec3 L = normalize(uLight);
+  // Rim on the steep normals only. A contour that catches light while the spine
+  // stays matte is the cheapest honest signal that a form has thickness.
+  float rim = pow(1.0 - nz, uRimP) * uRim;
+  vLit = uAmb + (1.0 - uAmb) * max(0.0, dot(N, L)) + rim;
+  vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
+  vSpc = pow(max(0.0, dot(N, H)), uShin) * uSpec;
+
+  // The chip's three faces are lit here, once per grain. The silhouette
+  // rotates per fragment by aRot, so the face normals rotate with it -- a
+  // tumbling cube catches and loses the light instead of wearing three
+  // painted-on tones.
+  float fc = cos(aRot), fs = sin(aRot);
+  mat2 FR = mat2(fc, -fs, fs, fc);
+  vec3 Nt = vec3(FR * vec2(0.0, -0.55), 0.84);
+  vec3 Nl = vec3(FR * vec2(-0.80, 0.28), 0.53);
+  vec3 Nr = vec3(FR * vec2(0.80, 0.28), 0.53);
+  vec3 lit = uAmb + (1.0 - uAmb) *
+    max(vec3(0.0), vec3(dot(Nt, L), dot(Nl, L), dot(Nr, L)));
+  vFace = mix(vec3(1.0), lit, uFace);
+  vTspec = pow(max(0.0, dot(Nt, H)), uShin) * uSpec;
+
+  // A strand is not extra geometry. The grain's own sprite is grown to span the
+  // gap back to the point behind it on its cord, and the fragment stage draws a
+  // tapered capsule inside it. Consecutive grains overlap into one smooth tube,
+  // which is the difference between a cord and a hair.
+  // ponytail: the sprite is square, so a long diagonal segment costs len^2
+  //   fragments. Segment reach bounds it; instanced quads if it ever binds.
+  float basePx = max(1.0, aSize * uSize * near);
+  // The anchor is the far end of this grain's own capsule; it stays on the
+  // grain when nothing pulls it, and the sprite degenerates to the plain form.
+  vec2 hd = (aHome - aPos) * uStretch;
+  float len = length(hd);
+  float sizePx = basePx + len;
+  vE = len / sizePx;
+  vW = basePx / sizePx;
+  vDir = len > 0.001 ? -hd / len : vec2(1.0, 0.0);
+
+  gl_PointSize = clamp(sizePx * uDpr, 1.0, 300.0);
+  vPs = gl_PointSize;
+  // The camera leans across the extruded depth. Spine and contour separate by
+  // parallax, which is the one cue a flat sticker can never produce.
+  vec2 p = aPos + hd * 0.5 + uCam * (aZ * uExt);
+  gl_Position = vec4(p.x / uRes.x * 2.0 - 1.0, 1.0 - p.y / uRes.y * 2.0, 0.0, 1.0);
+}`;
+
+const FRAG = `
+precision mediump float;
+uniform vec3 uColor; uniform sampler2D uAtlas;
+uniform float uOpaque; uniform float uFace; uniform float uGlint;
+uniform float uErg;
+uniform highp float uStretch;  // shared with the vertex stage, so precision must match
+uniform float uTaper; uniform float uAlign; uniform float uTail;
+varying float vA; varying float vG; varying float vC; varying float vR;
+varying float vS; varying float vLit; varying float vSpc; varying float vGly;
+varying float vE; varying float vW; varying vec2 vDir; varying float vPs;
+varying vec3 vFace; varying float vTspec;
+
+const float S = 0.866;
+
+void main(){
+  vec2 q = gl_PointCoord * 2.0 - 1.0;
+  float aa = 3.0 / max(vPs, 3.0);
+
+  // Under stretch the sprite spans grain -> reach point, and the grain's own
+  // form rides at its end of that span instead of dissolving into it. bq is
+  // the head-local frame every form below is drawn in; with no elongation it
+  // degenerates to q exactly.
+  vec2 bq = mix(q, (q - vDir * vE) / max(vW, 0.001), uStretch);
+
+  /* ---- chip: an isometric cube cut from the sprite, three lit faces -------- */
+  float caa = max(aa, 2.5 / max(vPs * vW, 2.5));
+  float cr = cos(vR), sr = sin(vR);
+  vec2 p = vec2(bq.x * cr - bq.y * sr, bq.x * sr + bq.y * cr);
+  float a = p.x / S;
+  float top = 1.0 - smoothstep(1.0 - caa, 1.0 + caa, abs(a) + abs(p.y + 0.5) * 2.0);
+  float ty = -0.5 * abs(a);
+  float band = (1.0 - smoothstep(1.0 - caa, 1.0 + caa, abs(a)))
+             * smoothstep(ty - caa, ty + caa, p.y)
+             * (1.0 - smoothstep(1.0 + ty - caa, 1.0 + ty + caa, p.y));
+  float rl = smoothstep(-caa, caa, p.x);
+  float edge = (1.0 - smoothstep(0.0, max(0.10, caa * 1.5), abs(p.x))) * band * uGlint;
+  float chipCov = clamp(top + band, 0.0, 1.0);
+  float chipLum = top * (vFace.x + vTspec) + band * mix(vFace.y, vFace.z, rl) + edge;
+
+  /* ---- surface: a soft round grain lit by the letterform's own normal ------ */
+  float d = length(bq);
+  float surfCov = 1.0 - smoothstep(0.55, 1.0, d);
+  float surfLum = vLit + vSpc * (1.0 - smoothstep(0.0, 0.8, d));
+
+  /* ---- glyph: what the grain reveals it was made of, while it is loose ----- */
+  // With alignment on, the character rotates to vR (which the CPU aims at the
+  // cursor) and shrinks enough that no rotated corner reads a neighbour's cell.
+  float gr = vR * uAlign;
+  float ggc = cos(gr), ggs = sin(gr);
+  vec2 gq = vec2(bq.x*ggc - bq.y*ggs, bq.x*ggs + bq.y*ggc) * (1.0 + 0.35*uAlign);
+  float gmask = 1.0 - step(1.001, max(abs(gq.x), abs(gq.y)));
+  vec2 gpc = gq * 0.5 + 0.5;
+  vec2 bu = vec2((vG + gpc.x) / 9.0, 1.0 - gpc.y);
+  // Hard-edged, not the raw bilinear tap: the atlas fringe is what turns a
+  // scaling character into a smear.
+  float gA = smoothstep(0.34, 0.56, texture2D(uAtlas, bu).a) * gmask;
+  // Strain lights the symbol: the harder a grain reaches, the more of its
+  // own light it holds. Same doctrine as the cord's emissive floor.
+  float glyLum = 0.55 + vLit * 0.6 + uErg * vE * 0.5;
+
+  /* ---- cord: one segment of a filament, tapered toward the root ----------- */
+  float sa = clamp(dot(q, vDir), -vE, vE);
+  float dseg = length(q - vDir * sa);
+  float tt = vE > 0.001 ? (sa + vE) / (2.0 * vE) : 1.0;
+  float rad = vW * mix(uTaper, 0.78, tt * tt);
+  float tetCov = 1.0 - smoothstep(rad - aa, rad + aa, dseg);
+  // Cross-section read per fragment from the capsule's own radius, so the
+  // tail lights as a cylinder instead of a flat ribbon.
+  float acr = clamp(dseg / max(rad, 0.001), 0.0, 1.0);
+  float cyl = 1.0 - acr * acr;
+  float tetLum = vLit * (0.42 + 0.58 * cyl) + vSpc * cyl * cyl * cyl;
+  // Torn matter is energy. The emissive floor scales with the capsule's own
+  // elongation, so the harder matter is stretched the more it holds its own
+  // light -- strain reads as luminosity instead of sinking into the vignette.
+  tetLum = max(tetLum, uErg * vE * (0.25 + 0.75 * cyl));
+
+  // surface -> chip -> glyph, in that order of disturbance. The grain keeps
+  // its own form -- the symbol -- at the head of the capsule, and the reach
+  // hangs behind it as a dimmer tapered filament.
+  float baseCov = mix(mix(surfCov, chipCov, vC), gA, vGly);
+  float baseLum = mix(mix(surfLum, chipLum, vC), glyLum, vGly);
+  float tailC = tetCov * uTail * smoothstep(0.03, 0.22, vE) * uStretch;
+  float headK = step(tailC * tetLum, baseCov * baseLum);
+  float cov = max(baseCov, tailC);
+  float lum = mix(tetLum, baseLum, headK);
+
+  float A = cov * vS;
+  if (A * vA < 0.012) discard;
+
+  // uOpaque 0 -> emissive: brightness lives in rgb, coverage in alpha.
+  // uOpaque 1 -> solid: alpha carries coverage so grains occlude, and the
+  // shading has to live in rgb, which is the only way a dark side stays dark.
+  vec3 rgb = uColor * lum;
+  float outA = mix(A * vA * 0.92, A * 0.97, uOpaque);
+  vec3 outC = mix(rgb, rgb * clamp(vA, 0.0, 1.4), uOpaque);
+  gl_FragColor = vec4(outC, outA);
+}`;
+
+/* ------------------------------------------------------------------ atlas -- */
+
+// 128px cells rather than 64: a decode carrier at display size draws the glyph
+// at ~120px, and a 64px cell magnified is exactly the mush being fixed.
+const CHARS = [...'01>${}*;'];
+// Candidate symbol faces. Every stack falls back to ui-monospace, so an
+// unloaded face degrades to a legible system mono rather than to tofu.
+const FONTS = [
+  ['JetBrains Mono', '"JetBrains Mono", ui-monospace, monospace'],
+  ['Fira Code', '"Fira Code", ui-monospace, monospace'],
+  ['IBM Plex Mono', '"IBM Plex Mono", ui-monospace, monospace'],
+  ['Space Mono', '"Space Mono", ui-monospace, monospace'],
+];
+function makeAtlas(){
+  const cv = Object.assign(document.createElement('canvas'), {width:1152, height:128});
+  const cx = cv.getContext('2d');
+  // Phosphor ink, though only its alpha survives: the shader tints every
+  // rendered pixel from uColor. Any opaque fill draws the identical atlas.
+  cx.fillStyle = '#e8edef'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.font = `${P.sbold ? 700 : 400} ${Math.round(116*P.gscale)}px ${FONTS[P.sfont][1]}`;
+  CHARS.forEach((g,i) => cx.fillText(g, i*128+64, 72));
+  return cv;
+}
+const loadSymFont = () => document.fonts
+  ? document.fonts.load(`${P.sbold ? 700 : 400} 116px "${FONTS[P.sfont][0]}"`).catch(()=>{})
+  : Promise.resolve();
+
+/* --------------------------------------------------------------- renderer -- */
+
+const canvas = document.getElementById('cv');
+const gl = canvas.getContext('webgl', {alpha:true, antialias:false, depth:false,
+  premultipliedAlpha:false, powerPreference:'high-performance'});
+if (!gl) { document.body.innerHTML = '<p style="padding:3.2vw">No WebGL.</p>'; return; }
+
+const mkShader = (t, s) => {
+  const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o);
+  if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o));
+  return o;
+};
+const prog = gl.createProgram();
+gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, VERT));
+gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const A = {
+  pos: new Float32Array(MAXN*2), vel: new Float32Array(MAXN*2), home: new Float32Array(MAXN*2),
+  anch: new Float32Array(MAXN*2),    // the far end of this grain's stretch capsule
+  st: new Uint8Array(MAXN), hAt: new Float32Array(MAXN), hT: new Float32Array(MAXN),
+  spin: new Float32Array(MAXN), rest: new Float32Array(MAXN), seed: new Float32Array(MAXN),
+  sArr: new Float32Array(MAXN), aArr: new Float32Array(MAXN), cArr: new Float32Array(MAXN),
+  gArr: new Float32Array(MAXN), rArr: new Float32Array(MAXN), zArr: new Float32Array(MAXN),
+  shArr: new Float32Array(MAXN), nArr: new Float32Array(MAXN*2), gyArr: new Float32Array(MAXN),
+  nHome: new Float32Array(MAXN*2),   // the surface normal this grain belongs to
+  s0: new Float32Array(MAXN), a0: new Float32Array(MAXN),  // resting size and alpha
+  fsArr: new Float32Array(MAXN),     // the type size this grain was sampled from
+  lead: new Float32Array(MAXN),      // brightness flash envelope
+  scar: new Float32Array(MAXN),
+  slot: new Int32Array(MAXN),        // which resting slot this grain currently owns
+  head: new Uint8Array(MAXN),        // which heading this grain was sampled from
+};
+
+// Slots are the letterform's vacancies, held apart from the grains that fill
+// them. Flux only works because the two are separable.
+const S = {
+  x: new Float32Array(MAXN), y: new Float32Array(MAXN),
+  nx: new Float32Array(MAXN), ny: new Float32Array(MAXN),
+  z: new Float32Array(MAXN), sh: new Float32Array(MAXN),
+  size: new Float32Array(MAXN), fs: new Float32Array(MAXN),
+  free: new Uint8Array(MAXN),
+};
+
+const attrs = [
+  ['aPos', A.pos, 2], ['aHome', A.anch, 2], ['aSize', A.sArr, 1], ['aAlpha', A.aArr, 1],
+  ['aChip', A.cArr, 1], ['aGlyph', A.gArr, 1], ['aRot', A.rArr, 1], ['aZ', A.zArr, 1],
+  ['aShade', A.shArr, 1], ['aN', A.nArr, 2], ['aGly', A.gyArr, 1],
+].map(([n, data, size]) => {
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+  const loc = gl.getAttribLocation(prog, n);
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+  return {buf, data, size, n};
+});
+// aZ and aShade are the letterform's own geometry: static until flux rewrites
+// a slot. Everything else, the stretch anchor included, uploads every frame.
+const dyn = attrs.filter(a => !/^a(Z|Shade)$/.test(a.n));
+const zAttr = attrs.find(a => a.n === 'aZ');
+const shadeAttr = attrs.find(a => a.n === 'aShade');
+
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, makeAtlas());
+for (const [k, v] of [['MIN_FILTER','LINEAR'],['MAG_FILTER','LINEAR'],['WRAP_S','CLAMP_TO_EDGE'],['WRAP_T','CLAMP_TO_EDGE']])
+  gl.texParameteri(gl.TEXTURE_2D, gl['TEXTURE_'+k], gl[v]);
+// The atlas is the one texture and stays bound, so a font change is one redraw.
+function refreshAtlas(){
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, makeAtlas());
+}
+
+const U = n => gl.getUniformLocation(prog, n);
+const u = {};
+for (const n of ['uRes','uDpr','uSize','uPersp','uCam','uExt','uBright','uBump','uAo',
+  'uLight','uAmb','uSpec','uShin','uRim','uRimP','uColor','uOpaque','uFace','uGlint',
+  'uTaper','uStretch','uAlign','uErg','uTail']) u[n] = U(n);
+gl.uniform1i(U('uAtlas'), 0);
+gl.uniform3fv(u.uColor, ACCENT);
+gl.uniform1f(u.uFace, 1);
+gl.uniform1f(u.uGlint, 0.5);
+gl.disable(gl.DEPTH_TEST);
+gl.enable(gl.BLEND);
+gl.clearColor(0, 0, 0, 0);
+
+function syncBlend(){
+  gl.blendFunc(gl.SRC_ALPHA, P.blend ? gl.ONE_MINUS_SRC_ALPHA : gl.ONE);
+  gl.uniform1f(u.uOpaque, P.blend ? 1 : 0);
+}
+function syncUniforms(){
+  gl.uniform1f(u.uSize, P.grain);
+  gl.uniform1f(u.uBright, P.bright);
+  gl.uniform1f(u.uPersp, P.persp);
+  gl.uniform1f(u.uExt, P.ext);
+  gl.uniform1f(u.uBump, P.bump);
+  gl.uniform1f(u.uAo, P.ao);
+  gl.uniform1f(u.uAmb, P.amb);
+  gl.uniform1f(u.uSpec, P.spec);
+  gl.uniform1f(u.uShin, P.shin);
+  gl.uniform1f(u.uRim, P.rim);
+  gl.uniform1f(u.uRimP, P.rimp);
+  gl.uniform1f(u.uErg, P.ergy);
+  gl.uniform1f(u.uTaper, P.ftaper);
+  gl.uniform1f(u.uStretch, P.str > 0 ? 1 : 0);
+  gl.uniform1f(u.uAlign, P.salign ? 1 : 0);
+  gl.uniform1f(u.uTail, P.stail);
+}
+
+let DPR = 1;
+function resize(){
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  canvas.width = Math.round(innerWidth * DPR);
+  canvas.height = Math.round(innerHeight * DPR);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.uniform2f(u.uRes, innerWidth, innerHeight);
+  gl.uniform1f(u.uDpr, DPR);
+}
+
+/* ----------------------------------------------------------------- sample -- */
+
+// Occupancy is blurred into a height field; its gradient is the surface normal
+// and its value is the depth into the stroke. Three box passes is enough for a
+// smooth ramp from contour to spine, and it all happens once, off the frame loop.
+function fieldOf(occ, gw, gh){
+  let a = Float32Array.from(occ), b = new Float32Array(gw*gh);
+  for (let pass = 0; pass < 3; pass++) {
+    for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) {
+      let s = 0, n = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const X = x+dx, Y = y+dy;
+        if (X < 0 || Y < 0 || X >= gw || Y >= gh) continue;
+        s += a[Y*gw+X]; n++;
+      }
+      b[y*gw+x] = s/n;
+    }
+    [a, b] = [b, a];
+  }
+  return a;
+}
+
+let NP = 0, HEADS = [];
+function seed(){
+  // The field is measured against the current viewport, never a stale one —
+  // headless captures were rendering grains a band off their row labels.
+  resize();
+  const off = document.createElement('canvas');
+  const ox = off.getContext('2d', {willReadFrequently:true});
+  const grains = [];
+  HEADS = [];
+
+  document.querySelectorAll('#src .mt').forEach(el => {
+    const hIdx = HEADS.length;
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    const fs = parseFloat(cs.fontSize);
+    // Spacing derived from the element's own size: same apparent density at 120px
+    // and at 27px, which is the whole point of the ramp being legible.
+    // Floored at 2: a 1px grid puts the sprite under a device pixel at any grain
+    // size that keeps the ratio, and the row renders as a smudge.
+    const G = clamp(Math.round(fs / P.gridk), 2, 8);
+    const pad = 6;
+    const cw = Math.ceil(r.width) + pad*2, ch = Math.ceil(r.height) + pad*2;
+    off.width = cw; off.height = ch;
+    ox.fillStyle = '#e8edef'; ox.textBaseline = 'middle'; ox.textAlign = 'left';
+    try {
+      ox.letterSpacing = cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing;
+      ox.fontStretch = parseFloat(cs.fontStretch) > 100 ? 'expanded' : 'normal';
+    } catch (e) { /* Safari < 17.4 bakes tracking into the measured box anyway */ }
+    ox.font = `${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
+    ox.fillText(el.textContent.replace(/\s+/g,' ').trim(), pad, ch/2);
+    const img = ox.getImageData(0, 0, cw, ch).data;
+
+    const gw = Math.ceil(cw/G), gh = Math.ceil(ch/G);
+    const occ = new Uint8Array(gw*gh);
+    for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) {
+      const px = x*G, py = y*G;
+      occ[y*gw+x] = (px < cw && py < ch && img[(py*cw+px)*4+3] > 120) ? 1 : 0;
+    }
+    const fld = fieldOf(occ, gw, gh);
+    const at = (x,y) => (x<0||y<0||x>=gw||y>=gh) ? 0 : fld[y*gw+x];
+
+    const loc = [];
+    for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) {
+      if (!occ[y*gw+x]) continue;
+      const c = at(x,y);
+      // Always keep the contour; thin the interior. The contour is what carries
+      // legibility and the interior is only weight.
+      const edge = !occ[y*gw+x-1] || !occ[y*gw+x+1] || !occ[(y-1)*gw+x] || !occ[(y+1)*gw+x];
+      if (!edge && Math.random() > P.fill) continue;
+      // Gradient of the height field -> the letterform's surface normal here.
+      // Negated so the normal points outward from the stroke's spine.
+      loc.push({
+        x: r.left + x*G - pad + (Math.random()-0.5)*G*0.6,
+        y: r.top  + y*G - pad + (Math.random()-0.5)*G*0.6,
+        nx: -(at(x+1,y) - at(x-1,y)) * 2.2,
+        ny: -(at(x,y+1) - at(x,y-1)) * 2.2,
+        d: Math.min(1, c * 1.6), fs, G, hi: hIdx,
+      });
+    }
+
+    for (const g of loc) grains.push(g);
+
+    // The sampled matter's own bounds. Every piece of furniture -- labels,
+    // carets, vessel walls, the decode lattice -- anchors to where the grains
+    // actually are, never to the DOM rect, so furniture and matter cannot
+    // disagree again: the rect-vs-textBaseline mapping error dies here.
+    let bx0 = r.left, by0 = r.top, bx1 = r.left + r.width, by1 = r.top + r.height;
+    if (loc.length) {
+      bx0 = by0 = 1e9; bx1 = by1 = -1e9;
+      for (const g of loc) {
+        if (g.x < bx0) bx0 = g.x; if (g.x > bx1) bx1 = g.x;
+        if (g.y < by0) by0 = g.y; if (g.y > by1) by1 = g.y;
+      }
+    }
+    HEADS.push({el, role: el.className.replace('mt t-',''), fs, G, n: loc.length,
+      bx0, by0, bx1, by1, cy: (by0 + by1)/2});
+  });
+
+  // Draw order IS depth order. Sorting contour-first once at seed buys correct
+  // back-to-front compositing for the extruded slab at zero per-frame cost,
+  // because a grain's depth is its position in the letterform and never changes.
+  grains.sort((a, b) => a.d - b.d);
+
+  NP = Math.min(grains.length, MAXN);
+  for (let i = 0; i < NP; i++) {
+    const s = grains[i], j = i*2;
+    A.home[j] = s.x; A.home[j+1] = s.y;
+    A.anch[j] = s.x; A.anch[j+1] = s.y;
+    A.pos[j]  = s.x; A.pos[j+1]  = s.y;
+    A.vel[j]  = A.vel[j+1] = 0;
+    A.nHome[j] = s.nx; A.nHome[j+1] = s.ny;
+    A.nArr[j]  = s.nx; A.nArr[j+1]  = s.ny;
+    A.st[i] = 0; A.lead[i] = 0; A.scar[i] = 0;
+    A.fsArr[i] = s.fs;
+    A.seed[i] = Math.random();
+    A.rest[i] = (Math.random()-0.5) * 0.7;
+    A.rArr[i] = A.rest[i];
+    A.spin[i] = 0;
+    // Grain size follows the heading it belongs to, so apparent density holds.
+    A.sArr[i] = A.s0[i] = s.G * (0.85 + Math.random()*0.4);
+    A.aArr[i] = A.a0[i] = 0.6 + Math.random()*0.4;
+    A.cArr[i] = P.mat === 0 ? 1 : 0;
+    A.gArr[i] = (Math.random()*8)|0;
+    A.gyArr[i] = 0;
+    // Extrusion in units of the display size, so every heading on the ramp gets
+    // the same proportional thickness rather than the same pixel count.
+    A.zArr[i] = s.d * (s.fs/120);
+    // Depth into the stroke doubles as ambient occlusion: the spine is bright,
+    // the contour sits back. It is the cheapest weight in the whole system.
+    A.shArr[i] = s.d;
+
+    A.slot[i] = i;
+    A.head[i] = s.hi;
+    S.x[i] = s.x; S.y[i] = s.y; S.nx[i] = s.nx; S.ny[i] = s.ny;
+    S.z[i] = A.zArr[i]; S.sh[i] = s.d; S.size[i] = A.s0[i]; S.fs[i] = s.fs;
+    S.free[i] = 0;
+  }
+
+  for (const a of attrs) { gl.bindBuffer(gl.ARRAY_BUFFER, a.buf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, a.data); }
+
+  document.getElementById('hud-n').textContent = NP.toLocaleString('en-US') + ' grains';
+  const box = document.getElementById('labels');
+  box.innerHTML = '';
+  let seenDisplay = false;
+  const guard = innerWidth - parseFloat(getComputedStyle(document.documentElement)
+    .getPropertyValue('--panel-w')) - 16;
+  for (const h of HEADS) {
+    if (h.role === 'display') { if (seenDisplay) continue; seenDisplay = true; }
+    const d = document.createElement('div');
+    d.textContent = `${h.role} · ${Math.round(h.fs)}px · ${h.G}px grid · ${h.n.toLocaleString('en-US')} grains`;
+    // The 27px row sits below the site's 26px matter floor by design: it is
+    // the reference under the floor, never a graduation candidate.
+    if (h.role === 'title') d.textContent += ' · below the 26px floor · reference';
+    // Beside the heading, not above it, and centred on the matter band itself.
+    d.style.top = (h.cy - 5) + 'px';
+    d.style.left = (h.bx1 + 28) + 'px';
+    box.append(d);
+    // Clamped off the panel afterwards, because the label's width is only known
+    // once it is in the document.
+    d.style.left = Math.max(12, Math.min(h.bx1 + 28, guard - d.offsetWidth)) + 'px';
+  }
+  syncFx();
+}
+
+/* --------------------------------------------------------------------- fx -- */
+
+// The vessel walls are DOM hairlines over the field, moved by transform only.
+// Rebuilt on every seed because they are cut from the headings' measured boxes.
+const fx = document.getElementById('fx');
+let BOX = [], UB = {x0:0, y0:0, x1:1, y1:1}, VELS = [], HH = new Float32Array(1);
+const DBG = location.hash.includes('dbg') ?
+  Object.assign(document.body.appendChild(document.createElement('pre')), {id: 'dbg', textContent: 'boot'}) : null;
+if (DBG) DBG.style.cssText =
+  'position:fixed;left:0;bottom:0;z-index:99;margin:0;padding:6px 8px;background:#000;' +
+  'color:#e8edef;font:12px/1.5 monospace;white-space:pre-wrap;max-width:60vw';
+// The sheen band sweeps the union box diagonally whatever the vessel is set to.
+const SHE = {cx: 0.94, cy: 0.34, pos: 0, inv: 1/(2*90*90), min: 0, max: 1};
+
+function syncFx(){
+  BOX = HEADS.map(h => ({x0: h.bx0 - P.cpad, y0: h.by0 - P.cpad,
+    x1: h.bx1 + P.cpad, y1: h.by1 + P.cpad}));
+  UB = BOX.length ? {
+    x0: Math.min(...BOX.map(b => b.x0)), y0: Math.min(...BOX.map(b => b.y0)),
+    x1: Math.max(...BOX.map(b => b.x1)), y1: Math.max(...BOX.map(b => b.y1))}
+    : {x0: 0, y0: 0, x1: innerWidth, y1: innerHeight};
+  const c1 = UB.x0*SHE.cx + UB.y0*SHE.cy, c2 = UB.x1*SHE.cx + UB.y1*SHE.cy;
+  SHE.min = Math.min(c1, c2) - 200; SHE.max = Math.max(c1, c2) + 200;
+
+  for (const el of VELS) el.remove();
+  VELS = [];
+  for (const b of (P.cont === 2 ? [UB] : P.cont === 1 ? BOX : [])) {
+    const el = document.createElement('div');
+    el.className = 'vessel';
+    el.style.left = b.x0 + 'px'; el.style.top = b.y0 + 'px';
+    el.style.width = (b.x1 - b.x0) + 'px'; el.style.height = (b.y1 - b.y0) + 'px';
+    fx.append(el);
+    VELS.push(el);
+  }
+  HH = new Float32Array(Math.max(1, VELS.length));
+
+}
+
+function hitWall(i){
+  A.lead[i] = Math.max(A.lead[i], 1);
+  HH[P.cont === 1 ? A.head[i] : 0] += 0.028;
+}
+
+function updateFx(dt){
+  if (DBG) {
+    const stc = [0,0,0,0,0,0,0];
+    for (let i = 0; i < NP; i++) stc[A.st[i]]++;
+    DBG.textContent = JSON.stringify({T: +T.toFixed(2), stc});
+  }
+  for (let v = 0; v < VELS.length; v++) {
+    HH[v] = Math.min(0.6, HH[v]) * Math.exp(-dt*2.4);
+    VELS[v].style.opacity = HH[v] < 0.004 ? 0 : Math.min(0.45, HH[v]).toFixed(3);
+  }
+}
+
+/* ---------------------------------------------------------------- physics -- */
+
+let mx = -9999, my = -9999, pvx = 0, pvy = 0, pt = 0, T = 0, speed = 0;
+addEventListener('pointermove', e => {
+  const now = performance.now();
+  const dt = clamp((now - pt)/1000, 0.008, 0.1);
+  if (mx > -9000) { pvx = (e.clientX - mx)/dt; pvy = (e.clientY - my)/dt; }
+  pt = now; mx = e.clientX; my = e.clientY;
+}, {passive:true});
+
+// 0..7 from an index and a tick: dying and manifesting grains cycle characters
+// deterministically, with no per-grain glyph state to store.
+const glyphOf = (c, t) => (Math.imul(c, 2654435761) ^ Math.imul(t, 40503)) >>> 29;
+
+function schedule(i, d, radius){
+  // Seam closes the hole from its rim inward, which is what makes it read as
+  // knitting shut rather than as every grain independently remembering to come home.
+  const rim = 1 - clamp(d/radius, 0, 1);
+  A.hAt[i] = T + P.delay * (P.seam*rim*2 + (1 - P.seam)*(0.7 + Math.random()*0.6));
+}
+
+function vacate(i){ S.free[A.slot[i]] = 1; }
+
+// Flux: a healing grain takes the nearest empty slot rather than the one it came
+// out of, so material is transported instead of rewound. Sampling beats a true
+// nearest search and is visually identical at this density.
+// ponytail: 40 samples, no fallback scan. If the field is nearly full the grain
+//   keeps its own slot, which is the correct answer anyway.
+function claimSlot(i){
+  const j = i*2, px = A.pos[j], py = A.pos[j+1];
+  let best = -1, bd = Infinity;
+  for (let k = 0; k < 40; k++) {
+    const c = (Math.random()*NP)|0;
+    if (!S.free[c]) continue;
+    const dx = S.x[c]-px, dy = S.y[c]-py, d2 = dx*dx + dy*dy;
+    if (d2 < bd) { bd = d2; best = c; }
+  }
+  if (best < 0) { const own = A.slot[i]; if (S.free[own]) { S.free[own] = 0; } return; }
+  S.free[best] = 0;
+  A.slot[i] = best;
+  A.home[j] = S.x[best]; A.home[j+1] = S.y[best];
+  A.nHome[j] = S.nx[best]; A.nHome[j+1] = S.ny[best];
+  A.shArr[i] = S.sh[best]; A.zArr[i] = S.z[best];
+  A.s0[i] = S.size[best]; A.fsArr[i] = S.fs[best];
+}
+let slotsDirty = false;
+
+// The two halves of the destructive returns. A grain that dies keeps its slot
+// open; the one that later manifests there is the same buffer entry, so the
+// matter is conserved in the machine even while the story is destruction.
+function die(i, flash){
+  const j = i*2;
+  A.st[i] = 4; A.hT[i] = T;
+  A.lead[i] = flash;
+  A.vel[j] *= 0.3; A.vel[j+1] *= 0.3;
+}
+function manifest(i, x, y){
+  const j = i*2;
+  if (P.flux > 0 && Math.random() < P.flux) { claimSlot(i); slotsDirty = true; }
+  else S.free[A.slot[i]] = 0;
+  A.st[i] = 6; A.hT[i] = T; A.lead[i] = 1;
+  A.pos[j] = x; A.pos[j+1] = y;
+  A.anch[j] = x; A.anch[j+1] = y;
+  A.gyArr[i] = 1; A.sArr[i] = 0; A.aArr[i] = 0;
+  A.gArr[i] = (Math.random()*8)|0;
+}
+
+/* ------------------------------------------------------------------ wound -- */
+
+function wound(cx, cy, vx, vy, radius, gain){
+  const R2 = radius*radius;
+  const sp = Math.hypot(vx, vy);
+  for (let i = 0; i < NP; i++) {
+    if (A.st[i] !== 0) continue;
+    const j = i*2;
+    const dx = A.pos[j]-cx, dy = A.pos[j+1]-cy;
+    const d2 = dx*dx + dy*dy;
+    if (d2 > R2) continue;
+    const d = Math.sqrt(d2) || 0.001;
+    const g = (1 - d/radius) * gain;
+    vacate(i);
+    A.st[i] = 1;
+    // Carry dominates: a grain is dragged along with the hand, not popped away
+    // from it. The radial push only clears it out of the cursor's path.
+    A.vel[j]   = vx*P.carry*g + (dx/d)*P.push*g + (Math.random()-0.5)*sp*0.18;
+    A.vel[j+1] = vy*P.carry*g + (dy/d)*P.push*g + (Math.random()-0.5)*sp*0.18;
+    A.spin[i]  = (Math.random()-0.5) * sp * 0.012 * P.spin;
+    schedule(i, d, radius);
+  }
+}
+
+/* ------------------------------------------------------------------- step -- */
+
+function step(dt){
+  T += dt;
+  if (P.demo) {
+    // A longer cycle than the sweep needs, so the recovery -- scan, caret,
+    // regrow -- has room to play out on camera before the next pass. After the
+    // sweep, one hard downward flick through the field puts the vessel on
+    // camera too: wall flashes on the way in, pooling at the floor after.
+    const tc = T % 6;
+    if (tc < 2.08) {
+      const nx = innerWidth*(0.04 + (tc/2.08)*0.84);
+      // From parked, appear without a velocity: the sentinel is not a position.
+      pvx = mx > -9000 ? (nx - mx)/dt : 0; pvy = 0;
+      mx = nx; my = innerHeight*(0.4 + Math.sin(tc*2.31)*0.14);
+    } else if (tc >= 2.3 && tc < 2.7) {
+      const ny = innerHeight*(0.16 + (tc - 2.3)*1.7);
+      pvy = mx > -9000 ? (ny - my)/dt : 0; pvx = 0;
+      mx = innerWidth*0.42; my = ny;
+    } else { mx = -9999; pvx = pvy = 0; }
+  }
+  speed = Math.hypot(pvx, pvy);
+  // Matter only moves when the cursor does. A parked cursor is inert, which is
+  // both physically right and what stops a stationary pointer boiling a hole.
+  if (mx > -9000 && speed > P.minv) {
+    wound(mx, my, pvx, pvy, P.r, clamp((speed - P.minv)/600, 0.15, 1));
+  }
+  const pdec = Math.pow(0.02, dt);   // pointer velocity decays if no new events
+  pvx *= pdec; pvy *= pdec;
+
+  const STR = P.str > 0;
+  const auraR = P.r * P.sreach, auraR2 = auraR*auraR;
+  if (P.isheen > 0) SHE.pos = SHE.min + ((T/P.isheenT) % 1) * (SHE.max - SHE.min);
+
+  const drag = Math.exp(-P.drag*dt);
+  const scarDec = Math.exp(-dt/P.scarlife);
+  for (let i = 0; i < NP; i++) {
+    const j = i*2, st = A.st[i];
+
+    if (st === 1) {
+      A.vel[j+1] += P.g*dt;
+      A.vel[j] *= drag; A.vel[j+1] *= drag;
+      A.pos[j]   += A.vel[j]*dt;
+      A.pos[j+1] += A.vel[j+1]*dt;
+      // The vessel. A wall takes the normal component and the floor eats the
+      // slide, so thrown matter pools at the base instead of leaving the jar.
+      if (P.cont) {
+        const B = P.cont === 1 ? BOX[A.head[i]] : UB;
+        const fy = B.y1 - A.seed[i]*P.cpile;
+        const vv = Math.abs(A.vel[j]) + Math.abs(A.vel[j+1]);
+        // The floor's threshold is higher than the walls': settling grains keep
+        // grazing it under gravity, and a flash per graze is flicker, not impact.
+        if (A.pos[j] < B.x0) { A.pos[j] = B.x0; if (A.vel[j] < 0) A.vel[j] *= -P.cbounce; if (vv > P.chit) hitWall(i); }
+        else if (A.pos[j] > B.x1) { A.pos[j] = B.x1; if (A.vel[j] > 0) A.vel[j] *= -P.cbounce; if (vv > P.chit) hitWall(i); }
+        if (A.pos[j+1] < B.y0) { A.pos[j+1] = B.y0; if (A.vel[j+1] < 0) A.vel[j+1] *= -P.cbounce; if (vv > P.chit) hitWall(i); }
+        else if (A.pos[j+1] > fy) {
+          A.pos[j+1] = fy;
+          if (A.vel[j+1] > 0) { if (A.vel[j+1] > P.chit*1.9) hitWall(i); A.vel[j+1] *= -P.cbounce; }
+          A.vel[j] *= Math.exp(-P.cfric*dt);
+          A.spin[i] *= Math.exp(-P.cfric*dt);
+        }
+      }
+      // A loose grain no longer belongs to a surface, so its normal tumbles
+      // with it -- unless it is aiming at the hand, and then so is its light.
+      if (STR && P.salign && mx > -9000) {
+        A.rArr[i] = Math.atan2(my - A.pos[j+1], mx - A.pos[j]) + A.rest[i]*0.35;
+      } else A.rArr[i] += A.spin[i]*dt;
+      A.nArr[j]   = Math.cos(A.rArr[i])*0.55;
+      A.nArr[j+1] = Math.sin(A.rArr[i])*0.55;
+      // Loose is where a mark finally has room to be something: a cube in the
+      // two chip materials, the symbol it was made of if that is switched on.
+      if (P.mat >= 1) A.cArr[i] += ((P.mat === 2 ? 1 : 0) - A.cArr[i]) * Math.min(1, dt*8);
+      A.gyArr[i] += (((P.reveal || P.mat === 3) ? 1 : 0) - A.gyArr[i]) * Math.min(1, dt*7);
+      // A symbol at grain size is a dot -- and so is a cube. Detached matter
+      // grows to a legible mark (character or chip, whichever form it takes)
+      // and pays for the area in alpha, so a wound does not read as the
+      // field getting brighter.
+      const sym = 1 + (P.ssize - 1) * Math.max(A.gyArr[i], A.cArr[i]);
+      A.sArr[i]  += (A.s0[i]*sym - A.sArr[i]) * Math.min(1, dt*6);
+      // Stretch: reach for the hand while it is near, streak with the flight
+      // when it is not. The anchor is the far end of this grain's own capsule.
+      let anx = A.pos[j], any_ = A.pos[j+1];
+      if (STR) {
+        const dxm = mx - A.pos[j], dym = my - A.pos[j+1];
+        const dm2 = dxm*dxm + dym*dym;
+        if (mx > -9000 && dm2 < auraR2) {
+          const f = (1 - Math.sqrt(dm2)/auraR) * P.str;
+          anx += dxm*f; any_ += dym*f;
+        } else if (P.svel > 0) {
+          const sp2 = Math.hypot(A.vel[j], A.vel[j+1]);
+          if (sp2 > 40) {
+            const L = Math.min(70, sp2*0.07) * P.svel;
+            anx -= A.vel[j]/sp2*L; any_ -= A.vel[j+1]/sp2*L;
+          }
+        }
+      }
+      A.anch[j] = anx; A.anch[j+1] = any_;
+      // The vessel flash rides the same envelope the decode leader uses.
+      if (A.lead[i] > 0.01) {
+        A.aArr[i] = A.a0[i]*(1 + A.lead[i]*P.cglow*1.5);
+        A.lead[i] *= Math.exp(-dt*6);
+      } else {
+        A.aArr[i] += (A.a0[i]/Math.sqrt(sym) - A.aArr[i]) * Math.min(1, dt*6);
+      }
+      if (T >= A.hAt[i]) die(i, 0.8);
+    } else if (st === 4) {
+      // Dying: the grain becomes the character it was made of, flickers, and
+      // burns down to nothing where it lies. The slot it left stays open.
+      const p = Math.min(1, (T - A.hT[i])/P.burn);
+      A.vel[j] *= drag; A.vel[j+1] *= drag;
+      A.pos[j] += A.vel[j]*dt; A.pos[j+1] += (A.vel[j+1] - 24)*dt;
+      A.gyArr[i] += (1 - A.gyArr[i]) * Math.min(1, dt*14);
+      A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt*8);
+      const gk = glyphOf(i, (T*1000/P.mflick + A.seed[i]*9)|0);
+      if (gk !== A.gArr[i]) { A.gArr[i] = gk; A.lead[i] = Math.max(A.lead[i], 0.8); }
+      A.lead[i] *= Math.exp(-dt*8);
+      // The dying grain burns down from symbol size, not grain size -- it was
+      // already a character while loose, and a shrink-then-swell reads as a pop.
+      const dsym = 1 + (P.ssize - 1) * A.gyArr[i];
+      A.sArr[i] = A.s0[i] * dsym * (1 + P.msize*0.4*Math.sin(p*Math.PI)) * (1 - p*p);
+      A.aArr[i] = A.a0[i]/Math.sqrt(dsym) * (1 - p*p) * (1 + A.lead[i]*1.4);
+      A.anch[j] = A.pos[j]; A.anch[j+1] = A.pos[j+1];
+      if (p >= 1) {
+        A.st[i] = 5; A.sArr[i] = 0; A.aArr[i] = 0; A.gyArr[i] = 0;
+        A.hAt[i] = T + P.mgap + A.seed[i]*0.2;
+      }
+    } else if (st === 5) {
+      // Waiting: gone. The slot regrows on the wound's own schedule.
+      if (T >= A.hAt[i]) manifest(i, A.home[j], A.home[j+1]);
+    } else if (st === 6) {
+      // Manifesting: a character appears at the site, licks through a few
+      // glyphs, and settles into flesh. The wound closes as tissue, not rain.
+      const p = Math.min(1, (T - A.hT[i])/P.mgrow);
+      const km = Math.min(1, dt*14);
+      A.pos[j] += (A.home[j] - A.pos[j]) * km;
+      A.pos[j+1] += (A.home[j+1] - A.pos[j+1]) * km;
+      const gk = glyphOf(i*7+3, (T*1000/P.mflick)|0);
+      if (gk !== A.gArr[i] && p < 0.7) { A.gArr[i] = gk; A.lead[i] = 1; }
+      A.lead[i] *= Math.exp(-dt*9);
+      // Flash decoupled from swell: msize is the size envelope, mflash the
+      // brightness one. Coupling them through the decode leader is what piled
+      // hot oversized sprites into an achromatic smear at the climax.
+      // The character phase manifests at symbol size (alpha pays for the
+      // area) and settles to grain size as gyArr hands the mark back to flesh.
+      const msym = 1 + (P.ssize - 1) * A.gyArr[i];
+      A.sArr[i] = A.s0[i] * Math.min(1, p*4) * msym * (1 + (P.msize - 1)*Math.sin(p*Math.PI)*(0.35 + 0.65*A.seed[i]));
+      A.aArr[i] += (A.a0[i]*(1 + A.lead[i]*P.mflash)/Math.sqrt(msym) - A.aArr[i]) * Math.min(1, dt*16);
+      A.gyArr[i] = p < 0.55 ? 1 : Math.max(P.mat === 3 ? 1 : 0, A.gyArr[i] - dt*5);
+      A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt*8);
+      A.nArr[j] += (A.nHome[j] - A.nArr[j]) * Math.min(1, dt*6);
+      A.nArr[j+1] += (A.nHome[j+1] - A.nArr[j+1]) * Math.min(1, dt*6);
+      A.anch[j] = A.pos[j]; A.anch[j+1] = A.pos[j+1];
+      if (p >= 1) {
+        A.st[i] = 0; A.vel[j] = A.vel[j+1] = 0;
+        A.pos[j] = A.home[j]; A.pos[j+1] = A.home[j+1];
+        A.anch[j] = A.home[j]; A.anch[j+1] = A.home[j+1];
+        A.nArr[j] = A.nHome[j]; A.nArr[j+1] = A.nHome[j+1];
+        A.sArr[i] = A.s0[i]; A.gyArr[i] = 0; A.rArr[i] = A.rest[i];
+        A.scar[i] = P.scar;
+      }
+    } else {
+      // At rest the word is settled matter, not a sticker. Everything here is
+      // an offset from home, so nothing accumulates and nothing drifts away.
+      const ph = A.seed[i]*6.2832;
+      const hx = A.home[j], hy = A.home[j+1];
+      let px = hx + Math.sin(T*1.3 + ph)*P.iwob;
+      let py = hy + Math.cos(T*1.1 + ph*2)*P.iwob;
+      let amp = 1;
+      // Flow: the contour drifts along its own stroke. The tangent is the
+      // normal turned once, so interior grains barely move and the outline does.
+      if (P.iflow > 0) {
+        const w = Math.sin(T*0.8 + ph*3) * P.iflow;
+        px += -A.nHome[j+1]*w; py += A.nHome[j]*w;
+      }
+      // Ember: two incommensurate sines per grain, so single grains smoulder
+      // on their own phase instead of the whole field breathing in step.
+      if (P.iember > 0)
+        amp += P.iember * 0.7 * Math.sin(T*1.7 + ph*7) * Math.sin(T*0.53 + ph*3);
+      // Sheen: one band of light walks the composition on its own period.
+      if (P.isheen > 0) {
+        const sd = hx*SHE.cx + hy*SHE.cy - SHE.pos;
+        amp += P.isheen * 1.4 * Math.exp(-sd*sd*SHE.inv);
+      }
+      // Aura and taffy: the field acknowledges a hand it has not been struck
+      // by. Near grains swell and lean; a share of them reach without letting
+      // go of the word. The share and the reach are the one Stretch knob.
+      let size = A.s0[i], taffy = 0, tdx = 0, tdy = 0;
+      if (mx > -9000 && (P.iaura > 0 || STR)) {
+        const dxm = mx - hx, dym = my - hy, dm2 = dxm*dxm + dym*dym;
+        if (dm2 < auraR2) {
+          const dm = Math.sqrt(dm2) || 1;
+          const f = 1 - dm/auraR;
+          if (P.iaura > 0) {
+            const fa = f*f*P.iaura;
+            amp += fa*0.55;
+            size *= 1 + fa*0.5;
+            px += dxm/dm*fa*7; py += dym/dm*fa*7;
+          }
+          if (STR && A.seed[i] < P.str) { taffy = f*f*0.5*P.str; tdx = dxm; tdy = dym; }
+        }
+      }
+      // Symbols where the story needs them: a reaching grain turns into its
+      // character (a stretched disc reads as goo, not code), and the settled
+      // word can hold a fixed share of characters for the legibility test.
+      const gt = (P.mat === 3 || taffy > 0 || (P.rsym && A.seed[i] < P.rdens)) ? 1 : 0;
+      A.gyArr[i] += (gt - A.gyArr[i]) * Math.min(1, dt*6);
+      size *= 1 + (P.rsize - 1) * A.gyArr[i];
+      if (taffy > 0) {
+        size *= 1 + taffy*(P.ssize - 1);
+        if (P.salign && mx > -9000)
+          A.rArr[i] = Math.atan2(my - py, mx - px) + A.rest[i]*0.35;
+      } else A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt*4);
+      A.pos[j] = px; A.pos[j+1] = py;
+      A.anch[j] = px + tdx*taffy; A.anch[j+1] = py + tdy*taffy;
+      A.sArr[i] += (size - A.sArr[i]) * Math.min(1, dt*8);
+      A.cArr[i] += ((P.mat === 0 ? 1 : 0) - A.cArr[i]) * Math.min(1, dt*5);
+      // Scar: matter that has been moved comes back brighter and forgets slowly,
+      // so the field carries a record of where the cursor has been.
+      if (A.scar[i] > 0.002) A.scar[i] *= scarDec; else A.scar[i] = 0;
+      A.aArr[i] = A.a0[i] * (1 + A.scar[i]) * amp / Math.sqrt(1 + (P.rsize - 1) * A.gyArr[i]);
+    }
+  }
+  updateFx(dt);
+}
+
+// Switching behaviour mid-wound has to put the field back, or the next mode
+// inherits a hole it has no state machine for.
+function reset(){
+  for (let i = 0; i < NP; i++) {
+    const j = i*2;
+    A.st[i] = 0; A.lead[i] = 0; A.scar[i] = 0;
+    A.pos[j] = A.anch[j] = A.home[j];
+    A.pos[j+1] = A.anch[j+1] = A.home[j+1];
+    A.vel[j] = A.vel[j+1] = 0;
+    A.nArr[j] = A.nHome[j]; A.nArr[j+1] = A.nHome[j+1];
+    A.sArr[i] = A.s0[i]; A.aArr[i] = A.a0[i];
+    A.gyArr[i] = 0; A.rArr[i] = A.rest[i];
+    A.cArr[i] = P.mat === 0 ? 1 : 0;
+    S.free[A.slot[i]] = 0;
+  }
+  HH.fill(0);
+  if (!NP) return;
+  for (const a of [zAttr, shadeAttr]) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, a.buf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, a.data);
+  }
+}
+
+/* ------------------------------------------------------------------- loop -- */
+
+let last = performance.now(), fa = 0, fn = 0, vmax = 0;
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt = Math.min((now - last)/1000, 0.045);
+  last = now;
+
+  // One key light for the whole field. Letting it track the pointer is the
+  // cheapest cue that the matter has a surface: the highlight travels over the
+  // word instead of sitting on it.
+  const lx = mx > -9000 ? (mx/innerWidth - 0.5)*2 : -0.4;
+  const ly = my > -9000 ? (my/innerHeight - 0.5)*2 : -0.5;
+  // The key also sways on its own, so an idle slab still has weather over it.
+  const swx = Math.sin(T*0.42)*P.ilight*0.4, swy = Math.cos(T*0.3)*P.ilight*0.3;
+  gl.uniform3f(u.uLight, -0.55 + lx*P.track + swx, -0.6 + ly*P.track + swy, P.lz);
+  // The camera leans with the pointer and drifts on its own when nothing is
+  // happening, so the slab keeps reading as a slab on an idle page.
+  gl.uniform2f(u.uCam,
+    (-0.62 + lx*0.5)*P.cam + Math.sin(T*0.31)*P.orbit,
+    (-0.34 + ly*0.5)*P.cam + Math.cos(T*0.23)*P.orbit*0.6);
+
+  if (DBG) { try { step(dt); } catch (err) { DBG.textContent = 'ERR ' + err.message + '\n' + err.stack; throw err; } }
+  else step(dt);
+  for (const a of dyn) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, a.buf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, a.data.subarray(0, NP*a.size));
+  }
+  // Flux rewrites geometry that is otherwise static, so those buffers are only
+  // re-sent on the frames where a grain actually changed slots.
+  if (slotsDirty) {
+    slotsDirty = false;
+    for (const a of [zAttr, shadeAttr]) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, a.buf);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, a.data.subarray(0, NP*a.size));
+    }
+  }
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.POINTS, 0, NP);
+
+  fa += dt; fn++;
+  vmax = Math.max(vmax, speed);
+  if (fa > 0.5) {
+    document.getElementById('hud-fps').textContent = Math.round(fn/fa) + ' fps';
+    // Peak speed this tick against the wound gate, not the instantaneous
+    // sample: a flick is briefer than the HUD cadence and must still register.
+    const hv = document.getElementById('hud-vel');
+    hv.textContent = Math.round(vmax) + ' / ' + Math.round(P.minv) + ' px/s';
+    hv.classList.toggle('hot', vmax >= P.minv);
+    fa = 0; fn = 0; vmax = 0;
+  }
+}
+
+/* --------------------------------------------------------------------- ui -- */
+
+const MATS = ['cubes', 'surface', 'both', 'symbols'];
+const CONTS = ['off', 'word', 'field'];
+
+function setMat(v){
+  P.mat = v;
+  document.querySelectorAll('#mats button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === v)));
+  document.getElementById('hud-mat').textContent = MATS[v];
+  pushHash();
+}
+function setCont(v){
+  P.cont = v;
+  document.querySelectorAll('#conts button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === v)));
+  document.getElementById('hud-cont').textContent = CONTS[v];
+  syncFx();
+  pushHash();
+}
+document.querySelectorAll('#mats button').forEach(b => b.addEventListener('click', () => setMat(+b.dataset.v)));
+document.querySelectorAll('#conts button').forEach(b => b.addEventListener('click', () => setCont(+b.dataset.v)));
+
+const pct = v => Math.round(v*100) + '%';
+const CTL = [
+  ['gridk','o-gridk',v=>'fs / '+Math.round(v),'s'], ['fill','o-fill',v=>pct(v),'s'],
+  ['grain','o-grain',v=>v.toFixed(2)+'×','u'], ['bright','o-bright',v=>v.toFixed(2)+'×','u'],
+  ['ssize','o-ssize',v=>v.toFixed(1)+'×'], ['rdens','o-rdens',v=>pct(v)],
+  ['rsize','o-rsize',v=>v.toFixed(1)+'×'], ['gscale','o-gscale',v=>pct(v),'a'],
+  ['str','o-str',v=>pct(v),'u'], ['sreach','o-sreach',v=>v.toFixed(1)+'× r'],
+  ['stail','o-stail',v=>pct(v),'u'], ['ftaper','o-ftaper',v=>pct(v),'u'],
+  ['svel','o-svel',v=>pct(v)],
+  ['r','o-r',v=>Math.round(v)+'px'], ['carry','o-carry',v=>pct(v)],
+  ['push','o-push',v=>Math.round(v)+' px/s'], ['minv','o-minv',v=>Math.round(v)+' px/s'],
+  ['drag','o-drag',v=>v.toFixed(2)], ['g','o-g',v=>Math.round(v)+' px/s²'],
+  ['spin','o-spin',v=>v.toFixed(2)+'×'],
+  ['delay','o-delay',v=>v.toFixed(2)+'s'], ['burn','o-burn',v=>v.toFixed(2)+'s'],
+  ['mgap','o-mgap',v=>v.toFixed(2)+'s'], ['mgrow','o-mgrow',v=>v.toFixed(2)+'s'],
+  ['msize','o-msize',v=>v.toFixed(1)+'×'], ['mflash','o-mflash',v=>v.toFixed(2)+'×'],
+  ['mflick','o-mflick',v=>Math.round(v)+'ms'],
+  ['flux','o-flux',v=>pct(v)], ['seam','o-seam',v=>pct(v)],
+  ['scar','o-scar',v=>pct(v)], ['scarlife','o-scarlife',v=>v.toFixed(1)+'s'],
+  ['cpad','o-cpad',v=>Math.round(v)+'px','v'], ['cbounce','o-cbounce',v=>pct(v)],
+  ['cpile','o-cpile',v=>Math.round(v)+'px'], ['cglow','o-cglow',v=>pct(v)],
+  ['isheen','o-isheen',v=>pct(v)], ['isheenT','o-isheenT',v=>v.toFixed(1)+'s'],
+  ['iember','o-iember',v=>pct(v)], ['iflow','o-iflow',v=>v.toFixed(1)+'px'],
+  ['iaura','o-iaura',v=>pct(v)], ['iwob','o-iwob',v=>v.toFixed(1)+'px'],
+  ['ilight','o-ilight',v=>pct(v)],
+  ['ext','o-ext',v=>Math.round(v)+'px','u'], ['cam','o-cam',v=>v.toFixed(2)+'×'],
+  ['rim','o-rim',v=>v.toFixed(2)+'×','u'], ['spec','o-spec',v=>v.toFixed(2)+'×','u'],
+  ['amb','o-amb',v=>pct(v),'u'], ['track','o-track',v=>pct(v)],
+  ['ergy','o-ergy',v=>v.toFixed(2)+'×','u'],
+];
+const SYNCS = [];
+for (const [k, oid, fmt, fx] of CTL) {
+  const inp = document.getElementById('i-'+k), out = document.getElementById(oid);
+  if (!inp) continue;
+  // A default the slider's step grid cannot represent would read as a tuned
+  // value forever after -- snap DEF through the same grid first, so the hash
+  // writer diffs against what the control can actually hold.
+  inp.value = DEF[k]; DEF[k] = +inp.value;
+  inp.value = P[k];
+  P[k] = +inp.value;   // the input clamps a hash value to its own min/max
+  const show = () => out.textContent = fmt(P[k]);
+  show();
+  SYNCS.push(() => { inp.value = P[k]; show(); });
+  inp.addEventListener('input', () => {
+    P[k] = +inp.value; show();
+    if (fx === 'u') syncUniforms();
+    else if (fx === 's') seed();
+    else if (fx === 'v') syncFx();
+    else if (fx === 'a') refreshAtlas();
+    pushHash();
+  });
+  // Pointer release returns focus to the field so the shortcuts keep working
+  // after a drag — but only pointer release: blurring on change ejected
+  // keyboard focus after a single arrow-key step, which broke fine tuning.
+  inp.addEventListener('pointerup', () => inp.blur());
+}
+const revealEl = document.getElementById('i-reveal');
+revealEl.checked = !!P.reveal;
+revealEl.addEventListener('change', () => { P.reveal = revealEl.checked ? 1 : 0; pushHash(); });
+const sal = document.getElementById('i-salign');
+sal.checked = !!P.salign;
+sal.addEventListener('change', () => { P.salign = sal.checked ? 1 : 0; syncUniforms(); pushHash(); });
+const rsymEl = document.getElementById('i-rsym');
+rsymEl.checked = !!P.rsym;
+rsymEl.addEventListener('change', () => { P.rsym = rsymEl.checked ? 1 : 0; pushHash(); });
+const sboldEl = document.getElementById('i-sbold');
+sboldEl.checked = !!P.sbold;
+sboldEl.addEventListener('change', () => { P.sbold = sboldEl.checked ? 1 : 0; loadSymFont().then(refreshAtlas); pushHash(); });
+for (const el of [revealEl, sal, rsymEl, sboldEl]) el.addEventListener('pointerup', () => el.blur());
+function setSfont(v){
+  P.sfont = v;
+  document.querySelectorAll('#sfonts button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === v)));
+  loadSymFont().then(refreshAtlas);
+  pushHash();
+}
+document.querySelectorAll('#sfonts button').forEach(b => b.addEventListener('click', () => setSfont(+b.dataset.v)));
+
+// The deliverable of a tuning session is the URL. Every input writes the
+// non-default keys back to the hash (foreign keys like t0/dbg pass through),
+// and reset restores the measured defaults exactly.
+let hashT = 0;
+function writeHash(){
+  const parts = [];
+  for (const [k, v] of new URLSearchParams(location.hash.slice(1))) if (!(k in P)) parts.push(k+'='+v);
+  for (const k in P) if (P[k] !== DEF[k]) parts.push(k+'='+(Math.round(P[k]*1000)/1000));
+  history.replaceState(null, '', '#'+parts.join('&'));
+}
+function pushHash(){ clearTimeout(hashT); hashT = setTimeout(writeHash, 150); }
+// One entry point for "make the lab match this hash": reset is applyState(''),
+// undo is applyState(what reset stashed), a pasted state is the boot parse.
+function applyState(h){
+  Object.assign(P, DEF);
+  for (const [k, v] of new URLSearchParams(h)) {
+    if (!(k in P)) continue;
+    const n = +v;
+    if (!Number.isFinite(n)) continue;
+    P[k] = k in ENUM ? clamp(Math.round(n), 0, ENUM[k]) : n;
+  }
+  for (const f of SYNCS) f();
+  revealEl.checked = !!P.reveal; sal.checked = !!P.salign; rsymEl.checked = !!P.rsym;
+  sboldEl.checked = !!P.sbold;
+  setMat(P.mat); setCont(P.cont); setSfont(P.sfont);
+  syncUniforms();
+  seed();
+  pushHash();
+}
+// Reset stashes the session it is about to discard and becomes its own undo:
+// the operator's costliest mistake is one click, so its recovery must be too.
+const resetBtn = document.getElementById('i-reset');
+let undoHash = null;
+resetBtn.addEventListener('click', () => {
+  if (undoHash !== null) {
+    const h = undoHash;
+    undoHash = null; resetBtn.textContent = 'reset';
+    applyState(h);
+    return;
+  }
+  clearTimeout(hashT); writeHash();   // stash what is really current, not a debounce behind
+  undoHash = location.hash.slice(1);
+  resetBtn.textContent = 'undo';
+  applyState('');
+});
+// The URL is the lab's deliverable; this is the moment it says so.
+const copyBtn = document.getElementById('i-copy');
+copyBtn.addEventListener('click', () => {
+  clearTimeout(hashT); writeHash();
+  let n = 0; for (const k in P) if (P[k] !== DEF[k]) n++;
+  const done = () => {
+    copyBtn.textContent = 'copied · ' + n + ' changed';
+    setTimeout(() => { copyBtn.textContent = 'copy state'; }, 1400);
+  };
+  (navigator.clipboard ? navigator.clipboard.writeText(location.href) : Promise.reject())
+    .then(done, () => prompt('Copy the tuned URL:', location.href));
+});
+// The auto-sweep is the lab's own hand: the one control that guarantees the
+// wound is seen, surfaced in the HUD instead of buried in the keys footer.
+const demoBtn = document.getElementById('hud-demo');
+function setDemo(v){
+  P.demo = v ? 1 : 0;
+  demoBtn.setAttribute('aria-pressed', String(!!P.demo));
+  pushHash();
+}
+demoBtn.addEventListener('click', () => setDemo(!P.demo));
+
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;   // Ctrl+R must reload, not reseed
+  if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if (e.key >= '1' && e.key <= '4') setMat(+e.key - 1);
+  else if (e.key === 'b') setCont((P.cont + 1) % 3);
+  else if (e.key === 'r') seed();
+  else if (e.key === 'd') setDemo(!P.demo);
+  else if (e.key === ' ') {
+    e.preventDefault();
+    wound(innerWidth*0.4, innerHeight*0.5, 900, -260, 4000, 0.85);
+  }
+});
+
+/* ------------------------------------------------------------------- boot -- */
+
+resize();
+syncBlend(); syncUniforms();
+setMat(P.mat); setCont(P.cont); setSfont(P.sfont); setDemo(P.demo);
+let rsT = 0;
+addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => { resize(); seed(); }, 200); });
+
+(document.fonts
+  ? Promise.race([
+      Promise.all([document.fonts.load('700 120px "Archivo"'), document.fonts.load('700 42px "JetBrains Mono"'), loadSymFont()]),
+      new Promise(r => setTimeout(r, 2000)),
+    ])
+  : Promise.resolve()
+).catch(()=>{}).then(() => {
+  refreshAtlas();
+  seed();
+  // #t0=3.2 scrubs the simulation to an exact moment before the first paint,
+  // deterministically, which is what a headless capture can aim a shot at.
+  const t0 = +(new URLSearchParams(location.hash.slice(1)).get('t0') || 0);
+  for (let k = 0; k < t0*60; k++) step(1/60);
+  requestAnimationFrame(frame);
+});
+})();
+</script>
+</body>
+</html>
