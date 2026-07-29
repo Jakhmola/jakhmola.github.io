@@ -1,0 +1,465 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-28T14:22:00Z",
+  "title": "Design System: Shubham Jakhmola — Matter",
+  "extensions": {
+    "colorMeta": {
+      "signal-cyan": {
+        "role": "primary",
+        "displayName": "Signal Cyan",
+        "canonical": "#67e8f9",
+        "tonalRamp": [
+          "#08262c",
+          "#0d3d47",
+          "#125562",
+          "#186e7e",
+          "#1f8a9d",
+          "#31adc2",
+          "#67e8f9",
+          "#c6f6ff"
+        ]
+      },
+      "instrument-black": {
+        "role": "neutral",
+        "displayName": "Instrument Black",
+        "canonical": "#0a0c0e",
+        "tonalRamp": [
+          "#050607",
+          "#0a0c0e",
+          "#14181c",
+          "#1f252a",
+          "#2b333a",
+          "#4a555e",
+          "#8e9aa3",
+          "#d4dade"
+        ]
+      },
+      "cold-start": {
+        "role": "neutral",
+        "displayName": "Cold Start",
+        "canonical": "#07090b",
+        "tonalRamp": [
+          "#030405",
+          "#07090b",
+          "#101418",
+          "#1a2026",
+          "#252d34",
+          "#414c56",
+          "#84909a",
+          "#cfd6db"
+        ]
+      },
+      "panel-slate": {
+        "role": "neutral",
+        "displayName": "Panel Slate",
+        "canonical": "#0a0d10",
+        "tonalRamp": [
+          "#050708",
+          "#0a0d10",
+          "#141a1f",
+          "#1f272e",
+          "#2a343d",
+          "#47555f",
+          "#8a97a1",
+          "#d2d9dd"
+        ]
+      },
+      "phosphor": {
+        "role": "neutral",
+        "displayName": "Phosphor",
+        "canonical": "#e8edef",
+        "tonalRamp": [
+          "#22282a",
+          "#343c3f",
+          "#4a5457",
+          "#636e72",
+          "#7f8a8e",
+          "#a4aeb1",
+          "#c9d1d4",
+          "#e8edef"
+        ]
+      },
+      "ink-85": {
+        "role": "neutral",
+        "displayName": "Ink 85%",
+        "canonical": "rgba(232, 237, 239, 0.85)",
+        "tonalRamp": []
+      },
+      "ink-65": {
+        "role": "neutral",
+        "displayName": "Ink 65%",
+        "canonical": "rgba(232, 237, 239, 0.65)",
+        "tonalRamp": []
+      },
+      "ink-62": {
+        "role": "neutral",
+        "displayName": "Ink 62%",
+        "canonical": "rgba(232, 237, 239, 0.62)",
+        "tonalRamp": []
+      },
+      "ink-55": {
+        "role": "neutral",
+        "displayName": "Ink 55%",
+        "canonical": "rgba(232, 237, 239, 0.55)",
+        "tonalRamp": []
+      },
+      "ink-40": {
+        "role": "neutral",
+        "displayName": "Ink 40%",
+        "canonical": "rgba(232, 237, 239, 0.4)",
+        "tonalRamp": []
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgba(232, 237, 239, 0.14)",
+        "tonalRamp": []
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The name, and only the name. Built from matter, at the widest width in the system. Below 820px it drops to normal width so eight characters fit a phone.",
+        "fontSize": "clamp(52px, 7.9vw, 120px)"
+      },
+      "statement": {
+        "displayName": "Statement",
+        "purpose": "The contact headline. Largest type after the name; built from matter, expanded width."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page headings — Experience, Projects. Built from matter."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Epoch year markers. Always Signal Cyan, always built from matter."
+      },
+      "address": {
+        "displayName": "Address",
+        "purpose": "The contact email. DOM text, not matter: it computed below the 26px floor at 821-866px, and as Matter Text it composited away its own focus ring."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Repo names on the Projects page. DOM text, not matter: it computes below 26px from 821 to 1181px, where five of them measured 1.03:1 against the field."
+      },
+      "tagline": {
+        "displayName": "Tagline",
+        "purpose": "The role line under the name. DOM text, not matter: fixed at 26px it was the widest element in the home column at every width under ~1500px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Pitch and about copy. DOM text, revealed as the caret passes."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Navigation and the boot log. Everything the machine says about itself."
+      },
+      "scale": {
+        "displayName": "Ramp remainder",
+        "purpose": "Size-only rungs below the named roles: display-narrow, subtitle 16.5, tagline-narrow 16, brand 14, body-sm 13, meta 12, hud 11.5, caption 11, micro 10. Each is scaled live by --fs and one of the seven --k-* role factors."
+      }
+    },
+    "shadows": [
+      {
+        "name": "boot-lift",
+        "value": "0 30px 90px color-mix(in srgb, var(--cold) 60%, transparent)",
+        "purpose": "The boot window only. The single elevated surface in the system; content is always flat. Mixed from the boot backdrop token rather than black, so a repalette takes the shadow with it."
+      }
+    ],
+    "motion": [
+      {
+        "name": "boot-exit",
+        "value": "cubic-bezier(0.76, 0, 0.24, 1)",
+        "purpose": "The boot terminal's 700ms slide out of frame. The only expressive easing curve in CSS."
+      },
+      {
+        "name": "copy-reveal",
+        "value": "opacity var(--fade) ease, transform var(--fade) ease (default 0.5s, rising var(--rise) = 8px)",
+        "purpose": "DOM copy fading up as the caret passes its position during a transition. Both duration and distance are panel knobs."
+      },
+      {
+        "name": "transition-full",
+        "value": "1.7s first visit / 1.9s thereafter (knobs: trFirst, trFull)",
+        "purpose": "Full choreography: consume the outgoing glyphs, travel, emit into the incoming ones."
+      },
+      {
+        "name": "transition-abbreviated",
+        "value": "0.62s (knob: trQuick)",
+        "purpose": "A second nav inside the 1200ms fullGate window. Direct flight, no caret journey, so hammering the arrow keys stays responsive."
+      },
+      {
+        "name": "caret-blink",
+        "value": "1s step, 55% duty (knob: caretBlink)",
+        "purpose": "The parked caret, and the boot log’s trailing block. Step, never a fade: a caret that eases is a caret that is animating."
+      },
+      {
+        "name": "scramble",
+        "value": "550ms linear resolve, left to right (knob: scrambleMs)",
+        "purpose": "Link hover. The only hover flourish in the system, and it belongs to links exclusively."
+      },
+      {
+        "name": "panel-hint",
+        "value": "color 0.25s, border-color 0.25s",
+        "purpose": "The tweak tab warming to Signal Cyan on hover or when its panel is open. The panel itself has no entrance animation; it is an instrument, not a reveal."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "calm",
+        "value": "820px",
+        "purpose": "Below this the matter reading is abandoned entirely for the calm scrolling document. Not an adjustment; the other site."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Read-only tech label on an epoch. Full pill, hairline border, no fill.",
+      "html": "<ul class=\"ds-tags\"><li>PyTorch</li><li>TensorFlow</li><li>U-Net</li></ul>",
+      "css": ".ds-tags { display: flex; gap: 6px; flex-wrap: wrap; padding: 0; margin: 0; list-style: none; } .ds-tags li { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; color: var(--quiet, rgba(232,237,239,0.55)); border: 1px solid var(--line-strong, rgba(232,237,239,0.18)); border-radius: var(--r-pill, 20px); padding: 2px 9px; }"
+    },
+    {
+      "name": "Tag (current epoch)",
+      "kind": "chip",
+      "refersTo": "tag-current",
+      "description": "The same pill on the epoch marked `now`. Signal Cyan text, half-alpha cyan border. There is no filled or selected variant.",
+      "html": "<ul class=\"ds-tags-now\"><li>Agents</li><li>RAG</li><li>Evals</li></ul>",
+      "css": ".ds-tags-now { display: flex; gap: 6px; flex-wrap: wrap; padding: 0; margin: 0; list-style: none; } .ds-tags-now li { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; color: var(--accent, #67e8f9); border: 1px solid color-mix(in srgb, var(--accent, #67e8f9) 50%, transparent); border-radius: var(--r-pill, 20px); padding: 2px 9px; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Fixed top bar, no background and no border in the matter reading. Inactive links sit at 75% opacity; the active one carries aria-current and Signal Cyan.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\">JAKHMOLA<span>.SYS</span></a><span class=\"ds-navlinks\"><a href=\"#\" aria-current=\"page\">index</a><a href=\"#\">experience</a><a href=\"#\">projects</a><a href=\"#\">contact</a></span></nav>",
+      "css": ".ds-nav { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 24px; } .ds-brand { font-family: Archivo, system-ui, sans-serif; font-weight: 700; font-size: 14px; letter-spacing: var(--tr-brand, 0.07em); text-transform: uppercase; color: var(--ink, #e8edef); text-decoration: none; padding: 8px 6px; } .ds-brand span { opacity: 0.5; } .ds-navlinks { display: flex; gap: 4px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12.5px; text-transform: lowercase; } .ds-navlinks a { padding: 8px 10px; color: var(--ink, #e8edef); text-decoration: none; opacity: 0.75; transition: opacity 0.3s ease; } .ds-navlinks a:hover { opacity: 1; color: var(--accent, #67e8f9); } .ds-navlinks a[aria-current=\"page\"] { color: var(--accent, #67e8f9); opacity: 1; } .ds-navlinks a:focus-visible { outline: 2px solid var(--accent, #67e8f9); outline-offset: 3px; }"
+    },
+    {
+      "name": "Project Row",
+      "kind": "card",
+      "refersTo": "project-row",
+      "description": "One Featured Project. A 52px cyan mono index, then a single column holding name, Summary and source link, separated from the next row by a hairline. No radius, no shadow, no box.",
+      "html": "<li class=\"ds-project\"><span class=\"ds-pnum\">/01</span><div class=\"ds-pbody\"><h3 class=\"ds-pname\">career-ops</h3><span class=\"ds-pdesc\">Claude-Code-based job search operations system that tracks applications and drafts follow-ups from a single ledger.</span><a class=\"ds-psrc\" href=\"#\">source ↗</a></div></li>",
+      "css": ".ds-project { display: grid; grid-template-columns: 52px 1fr; gap: 20px; align-items: baseline; list-style: none; border-bottom: 1px solid var(--line-soft, rgba(232,237,239,0.1)); padding: 0 6px 14px; } .ds-pnum { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; color: var(--accent, #67e8f9); } .ds-pbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-pname { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: clamp(22px, 2.2vw, 27px); font-weight: 700; margin: 0; color: var(--ink, #e8edef); } .ds-pdesc { font-family: Archivo, system-ui, sans-serif; font-size: 13px; line-height: 1.55; color: var(--dim, rgba(232,237,239,0.62)); max-width: 620px; } .ds-psrc { align-self: start; margin-top: 4px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; color: var(--quiet, rgba(232,237,239,0.55)); text-decoration: none; } .ds-psrc:hover { color: var(--accent, #67e8f9); }"
+    },
+    {
+      "name": "Boot Terminal",
+      "kind": "custom",
+      "refersTo": "boot-window",
+      "description": "The gate in front of the site for ~1.25s, and the only rounded, elevated surface in the system. Its three dots are ink alphas, not traffic lights: the terminal introduces no hue of its own.",
+      "html": "<div class=\"ds-boot\"><div class=\"ds-boot-bar\"><span class=\"ds-d\"></span><span class=\"ds-d\"></span><span class=\"ds-d\"></span><span class=\"ds-boot-title\">jakhmola.sys — v4</span></div><div class=\"ds-boot-log\"><div><span class=\"ds-cy\">$</span> jakhmola --wake</div><div>&gt; ledger restored ....... 9,000 units · nothing lost</div><div>&gt; route /index<span class=\"ds-blink\">▮</span></div></div></div>",
+      "css": ".ds-boot { width: min(480px, 90vw); border: 1px solid var(--line, rgba(232,237,239,0.14)); border-radius: var(--r-window, 10px); background: var(--panel, #0a0d10); box-shadow: 0 30px 90px color-mix(in srgb, var(--cold, #07090b) 60%, transparent); } .ds-boot-bar { display: flex; align-items: center; gap: 7px; padding: 11px 15px; border-bottom: 1px solid var(--line-soft, rgba(232,237,239,0.1)); } .ds-d { width: 9px; height: 9px; border-radius: 50%; background: var(--dim, rgba(232,237,239,0.62)); } .ds-d:nth-child(2) { background: var(--dimmer, rgba(232,237,239,0.4)); } .ds-d:nth-child(3) { background: var(--line, rgba(232,237,239,0.14)); } .ds-boot-title { margin-left: 9px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; color: var(--quiet, rgba(232,237,239,0.55)); } .ds-boot-log { padding: 16px 20px 20px; min-height: 88px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12.5px; line-height: 2.1; color: var(--ink85, rgba(232,237,239,0.85)); } .ds-cy { color: var(--accent, #67e8f9); } .ds-blink { animation: ds-blink 1s step-end infinite; } @keyframes ds-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }"
+    },
+    {
+      "name": "HUD",
+      "kind": "custom",
+      "refersTo": "hud",
+      "description": "The instrument strip pinned to the bottom of the matter reading: local clock, page counter, system line. Uppercase mono at Ink 55%, pointer-events none, and switchable off from the panel.",
+      "html": "<p class=\"ds-hud\"><span>GMT+5:30 IN 19:22:50</span><span>01 / 04 — INDEX</span><span>v4.0 — ✱ MATTER IS CONSERVED</span></p>",
+      "css": ".ds-hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin: 0; padding: 15px 24px; pointer-events: none; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11.5px; text-transform: uppercase; color: var(--quiet, rgba(232,237,239,0.55)); } .ds-hud span:last-child { text-align: right; }"
+    },
+    {
+      "name": "Sigil",
+      "kind": "custom",
+      "refersTo": "sigil",
+      "description": "The site's mark: two triangles meeting at a slight waist. Drawn from particles in the matter reading; this is the CSS clip-path the calm reading uses. Never an image file.",
+      "html": "<div class=\"ds-sigil\"></div>",
+      "css": ".ds-sigil { position: relative; width: 120px; height: 180px; } .ds-sigil::before { content: \"\"; position: absolute; inset: 2px 0; background: color-mix(in srgb, var(--accent, #67e8f9) 28%, transparent); clip-path: polygon(0 0, 100% 0, 50% 48%, 100% 100%, 0 100%, 50% 52%); } .ds-sigil::after { content: \"\"; position: absolute; inset: 0; border-top: 2px solid var(--accent, #67e8f9); border-bottom: 2px solid var(--accent, #67e8f9); }"
+    },
+    {
+      "name": "Tweak Tab",
+      "kind": "button",
+      "refersTo": "tweak-tab",
+      "description": "The only way into the tweak panel, and deliberately the quietest element on the page: a hairline tab on the right edge, mono set vertically, warming to Signal Cyan on hover or while its panel is open.",
+      "html": "<button class=\"ds-tab\" type=\"button\" aria-expanded=\"false\">tweak</button>",
+      "css": ".ds-tab { display: flex; align-items: center; padding: 14px 7px; border: 1px solid var(--line, rgba(232,237,239,0.14)); border-right: 0; background: var(--panel, #0a0d10); color: var(--quiet, rgba(232,237,239,0.55)); font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; font-weight: 500; line-height: 1; letter-spacing: 0.18em; text-transform: uppercase; writing-mode: vertical-rl; cursor: pointer; transition: color 0.25s, border-color 0.25s; } .ds-tab:hover, .ds-tab[aria-expanded=\"true\"] { color: var(--accent, #67e8f9); border-color: var(--accent, #67e8f9); } .ds-tab:focus-visible { outline: 2px solid var(--accent, #67e8f9); outline-offset: 3px; }"
+    },
+    {
+      "name": "Tweak Row (range)",
+      "kind": "input",
+      "refersTo": "tweak-panel",
+      "description": "The system’s only input, and the shape all 84 controls take: label at Ink 62%, live value in Signal Cyan with tabular figures, the native control below spanning the row. No slider is drawn by hand — accent-color does it.",
+      "html": "<div class=\"ds-row\"><label for=\"ds-r1\">Grain size</label><output for=\"ds-r1\">2.3</output><input id=\"ds-r1\" type=\"range\" min=\"0.5\" max=\"6\" step=\"0.05\" value=\"2.3\"></div>",
+      "css": ".ds-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 14px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; } .ds-row label { font-size: 11px; color: var(--dim, rgba(232,237,239,0.62)); } .ds-row output { font-size: 10.5px; color: var(--accent, #67e8f9); text-align: right; font-variant-numeric: tabular-nums; } .ds-row input[type=\"range\"] { grid-column: 1 / -1; width: 100%; height: 16px; margin: 0; background: none; cursor: pointer; accent-color: var(--accent, #67e8f9); } .ds-row input:focus-visible { outline: 2px solid var(--accent, #67e8f9); outline-offset: 3px; }"
+    },
+    {
+      "name": "Tweak Preset Pill",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "A whole-state preset in the panel header. Reuses the tag pill exactly — the panel borrows the site’s own vocabulary rather than inventing a second one — with a hover state, because unlike a tag it is actionable.",
+      "html": "<div class=\"ds-presets\"><button type=\"button\">Default</button><button type=\"button\">Amber</button><button type=\"button\">Dense</button><button type=\"button\">Quiet</button></div>",
+      "css": ".ds-presets { display: flex; flex-wrap: wrap; gap: 5px; padding: 11px 14px; } .ds-presets button { padding: 4px 8px; border: 1px solid var(--line, rgba(232,237,239,0.14)); border-radius: var(--r-pill, 20px); background: none; color: var(--quiet, rgba(232,237,239,0.55)); font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 10px; line-height: 1; cursor: pointer; } .ds-presets button:hover { color: var(--accent, #67e8f9); border-color: var(--accent, #67e8f9); } .ds-presets button:focus-visible { outline: 2px solid var(--accent, #67e8f9); outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Deliberate Machinery",
+    "overview": "A system that conserves its own material and moves it with intent. Not decoration, not chaos. Cold, precise, slightly alive. The governing illusion is that the same matter has been on screen the whole time — grains are moved between letterforms, never created and never destroyed — and every visual decision either supports that illusion or is cut.\n\nThe surface is almost entirely absent. One near-black field, one cyan, and type. There are no images, no illustrations, no gradients on content, no decorative shapes; the only things that move are the particles, the caret that drives them, and copy fading in behind it. This is not minimalism as a style choice — image and video generation are unavailable to this project, so everything must be computed in the browser or authored by hand. The restraint is a production fact that became the identity.\n\nThe register is instrumentation rather than editorial. Monospace carries everything the machine says about itself: the clock, the page counter, the year markers, the repo names, the boot log. The proportional face is reserved for the two things a person says: the name and the headings. When the system speaks as a machine it is mono; when it speaks as Shubham it is Archivo. Nothing else is added.",
+    "keyCharacteristics": [
+      "Exactly one chromatic value in the entire system",
+      "Square by default; the boot window is the only rounded surface",
+      "No shadows on content — depth comes from a radial vignette and additive particle glow",
+      "Type is either large enough to be built from matter (≥26px) or small enough to be DOM text; nothing sits in between",
+      "Every page fills the viewport exactly once and never scrolls",
+      "Every value in this document is a control a visitor can move — see The Tweak Layer. What is written here is the **default** state of the system, and defaults are the part that was measured"
+    ],
+    "rules": [
+      {
+        "name": "The AA Floor Rule",
+        "body": "Ink 55% is the darkest a *word* is ever set in. Anything quieter is furniture — a dot, a rule, an index. The three elements that broke this (the contact footer at 3.39:1, the boot title at 3.99:1, the boot hint at 2.86:1) each read as \"deliberately quiet\" and were each simply unreadable; quiet is a job for size and placement, not for alpha below the threshold.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Hue Rule",
+        "body": "The system has exactly one chromatic value. Every other color is a neutral or an alpha of the ink. A second hue breaks the claim that all matter on screen is the same matter. The rule has no exceptions, including borrowed chrome: the boot window quotes an OS titlebar, but its three dots are ink alphas (`--dim`, `--dimmer`, `--line`), not red/amber/green. They are window furniture, not status lights, and they are the first thing a visitor sees — a saturated trio there would spend the single-cyan reveal before the site has drawn a single grain.",
+        "section": "colors"
+      },
+      {
+        "name": "The Additive Ceiling Rule",
+        "body": "Signal Cyan is `rgb(0.404, 0.910, 0.976)` in linear terms, and particles are drawn with `blendFunc(SRC_ALPHA, ONE)`. Green and blue therefore saturate after roughly one layer while red keeps climbing, so anywhere grains stack past about **2.4× coverage the field cores out to achromatic white** — which breaks the One Hue Rule in the rendered output even though every value in the stylesheet is compliant. Density is the lever that has to be held: the name rests at `alpha 0.82`, and every matter heading is re-measured after any change to grain count, size, or alpha — measured, not reasoned about. Last measured at 1440×900: name 0.02%, Experience 0.00%, Projects 0.09%, contact statement 0.01–0.03%, year markers 0.00%. The idle sigil measures 0.88%, down from 1.67% but still the only element with a visible achromatic core; it remains the one open violation, and it is the decoration rather than a word. Note that **coverage is not the same lever as brightness.** The name previously measured 30.4% lit and read as a smear; it now measures 21.1% and reads as discrete matter. Coverage bought past the point where sprites merge buys blur, not legibility — see The Grain Ratio Rule.",
+        "section": "colors"
+      },
+      {
+        "name": "The Name Reads First Rule",
+        "body": "The name is the one heading a visitor must be able to read, and it is held to that by measurement, not intent. It is exempt from budget thinning and rests at a larger grain than anything else — the settings are commented at the `heroG` branch in `matter.js`. The bar is **lit coverage inside its own bounding box**, which must stay above the site's real DOM body text. Measured at 1440×900 against the tagline's 11.33%: `SHUBHAM` 23.06%, `JAKHMOLA` 22.24%, whole name box 21.08%. The idle sigil sits at 8.06%, so the decoration no longer out-measures the name — which it did, at 19.59:1 contrast against the name's 1.04:1, before this rule existed. **Coverage alone was never the bar, and reading it as one is how the name got smeared.** Held to coverage only, the answer was to grow the sprite until the letterform filled in; at `2.2 × baseS` on a 3px grid each grain spanned four to eight grid cells and the strokes closed into cotton wool that measured 30.4% and read as nothing. The bar is coverage *and* The Grain Ratio Rule together.",
+        "section": "colors"
+      },
+      {
+        "name": "The Monochrome Matter Rule",
+        "body": "Every particle is drawn with the same uniform color. An `.accent` class on Matter Text has no effect in the matter reading — it only colors the calm reading. Never design a variant whose idea depends on two colors of matter.",
+        "section": "colors"
+      },
+      {
+        "name": "The Alpha, Not Grey, Rule",
+        "body": "Secondary text is the ink color at reduced alpha, never a separately chosen grey. This keeps every neutral related to the field it sits on.",
+        "section": "colors"
+      },
+      {
+        "name": "The Closed Ramp Rule",
+        "body": "The ramp above is the complete set of sizes in the system — 22 steps, every one of them in use. A new size is a system change, not a local decision: add it to `typography.scale` in this file's frontmatter or reuse an existing rung. The design hook enforces this, so an undocumented literal will be flagged on the next edit.",
+        "section": "typography"
+      },
+      {
+        "name": "The Contour Rule",
+        "body": "Every heading samples on the same **2px grid**, keeps its whole contour, and thins only the interior — to 37%. The grid used to scale with font size (`fontSize / 14`, clamped 3–6px) and that spent the budget exactly backwards: a 54px heading got a 4px grid and 280 grains, too few to resolve into a word, while the name got a 3px grid and enough sprite overlap to close shut. Size is not what decides how many grains a letterform needs. A silhouette is what makes a letterform legible; the fill is only weight, and weight is the cheap thing to buy back with grain size. Contour-first costs about a third of a solid 2px grid, so every page fits the same 9,000-grain budget: home 6,265, contact 3,888, experience 1,881, projects 675. Measured lift at 1440×900 — Experience 3.81% → 16.89%, Projects 3.34% → 15.98%, \"something real.\" 2.56% → 19.04%, the year markers roughly tripled. The cost is paid by the idle hourglass, which now gets 2,735 grains on the home page instead of 4,414 and measures 8.06% against its old 11.62%. That is the correct direction: the decoration must not out-measure the name.",
+        "section": "typography"
+      },
+      {
+        "name": "The Grain Ratio Rule",
+        "body": "A grain sprite must stay near its sample spacing. Much past ~2× and neighbouring sprites merge before the eye resolves either, so the letterform reads as a brush stroke rather than as matter, and the extra coverage is spent on a halo outside the stroke. `GRAIN`, `HERO_S` and `REST_S` in `matter.js` are the three constants that set this, and they are only meaningful relative to the 2px grid The Contour Rule fixes. Change one and re-measure the rendered page; do not re-derive it.",
+        "section": "typography"
+      },
+      {
+        "name": "The 26px Floor",
+        "body": "Type below roughly 26px cannot be built from matter: a 2px grid leaves no room under its own strokes. Anything smaller must be DOM text. This is a hard constraint of the renderer, not a preference — and CSS specificity is the usual way it gets violated, since any rule that shrinks a Matter Text element below the floor silently dissolves it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Faces Rule",
+        "body": "Archivo speaks as Shubham; JetBrains Mono speaks as the machine. A third face is never added, and neither face crosses into the other's role.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Widths Rule",
+        "body": "Archivo runs at its normal width everywhere except the two things a person says outright — the name and the contact statement — which run at `font-stretch: expanded` (the `wdth 125` end of the axis). Wide is reserved for those two; a third expanded element dilutes the signal. Because width inherits, it is set once on `.name` and `.ct` and reaches the `.mt` spans the sampler measures. The sampler must set it separately as a keyword: the canvas `font` shorthand silently drops stretch, and the computed `125%` is rejected by `ctx.fontStretch`, so a width set only in the shorthand would render normal-width particles under expanded DOM text. The rule has exactly one exception, and it is a phone. `SHUBHAM` and `JAKHMOLA` are single tokens, so no wrapping strategy can rescue them — below 820px the expanded name did not fit any viewport, and `overflow-wrap: anywhere` only converted the overflow into `SHUB / HAM / JAKH / MOLA`. The ~27% the width axis costs *is* the entire deficit, so below 820px the name drops to normal width at `clamp(26px, 8.6vw, 120px)`. Verified: one line per span, zero horizontal overflow, at every width from 320px up. Given a real choice between the width axis and a readable name, the name wins — that is The Name Reads First Rule applied to the one axis that can pay for it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sigil Budget Rule",
+        "body": "On the home page the name and the sigil share one flex row that is allowed to wrap, and a wrap breaks the one-viewport rule — the sigil drops to its own line and the composition collapses. The budget is `min(1180, 84vw) − 180 − min(5vw, 96)`, and the row fits only while max(tagline width, name width) ≤ that budget **The binding element is whichever of those two is wider, and it is not always the name.** The rule previously measured only the name and was wrong in both directions because of it: the row wrapped at every width from 821px to 1279px, and again at every width from 2820px up. Two causes, both now fixed and both worth keeping in mind: - **Below ~1500px the tagline binds.** At a fixed `26px` with `0.14em` tracking and `white-space: nowrap` it measured **808px at every viewport width** — it never responded to anything, so it, not the name, set the column width. It is now `clamp(13px, 1.45vw, 18px)`, which also puts it below the matter floor; see Tagline. - **Above ~2800px the gap binds.** `.page-in` stops growing at 1180px while a bare `5vw` gap keeps going, so past 2820px the gap ate the name's budget. The gap is now `min(5vw, 96px)`, which stops growing at the same point the container does. An expanded Display line measures roughly `7.16 × font-size` (verified: 120px renders 859.3px). Display is `clamp(52px, 7.9vw, 120px)` rather than `8vw` so the inequality also holds at 821px, the tightest point. Any change to the display size, the tagline size, the sigil's `180px`, the gap cap, or the `1180px` container cap must be re-measured — not re-derived — at **821, 1024, 1279, 1920 and 3440px**. The previous version of this rule named its binding viewports confidently and its own arithmetic predicted the 1024px failure, which shipped anyway. Measure the rendered page. Last measured across 320 / 360 / 390 / 480 / 680 / 820 / 821 / 900 / 1024 / 1152 / 1200 / 1279 / 1440 / 1920 / 2560 / 2820 / 3440: the row holds at every width from 820px up, each name span occupies exactly one line, and `documentElement.scrollWidth` never exceeds the viewport. Below 820px the row wraps by design — that is the calm stacked reading, not the failure this rule guards.",
+        "section": "typography"
+      },
+      {
+        "name": "The Nowrap Rule",
+        "body": "Matter Text is measured as a single line. Every `.mt` element is `white-space: nowrap; width: fit-content` in the matter reading, because the sampler rasterizes one line of text at the element's computed font. A heading that wraps will sample wrong.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Scrollbar Rule",
+        "body": "Neither click nor scroll gesture ever reveals a scrollbar in the matter reading. Both advance a page instead. If content does not fit a viewport, the content is cut, not the constraint.",
+        "section": "layout"
+      },
+      {
+        "name": "The Measure-Once Rule",
+        "body": "Element positions are sampled on load, on resize, and on page change — never per frame. Any layout idea that would require continuous measurement is out.",
+        "section": "layout"
+      },
+      {
+        "name": "The Smallest Mark Bounds the Parallax Rule",
+        "body": "One uniform shears every grain, so the shear is bounded by the *smallest* thing built from matter, never the largest. At 3.6px it was 0.4% of the name's width and 13% of the 28px corner sigil, and it visibly wobbled the wordmark's companion mark. It is 2.6px. Exactly one real shadow exists in the system, and it belongs to the boot terminal.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Shadow Rule",
+        "body": "The boot window is the only elevated surface. Content is flat, always. Adding a shadow to a project row or an epoch card is a system violation, not a refinement.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Glow Is Earned Rule",
+        "body": "Brightness comes from particle density under additive blending, never from a CSS glow, blur, or filter on content.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square-By-Default Rule",
+        "body": "New surfaces get `0` radius. A radius must be argued for from an existing exception, not chosen for softness.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Hairline, Not Box, Rule",
+        "body": "Separate with a 1px hairline at 10–15% ink. Never enclose content in a full border.",
+        "section": "shapes"
+      },
+      {
+        "name": "The 44px Thumb Rule",
+        "body": "Below 820px every link is a touch target and gets `padding-block: 14px`, which is what carries a 17px line to 45px. Padding, not `min-height`, so the text keeps its baseline inside the row it belongs to. All eighteen links on the calm reading failed this before it was written down, none of them by more than a few pixels of padding — it is the kind of thing that is invisible on a desk and constant on a phone.",
+        "section": "components"
+      },
+      {
+        "name": "The Every Knob Rule",
+        "body": "Anything added to this system ships with its control in the same change. A hard-coded literal in `static/style.css` or `static/matter.js` is now a defect on its own — not because the value is wrong, but because it is the one value a visitor cannot reach. Colors, sizes, weights, tracking, leading, radii, rhythm, durations, particle counts, grain sizes, blend modes, glyph sets: each one is either a token in `:root` that the schema writes, or a key in `T` that the frame loop reads.",
+        "section": "tweak-layer"
+      },
+      {
+        "name": "The Defaults Are The Measured Set Rule",
+        "body": "The One Hue Rule, the Additive Ceiling, The Grain Ratio Rule and The Name Reads First Rule were all established by measuring the rendered page, and they hold at the defaults. The panel can leave all four behind — a second hue is one color picker away, and `grain` at 6 on a 1px grid is cotton wool. That is the point of it, and it is not a licence to ship a new default without re-measuring. **A default changes only with a fresh measurement; a slider changes with a drag.**",
+        "section": "tweak-layer"
+      },
+      {
+        "name": "The Reload-Free Rule",
+        "body": "A control takes effect on the frame after it moves. Three cannot: the reading (`auto`/`matter`/`calm`) and the boot terminal are decided before the panel exists, so they persist and reload. Everything else — including the particle budget, which is why the buffer is allocated once at a 22,000-grain ceiling and drawn to a live `NP` — resolves live.",
+        "section": "tweak-layer"
+      },
+      {
+        "name": "The Panel Owns The Gesture Rule",
+        "body": "The matter site navigates on wheel, arrow keys, digits and swipe. While the panel is open it sets `data-tw=\"open\"` on `<html>` and matter.js refuses all four, because a panel you cannot scroll without changing page is not a panel.",
+        "section": "tweak-layer"
+      },
+      {
+        "name": "The Font Picker Exception",
+        "body": "The Two Faces Rule ends at this panel. Ten display faces and six monos are selectable, injected from the font CDN on first use; a face change repaints the glyph atlas and re-samples every heading once `document.fonts.ready` settles, because a point cloud measured against a fallback is a point cloud of the wrong shape. The rule still governs the *design*: Archivo and JetBrains Mono are the two faces the system ships as, and a third face is never added to the default.",
+        "section": "tweak-layer"
+      }
+    ],
+    "dos": [
+      "**Do** keep Signal Cyan (#67e8f9) as the only hue. If a variant needs a second color, it needs a different idea.",
+      "**Do** keep Matter Text at 26px or larger, and check the computed size rather than the authored rule — a more specific selector elsewhere is the usual way this breaks.",
+      "**Do** separate content with 1px hairlines at 10–15% ink.",
+      "**Do** express secondary text as an alpha of Phosphor (#e8edef), not as a chosen grey.",
+      "**Do** let mono speak for the machine (HUD, years, repo names, links, boot log) and Archivo speak for the person (name, headings).",
+      "**Do** design both readings. Anything added to the matter site must also make sense in the calm scrolling document, because the same markup serves both.",
+      "**Do** ship a control with anything new, in the same change. One line in `SCHEMA` — see The Every Knob Rule.",
+      "**Do** re-measure before changing a default. A slider is free; a default is a claim."
+    ],
+    "donts": [
+      "**Don't** add a shadow to content. The boot window is the only elevated surface in the system.",
+      "**Don't** introduce a corner radius on a content surface; square is the default and the three exceptions are already spent.",
+      "**Don't** use a CSS glow, blur, or `filter` to brighten something. Luminosity is earned through particle density under additive blending.",
+      "**Don't** add a third typeface, or move a role from one face to the other.",
+      "**Don't** rely on a color difference *within* matter — every particle renders in the same uniform color regardless of the element's CSS.",
+      "**Don't** introduce an image, illustration, gradient fill, or texture. Generated assets are unavailable to this project and the identity is built on that absence.",
+      "**Don't** write a literal size, color, duration, or particle constant into `style.css` or `matter.js`. If it is worth choosing, it is worth exposing; if it is not worth exposing, it should not be a magic number either.",
+      "**Don't** let a page scroll or reveal a scrollbar in the matter reading."
+    ]
+  }
+}

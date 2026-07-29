@@ -33,7 +33,9 @@ test('renders the four pages, name, epochs, and contact links from Seed Content'
   for (const id of ['pg-home', 'pg-exp', 'pg-proj', 'pg-contact']) {
     assert.match(b.html, new RegExp(`id="${id}"`), `${id} section exists`);
   }
-  assert.match(b.html, /<h1 class="name"><span class="mt">SHUBHAM<\/span><span class="mt">JAKHMOLA<\/span><\/h1>/);
+  // The space between the spans is load-bearing: without it the accessible name
+  // of the <h1> is "SHUBHAMJAKHMOLA". Flex layout drops it, so it costs nothing.
+  assert.match(b.html, /<h1 class="name"><span class="mt">SHUBHAM<\/span> <span class="mt">JAKHMOLA<\/span><\/h1>/);
   assert.match(b.html, /AI ENGINEER — AGENTS · RAG · DEEP LEARNING/);
   assert.match(b.html, /I build LLM systems that ship/);
   assert.match(b.html, /Deep learning research/, 'experience epoch renders');
@@ -53,7 +55,7 @@ test('renders Featured Projects in rank order with source links', () => {
     'Brain-Tumor-Segmentation',
     'interview-coach',
   ];
-  const positions = expected.map((n) => b.html.indexOf(`<h3 class="mt pname">${n}</h3>`));
+  const positions = expected.map((n) => b.html.indexOf(`<h3 class="copy pname">${n}</h3>`));
   for (const [i, pos] of positions.entries()) {
     assert.ok(pos !== -1, `${expected[i]} has a project row`);
     assert.match(b.html, new RegExp(`href="https://github\\.com/Jakhmola/${expected[i]}"`));
@@ -116,8 +118,49 @@ test('a portfolio-feature fork gets a Project Card end to end (amended fork rule
     return { ok: true, status: 200, json: async () => repos };
   };
   const built = await runBuild(fetchImpl);
-  assert.match(built.html, /<h3 class="mt pname">rescued-fork<\/h3>/);
+  assert.match(built.html, /<h3 class="copy pname">rescued-fork<\/h3>/);
   assert.ok(!built.html.includes('freeCodeCamp-boilerplate'), 'untagged fork still excluded');
+});
+
+// The nightly cron is unattended: an API that answers with nothing is a state
+// this page ships in, not a hypothetical.
+test('zero Featured Projects renders an explained page, not an empty one', async () => {
+  const fetchImpl = async (url) =>
+    /\/users\/[^/]+\/repos/.test(String(url))
+      ? { ok: true, status: 200, json: async () => [] }
+      : fixtureFetch(FIXTURES, url);
+  const built = await runBuild(fetchImpl);
+  assert.ok(!built.html.includes('class="copy pname"'), 'no project rows');
+  assert.match(built.html, /Nothing came back from the API/, 'the void is explained');
+  assert.match(built.html, /all repos on github/, 'and GitHub is still reachable');
+});
+
+test('a repo with no summary and no description still says something specific', async () => {
+  const fetchImpl = async (url) => {
+    const res = await fixtureFetch(FIXTURES, url);
+    if (!/\/users\/[^/]+\/repos/.test(String(url))) return res;
+    const repos = await res.json();
+    return {
+      ok: true,
+      status: 200,
+      json: async () => [
+        ...repos,
+        {
+          name: 'blank-slate',
+          full_name: 'Jakhmola/blank-slate',
+          html_url: 'https://github.com/Jakhmola/blank-slate',
+          description: '',
+          fork: false,
+          topics: ['portfolio-feature'],
+          language: 'Rust',
+          stargazers_count: 4,
+          pushed_at: '2026-06-09T10:00:00Z',
+        },
+      ],
+    };
+  };
+  const built = await runBuild(fetchImpl);
+  assert.match(built.html, /Rust · 4 stars\. No summary yet/, 'fallback names the repo, not every repo');
 });
 
 test('a corrupted Summary cache degrades to a cold cache instead of failing the build', async () => {
@@ -139,10 +182,22 @@ test('a corrupted Summary cache degrades to a cold cache instead of failing the 
   assert.deepEqual(Object.keys(JSON.parse(await readFile(cachePath, 'utf8'))), [], 'cache rewritten valid');
 });
 
-test('dist/ ships style.css, matter.js and resume.pdf alongside index.html', async () => {
+test('dist/ ships style.css, tweak.js, matter.js and resume.pdf alongside index.html', async () => {
   assert.ok((await stat(path.join(b.outDir, 'style.css'))).isFile());
+  assert.ok((await stat(path.join(b.outDir, 'tweak.js'))).isFile());
   assert.ok((await stat(path.join(b.outDir, 'matter.js'))).isFile());
   assert.ok((await stat(path.join(b.outDir, 'resume.pdf'))).size > 0);
+});
+
+// Order is load-bearing three times over: tweak.js has to put saved values on
+// :root before first paint, it can only override the probe's reading if it runs
+// after it, and matter.js reads its knobs from the object tweak.js defines.
+test('tweak.js loads undeferred, after the mode probe and before matter.js', () => {
+  const probe = b.html.indexOf("document.documentElement.className='matter'");
+  const tweak = b.html.indexOf('<script src="tweak.js"></script>');
+  const matter = b.html.indexOf('<script src="matter.js" defer>');
+  assert.ok(probe !== -1 && tweak !== -1 && matter !== -1, 'all three scripts present');
+  assert.ok(probe < tweak && tweak < matter, 'probe -> tweak -> matter');
 });
 
 test('page carries title, description, and Open Graph meta tags', () => {

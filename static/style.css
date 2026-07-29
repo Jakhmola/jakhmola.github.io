@@ -5,19 +5,108 @@
  *
  * `html.matter` = the matter site: four fixed pages, headings hidden because the
  * particle system draws them, copy revealed as the caret passes.
- * The class is set by an inline probe in <head>, so neither mode ever flashes. */
+ * The class is set by an inline probe in <head>, so neither mode ever flashes.
+ *
+ * Every value a visitor can tune lives in the `:root` token block below and
+ * nowhere else -- tweak.js writes those custom properties and nothing more. A
+ * literal further down the file is a value the panel cannot reach, which is the
+ * one thing this stylesheet is not allowed to have. See The Every Knob Rule. */
 
 :root {
+  /* ------------------------------------------------------------- palette -- */
   --bg: #0a0c0e;
+  --cold: #07090b;
   --panel: #0a0d10;
   --ink: #e8edef;
   --accent: #67e8f9;
-  --dim: rgba(232, 237, 239, 0.62);
-  --dimmer: rgba(232, 237, 239, 0.4);
-  --line: rgba(232, 237, 239, 0.14);
+
+  /* Every neutral is an alpha of --ink, never a separately chosen grey (The
+   * Alpha, Not Grey, Rule). Four knobs drive all of them, so moving the ink
+   * moves the whole set with it. */
+  --ink-a: 85%;
+  --link-a: 65%;
+  --dim-a: 62%;
+  --quiet-a: 55%;
+  --dimmer-a: 40%;
+  --line-a: 14%;
+  --ink85: color-mix(in srgb, var(--ink) var(--ink-a), transparent);
+  --ink65: color-mix(in srgb, var(--ink) var(--link-a), transparent);
+  --dim: color-mix(in srgb, var(--ink) var(--dim-a), transparent);
+  --quiet: color-mix(in srgb, var(--ink) var(--quiet-a), transparent);
+  --dimmer: color-mix(in srgb, var(--ink) var(--dimmer-a), transparent);
+  --line: color-mix(in srgb, var(--ink) var(--line-a), transparent);
+  --line-strong: color-mix(in srgb, var(--ink) calc(var(--line-a) * 1.3), transparent);
+  --line-soft: color-mix(in srgb, var(--ink) calc(var(--line-a) * 0.72), transparent);
+
+  /* ---------------------------------------------------------- typography -- */
+  --display: 'Archivo', system-ui, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --display: 'Space Grotesk', system-ui, sans-serif;
+
+  /* The closed ramp, one rung per line. --fs scales the whole system; the seven
+   * --k-* factors scale one role each, so a heading can be pushed without
+   * dragging body copy along with it. */
+  --fs: 1;
+  --k-display: 1;
+  --k-statement: 1;
+  --k-headline: 1;
+  --k-figure: 1;
+  --k-title: 1;
+  --k-body: 1;
+  --k-label: 1;
+
+  --t-display: calc(clamp(52px, 7.9vw, 120px) * var(--fs) * var(--k-display));
+  --t-display-narrow: calc(clamp(26px, 8.6vw, 120px) * var(--fs) * var(--k-display));
+  --t-statement: calc(clamp(38px, 6vw, 84px) * var(--fs) * var(--k-statement));
+  --t-headline: calc(clamp(34px, 4.4vw, 54px) * var(--fs) * var(--k-headline));
+  --t-figure: calc(42px * var(--fs) * var(--k-figure));
+  --t-address: calc(clamp(18px, 3vw, 28px) * var(--fs) * var(--k-title));
+  --t-title: calc(clamp(22px, 2.2vw, 27px) * var(--fs) * var(--k-title));
+  --t-tagline: calc(clamp(13px, 1.45vw, 18px) * var(--fs) * var(--k-label));
+  --t-tagline-narrow: calc(16px * var(--fs) * var(--k-label));
+  --t-subtitle: calc(16.5px * var(--fs) * var(--k-body));
+  --t-brand: calc(14px * var(--fs) * var(--k-label));
+  --t-body: calc(15px * var(--fs) * var(--k-body));
+  --t-body-sm: calc(13px * var(--fs) * var(--k-body));
+  --t-label: calc(12.5px * var(--fs) * var(--k-label));
+  --t-meta: calc(12px * var(--fs) * var(--k-label));
+  --t-hud: calc(11.5px * var(--fs) * var(--k-label));
+  --t-caption: calc(11px * var(--fs) * var(--k-label));
+  --t-micro: calc(10px * var(--fs) * var(--k-label));
+
+  --w-display: 700;
+  --w-body: 500;
+  /* Archivo's wdth axis. --wdth-name is what the two expanded elements read, so
+   * the phone exception below can cap it without disabling the knob. */
+  --wdth-display: 125%;
+  --wdth-name: var(--wdth-display);
+  --tr-display: -0.02em;
+  --tr-statement: -0.03em;
+  --tr-tagline: 0.14em;
+  --tr-brand: 0.07em;
+  --lh-display: 1.02;
+  --lh-statement: 1.05;
+  --lh-headline: 1.1;
+  --lh-body: 1.7;
+  --lh-body-sm: 1.6;
+
+  /* -------------------------------------------------------------- motion -- */
+  --fade: 0.5s;
+  --rise: 8px;
+  --scale-nav: 0.3s;
+
+  /* -------------------------------------------------------------- layout -- */
   --gutter: 8vw;
+  --maxw: 1180px;
+  --stack: 4.5vh;
+  --block: 2.6vh;
+  --vig: 1;
+  /* The small sigil, in one place: the nav brand has to clear it, and a magic
+   * 40px there stops tracking the moment this size changes. */
+  --sigil-w: 28px;
+  --sigil-h: 40px;
+  --sigil-lg: 1;
+  --r-window: 10px;
+  --r-pill: 20px;
 }
 
 *,
@@ -76,6 +165,18 @@ ul {
   color: var(--accent);
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .dim {
   opacity: 0.5;
 }
@@ -108,13 +209,13 @@ ul {
 .sigil {
   position: relative;
   flex: none;
-  width: 28px;
-  height: 40px;
+  width: var(--sigil-w);
+  height: var(--sigil-h);
 }
 
 .sigil.lg {
-  width: 120px;
-  height: 180px;
+  width: calc(120px * var(--sigil-lg));
+  height: calc(180px * var(--sigil-lg));
 }
 
 #hg-sigil {
@@ -138,8 +239,8 @@ ul {
 
 .brand {
   font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.07em;
+  font-size: var(--t-brand);
+  letter-spacing: var(--tr-brand);
   text-transform: uppercase;
   padding: 8px 6px;
 }
@@ -149,12 +250,24 @@ ul {
   gap: 4px;
   align-items: center;
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: var(--t-label);
   text-transform: lowercase;
 }
 
 .navlinks a {
   padding: 8px 10px;
+}
+
+/* The calm reading never runs navActive() -- matter.js early-returns before it
+ * -- so four identical links sat over a 2,691px document with nothing marked.
+ * The URL marks it instead; the hash is what a shared deep link carries anyway.
+ * ponytail: no scroll-spy. That wants an IntersectionObserver and a second
+ * script on the page that exists precisely because JS may not be running. */
+body:has(#pg-home:target) #nl-home,
+body:has(#pg-exp:target) #nl-exp,
+body:has(#pg-proj:target) #nl-proj,
+body:has(#pg-contact:target) #nl-contact {
+  color: var(--accent);
 }
 
 .hud {
@@ -175,8 +288,8 @@ ul {
 .page-in {
   display: flex;
   flex-direction: column;
-  gap: 4.5vh;
-  max-width: 1180px;
+  gap: var(--stack);
+  max-width: var(--maxw);
   margin: 0 auto;
 }
 
@@ -187,7 +300,7 @@ ul {
   gap: 20px;
   flex-wrap: wrap;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--t-meta);
 }
 
 .page-head h2,
@@ -196,9 +309,10 @@ ul {
 }
 
 h2.mt {
-  font-size: clamp(34px, 4.4vw, 54px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: var(--t-headline);
+  font-weight: var(--w-display);
+  letter-spacing: var(--tr-display);
+  line-height: var(--lh-headline);
 }
 
 /* home */
@@ -206,7 +320,10 @@ h2.mt {
 .home-top {
   display: flex;
   align-items: center;
-  gap: 5vw;
+  /* Capped, not bare 5vw: .page-in stops growing at --maxw while a raw vw gap
+   * keeps going, so past ~2800px the gap ate the name's budget and wrapped the
+   * row. See The Sigil Budget Rule. */
+  gap: min(5vw, 96px);
   flex-wrap: wrap;
 }
 
@@ -217,34 +334,47 @@ h2.mt {
   min-width: 0;
 }
 
+/* DOM text, not matter. At a fixed 26px with 0.14em tracking this line measured
+ * 808px at every viewport width, which made it -- not the name -- the element
+ * that set .home-head's width and wrapped the home row. See The Sigil Budget
+ * Rule. It now scales, which puts it below the 26px floor, so it is no longer
+ * built from particles. */
 .tagline {
   font-family: var(--mono);
-  font-size: 26px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
+  font-size: var(--t-tagline);
+  font-weight: var(--w-body);
+  letter-spacing: var(--tr-tagline);
   color: var(--accent);
 }
 
 .name {
   display: flex;
   flex-direction: column;
-  font-size: clamp(52px, 9.5vw, 140px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.02;
+  /* Expanded glyphs run ~27% wider, so the size comes down to keep the name on
+   * one row beside the sigil: .page-in caps at --maxw while the 5vw gap keeps
+   * growing, which makes the widest viewports the binding case, not the
+   * narrowest. Budget is 1180 - 180 (sigil) - 5vw; width is ~7.16x font-size. */
+  font-size: var(--t-display);
+  font-weight: var(--w-display);
+  /* Archivo's wdth axis, widest instance: machine-label proportions for the two
+   * things a person says. Inherits down to the .mt spans the particles sample. */
+  font-stretch: var(--wdth-name);
+  letter-spacing: var(--tr-display);
+  line-height: var(--lh-display);
 }
 
 .home-foot {
   display: flex;
   flex-direction: column;
-  gap: 2.6vh;
+  gap: var(--block);
 }
 
 .pitch,
 .about {
   max-width: 62ch;
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: var(--t-body);
+  font-weight: var(--w-body);
+  line-height: var(--lh-body);
   color: var(--dim);
 }
 
@@ -253,11 +383,11 @@ h2.mt {
   gap: 28px;
   flex-wrap: wrap;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: var(--t-body-sm);
 }
 
 .links a {
-  color: rgba(232, 237, 239, 0.65);
+  color: var(--ink65);
 }
 
 /* experience */
@@ -270,13 +400,13 @@ h2.mt {
 
 .rule {
   height: 1px;
-  background: rgba(232, 237, 239, 0.15);
+  background: var(--line);
   margin-bottom: 20px;
 }
 
 .year {
   font-family: var(--mono);
-  font-size: 42px;
+  font-size: var(--t-figure);
   font-weight: 700;
   line-height: 1;
   color: var(--accent);
@@ -284,15 +414,15 @@ h2.mt {
 
 .epoch h3 {
   margin: 13px 0 7px;
-  font-size: 16.5px;
+  font-size: var(--t-subtitle);
   font-weight: 700;
 }
 
 /* Scoped to .copy: a bare `.epoch p` would outrank `.year` and shrink the
  * matter-built year to body size, which is below the resolvable floor. */
 .epoch .copy p {
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: var(--t-body-sm);
+  line-height: var(--lh-body-sm);
   color: var(--dim);
 }
 
@@ -305,10 +435,10 @@ h2.mt {
 
 .tags li {
   font-family: var(--mono);
-  font-size: 10px;
-  color: rgba(232, 237, 239, 0.55);
-  border: 1px solid rgba(232, 237, 239, 0.18);
-  border-radius: 20px;
+  font-size: var(--t-micro);
+  color: var(--quiet);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
   padding: 2px 9px;
 }
 
@@ -327,10 +457,10 @@ h2.mt {
 
 .project {
   display: grid;
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 52px 1fr;
   gap: 20px;
-  align-items: center;
-  border-bottom: 1px solid rgba(232, 237, 239, 0.1);
+  align-items: baseline;
+  border-bottom: 1px solid var(--line-soft);
   padding: 0 6px 14px;
 }
 
@@ -341,7 +471,7 @@ h2.mt {
 
 .pnum {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--t-meta);
   color: var(--accent);
 }
 
@@ -352,25 +482,33 @@ h2.mt {
   min-width: 0;
 }
 
-/* Floor at 22px: below ~20px the sample grid is coarser than the stroke and the
- * letterform will not resolve from matter. */
+/* DOM text, not matter. At 22-27px this was measurably the least legible content
+ * on the site -- 1.03:1 against the background -- and five of them spent ~a
+ * third of the grain budget at a size the sample grid cannot resolve. Below The
+ * 26px Floor there is no version of this that works as particles. */
 .pname {
   font-family: var(--mono);
-  font-size: clamp(22px, 2.2vw, 27px);
+  font-size: var(--t-title);
   font-weight: 700;
 }
 
 .pdesc {
-  font-size: 13px;
+  font-size: var(--t-body-sm);
   line-height: 1.55;
   color: var(--dim);
   max-width: 620px;
 }
 
 .psrc {
+  align-self: start;
+  margin-top: 4px;
   font-family: var(--mono);
-  font-size: 12px;
-  color: rgba(232, 237, 239, 0.55);
+  font-size: var(--t-meta);
+  color: var(--quiet);
+}
+
+.project.empty .pnum {
+  color: var(--dimmer);
 }
 
 /* contact */
@@ -385,15 +523,16 @@ h2.mt {
   display: flex;
   flex-direction: column;
   gap: 1vh;
-  font-size: clamp(38px, 6vw, 84px);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  font-size: var(--t-statement);
+  font-weight: var(--w-display);
+  font-stretch: var(--wdth-name);
+  letter-spacing: var(--tr-statement);
+  line-height: var(--lh-statement);
 }
 
 .email {
   font-family: var(--mono);
-  font-size: clamp(18px, 3vw, 28px);
+  font-size: var(--t-address);
   font-weight: 700;
   color: var(--accent);
   word-break: break-all;
@@ -404,11 +543,13 @@ h2.mt {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  max-width: 1180px;
+  max-width: var(--maxw);
   margin: 8vh auto 0;
   font-family: var(--mono);
-  font-size: 11px;
-  color: var(--dimmer);
+  font-size: var(--t-caption);
+  /* ink-62, not ink-40: at 11px the dimmer token measures 3.39:1 and fails AA.
+   * This is the only body text on the site that was under the threshold. */
+  color: var(--dim);
 }
 
 /* ============================================================ matter mode == */
@@ -434,9 +575,17 @@ h2.mt {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  opacity: var(--vig);
+  /* Both stops are mixes of tokens rather than picked darks, so a repalette takes
+   * the atmosphere with it instead of leaving a cold frame around a warm field.
+   * --vig scales the whole thing through opacity, which is the one knob here. */
   background:
-    radial-gradient(ellipse 70% 58% at 50% 44%, rgba(18, 24, 28, 0.55) 0%, rgba(10, 12, 14, 0) 60%),
-    radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, rgba(6, 8, 9, 0.8) 100%);
+    radial-gradient(
+      ellipse 70% 58% at 50% 44%,
+      color-mix(in srgb, var(--ink) 4%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, color-mix(in srgb, var(--cold) 80%, transparent) 100%);
 }
 
 .matter #matter,
@@ -468,14 +617,14 @@ h2.mt {
   position: fixed;
   top: 13px;
   left: 3.2vw;
-  width: 28px;
-  height: 40px;
+  width: var(--sigil-w);
+  height: var(--sigil-h);
   z-index: 45;
 }
 
 .matter .sigil.lg {
-  width: 180px;
-  height: 260px;
+  width: calc(180px * var(--sigil-lg));
+  height: calc(260px * var(--sigil-lg));
 }
 
 .matter .topnav {
@@ -496,12 +645,12 @@ h2.mt {
 }
 
 .matter .brand {
-  margin-left: 40px;
+  margin-left: calc(var(--sigil-w) + 12px);
 }
 
 .matter .navlinks a {
   opacity: 0.75;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--scale-nav) ease;
 }
 
 .matter .navlinks a[aria-current='page'] {
@@ -521,9 +670,9 @@ h2.mt {
   padding: 15px 3.2vw;
   pointer-events: none;
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: var(--t-hud);
   text-transform: uppercase;
-  color: rgba(232, 237, 239, 0.55);
+  color: var(--quiet);
 }
 
 .matter .hud span:last-child {
@@ -566,17 +715,21 @@ h2.mt {
 
 .matter .copy {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(var(--rise));
   transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
+    opacity var(--fade) ease,
+    transform var(--fade) ease;
 }
 
+/* 3.2vw, not the 8vw page gutter: this row stacks directly on the HUD, and two
+ * adjacent fixed rows with a 70px difference in left margin read as a mistake.
+ * The HUD wins because it is the one that spans the whole viewport. */
 .matter #pg-contact footer {
   position: absolute;
   bottom: 52px;
-  left: var(--gutter);
-  right: var(--gutter);
+  left: 3.2vw;
+  right: 3.2vw;
+  max-width: none;
   margin: 0;
 }
 
@@ -589,15 +742,15 @@ h2.mt {
   z-index: 100;
   align-items: center;
   justify-content: center;
-  background: #07090b;
+  background: var(--cold);
 }
 
 .boot-win {
   width: min(480px, 90vw);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-window);
   background: var(--panel);
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 30px 90px color-mix(in srgb, var(--cold) 60%, transparent);
 }
 
 .boot-bar {
@@ -605,41 +758,43 @@ h2.mt {
   align-items: center;
   gap: 7px;
   padding: 11px 15px;
-  border-bottom: 1px solid rgba(232, 237, 239, 0.1);
+  border-bottom: 1px solid var(--line-soft);
 }
 
+/* Window chrome, not a status light: three descending ink alphas rather than the
+ * borrowed red/amber/green, so the boot terminal introduces no hue of its own.
+ * Positional, because after the color goes there is nothing to name them by. */
 .boot-bar .d {
   width: 9px;
   height: 9px;
   border-radius: 50%;
+  background: var(--dim);
 }
 
-.boot-bar .r {
-  background: #ff5f57;
+.boot-bar .d:nth-child(2) {
+  background: var(--dimmer);
 }
 
-.boot-bar .y {
-  background: #febc2e;
-}
-
-.boot-bar .g {
-  background: #28c840;
+.boot-bar .d:nth-child(3) {
+  background: var(--line);
 }
 
 .boot-title {
   margin-left: 9px;
   font-family: var(--mono);
-  font-size: 11px;
-  color: rgba(232, 237, 239, 0.45);
+  font-size: var(--t-caption);
+  /* ink-55 (5.46:1). The boot terminal is quiet, not exempt: 0.45 measured
+   * 3.99:1 and 0.35 on the hint measured 2.86:1, both under AA. */
+  color: var(--quiet);
 }
 
 #boot-log {
   padding: 16px 20px 20px;
   min-height: 88px;
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: var(--t-label);
   line-height: 2.1;
-  color: rgba(232, 237, 239, 0.85);
+  color: var(--ink85);
 }
 
 #boot-log div {
@@ -662,8 +817,8 @@ h2.mt {
   right: 0;
   text-align: center;
   font-family: var(--mono);
-  font-size: 11px;
-  color: rgba(232, 237, 239, 0.35);
+  font-size: var(--t-caption);
+  color: var(--quiet);
 }
 
 .caret-blink {
@@ -680,47 +835,72 @@ h2.mt {
   }
 }
 
-/* ------------------------------------------------------------ pointer ring */
-
-#ring {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 34px;
-  height: 34px;
-  border: 1.5px solid var(--accent);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 300;
-  opacity: 0.5;
-  mix-blend-mode: screen;
-  transform: translate(-100px, -100px);
-}
-
 /* --------------------------------------------------------------- narrow -- */
 
 @media (max-width: 820px) {
   :root {
     --gutter: 6vw;
+    /* "JAKHMOLA" is one token, so wrapping cannot save it -- and `overflow-wrap`
+     * only converts an overflow into a worse defect: at 320px it broke the name
+     * into SHUB / HAM / JAKH / MOLA. The width axis is what has to give.
+     * Expanded runs ~27% wide, which is the whole deficit; at normal width
+     * 8.6vw fits eight characters inside the 88vw the gutters leave, from 320px
+     * up. See The Two Widths Rule -- this is its one exception.
+     *
+     * min(), not a flat `normal`: the panel can still condense the name below
+     * 820px, it just cannot expand it past the width that fits. */
+    --wdth-name: min(var(--wdth-display), 100%);
+    --t-tagline: var(--t-tagline-narrow);
+    --tr-tagline: 0.1em;
   }
 
-  .tagline {
-    font-size: 16px;
-    letter-spacing: 0.1em;
+  .name {
+    font-size: var(--t-display-narrow);
+    overflow-wrap: anywhere;
+  }
+
+  /* Four links plus the brand do not fit one 320px row; the bar is already
+   * `flex-wrap: wrap` but the link group inside it was not. */
+  .navlinks {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .sigil.lg,
   .matter .sigil.lg {
-    width: 84px;
-    height: 126px;
+    width: calc(84px * var(--sigil-lg));
+    height: calc(126px * var(--sigil-lg));
   }
 
   .project {
     grid-template-columns: 40px 1fr;
   }
 
+  /* Every link here is a thumb target and all 18 measured under 44px tall --
+   * 17px on the twelve inline links. Padding rather than min-height, so the
+   * text keeps its baseline inside the row it belongs to. */
+  .brand,
+  .navlinks a,
+  .links a,
+  .page-head a,
+  .psrc,
+  .email {
+    display: inline-block;
+    padding-block: 14px;
+  }
+
+  .navlinks a {
+    padding: 14px 10px;
+  }
+
+  /* The padding above is the tap target; these two rows would otherwise gain
+   * 28px of dead space per line on top of their own gaps. */
+  .links {
+    gap: 0 28px;
+  }
+
   .psrc {
-    grid-column: 2;
+    margin-top: 0;
   }
 
   /* Below this width the fixed-page layout cannot hold four pages of copy;
@@ -760,8 +940,7 @@ h2.mt {
     margin-left: 0;
   }
 
-  .matter .hud,
-  #ring {
+  .matter .hud {
     display: none;
   }
 
@@ -793,6 +972,24 @@ h2.mt {
     position: static;
     margin: 8vh auto 0;
   }
+}
+
+/* ------------------------------------------------------- panel switches -- */
+
+/* Last in the file on purpose: these have to outrank the narrow overrides above
+ * without an !important, and they are furniture only -- nothing switched off
+ * here is the only copy of anything a visitor needs. */
+
+[data-hud='off'] .hud {
+  display: none;
+}
+
+/* The mark's box is what anchors the idle grains, so switching the mark off hides
+ * the drawing and keeps the geometry. In the matter reading the same control
+ * switches off the particles instead -- see `idle` in tweak.js. */
+[data-sigil='off'] .sigil::before,
+[data-sigil='off'] .sigil::after {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

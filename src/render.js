@@ -1,5 +1,12 @@
 // Renders the whole site as one static HTML page via template literals.
 //
+// Class contract for anything inside a <section class="page">: `.mt` = drawn by
+// the particle system, `.copy` = DOM text the transition fades in and out.
+// Everything visible needs one of the two. A bare element is fine on the calm
+// reading and wrong on the matter one, where the outgoing page stays visible
+// until the transition ends and only `.copy` gets hidden -- so it burns through
+// the incoming page at full opacity for the whole 1.7s.
+//
 // Two readings of the same markup:
 //   - no JS / reduced motion / no WebGL -> a plain, calm, scrolling document.
 //   - otherwise -> matter.js adds `.matter` to <html> and the same sections
@@ -62,15 +69,45 @@ function epoch(ep) {
         </article>`;
 }
 
+// Every summary-less repo emitting one identical sentence reads as a bug rather
+// than a fallback. The API already returns the two facts that tell them apart.
+function fallbackBlurb(repo) {
+  const facts = [repo.language, repo.stargazers_count ? `${repo.stargazers_count} stars` : null]
+    .filter(Boolean)
+    .join(' · ');
+  return facts
+    ? `${facts}. No summary yet — the README is on GitHub.`
+    : 'No summary yet — the README is on GitHub.';
+}
+
+// The source link sits under the description, not in a right rail: at 1920 the rail
+// put it 418px from the text it belonged to, and below 820px it landed closer
+// to the divider than to its own row.
+//
+// ponytail: not the whole row as one <a>. That would swallow text selection of
+// the description, and the link is now adjacent to it anyway.
 function projectRow(repo, summary, index) {
   const n = String(index + 1).padStart(2, '0');
   return `        <li class="project">
           <span class="copy pnum">/${n}</span>
-          <span class="pbody">
-            <h3 class="mt pname">${e(repo.name)}</h3>
-            <span class="copy pdesc">${e(summary || repo.description || 'See the repository for details.')}</span>
-          </span>
-          <a class="copy psrc" href="${e(repo.html_url)}" data-scramble>source &rarr;</a>
+          <div class="pbody">
+            <h3 class="copy pname">${e(repo.name)}</h3>
+            <span class="copy pdesc">${e(summary || repo.description || fallbackBlurb(repo))}</span>
+            <a class="copy psrc" href="${e(repo.html_url)}" data-scramble>source &#8599;</a>
+          </div>
+        </li>`;
+}
+
+// The build runs unattended on a nightly cron against a live API. Zero featured
+// repos is a production state, not a hypothetical, and the page it produced was
+// an illegible heading over a void.
+function emptyProjects(config) {
+  return `        <li class="project empty">
+          <span class="copy pnum">/--</span>
+          <div class="pbody">
+            <span class="copy pdesc">Nothing came back from the API on the last rebuild. The repositories are still there; this page just could not see them.</span>
+            <a class="copy psrc" href="${e(config.github)}" data-scramble>github &#8599;</a>
+          </div>
         </li>`;
 }
 
@@ -94,15 +131,19 @@ export function renderPage({ config, featured, summaries, builtAt = new Date() }
   <link rel="icon" href="${FAVICON}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..700&family=JetBrains+Mono:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="style.css">
   <script>${MODE_PROBE}</script>
+  <!-- Not deferred, and after the probe on purpose: tweak.js has to put saved
+       values on :root before first paint, and it can override the probe's choice
+       of reading. matter.js reads its knobs from the object it defines. -->
+  <script src="tweak.js"></script>
   <script src="matter.js" defer></script>
 </head>
 <body>
   <div id="boot" aria-hidden="true">
     <div class="boot-win">
-      <div class="boot-bar"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="boot-title">jakhmola.sys &mdash; v4</span></div>
+      <div class="boot-bar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="boot-title">jakhmola.sys &mdash; v4</span></div>
       <div id="boot-log"></div>
     </div>
     <p class="boot-hint">any input skips &#9654;</p>
@@ -126,13 +167,16 @@ ${navLinks()}
     <span>v4.0 &mdash; &#8727; MATTER IS CONSERVED</span>
   </p>
 
+  <!-- The HUD counter is decorative; this is how a page change is announced. -->
+  <p id="pg-live" class="sr-only" aria-live="polite"></p>
+
   <main>
     <section id="pg-home" class="page" aria-label="Home">
       <div class="page-in">
         <div class="home-top">
           <div class="home-head">
-            <p class="mt tagline">${e(config.tagline)}</p>
-            <h1 class="name"><span class="mt">${e(first.toUpperCase())}</span><span class="mt">${e(surname.join(' ').toUpperCase())}</span></h1>
+            <p class="copy tagline">${e(config.tagline)}</p>
+            <h1 class="name"><span class="mt">${e(first.toUpperCase())}</span> <span class="mt">${e(surname.join(' ').toUpperCase())}</span></h1>
           </div>
           <div id="hg-home" class="sigil lg" aria-hidden="true"></div>
         </div>
@@ -164,18 +208,18 @@ ${config.experience.map(epoch).join('\n')}
       <div class="page-in">
         <div class="page-head">
           <h2 class="mt">Projects</h2>
-          <a class="copy" href="${e(config.github)}" data-scramble>all repos on github &rarr;</a>
+          <a class="copy" href="${e(config.github)}" data-scramble>all repos on github &#8599;</a>
         </div>
         <ul class="projects">
-${featured.map((r, i) => projectRow(r, summaries[r.full_name], i)).join('\n')}
+${featured.length ? featured.map((r, i) => projectRow(r, summaries[r.full_name], i)).join('\n') : emptyProjects(config)}
         </ul>
       </div>
     </section>
 
     <section id="pg-contact" class="page" aria-label="Contact">
       <div class="page-in center">
-        <h2 class="ct"><span class="mt">${e(line1)}</span><span class="mt accent">${e(line2)}</span></h2>
-        <a class="mt email" href="mailto:${e(config.email)}">${e(config.email)}</a>
+        <h2 class="ct"><span class="mt">${e(line1)}</span> <span class="mt accent">${e(line2)}</span></h2>
+        <a class="copy email" href="mailto:${e(config.email)}">${e(config.email)}</a>
         <p class="copy links">
           <a href="${e(config.github)}" data-scramble>github &#8599;</a>
           <a href="${e(config.linkedin)}" data-scramble>linkedin &#8599;</a>
