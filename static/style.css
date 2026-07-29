@@ -1008,9 +1008,10 @@ h2.mt {
   display: none;
 }
 
-/* The mark's box is what anchors the idle grains, so switching the mark off hides
- * the drawing and keeps the geometry. In the matter reading the same control
- * switches off the particles instead -- see `idle` in tweak.js. */
+/* Hides the drawing and keeps the box, which is still what the caret takes as its
+ * origin on a first load. Both readings draw the mark in CSS now, so this is the
+ * only control it has; the `idle` knob this used to point at went with the
+ * particle hourglass. */
 [data-sigil='off'] .sigil::before,
 [data-sigil='off'] .sigil::after {
   display: none;

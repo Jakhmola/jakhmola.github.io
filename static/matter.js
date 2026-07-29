@@ -1,10 +1,11 @@
 // The matter system: one conserved particle buffer that spells the site.
 //
 // Every heading marked `.mt` is sampled off-screen into a point cloud. Navigating
-// runs one choreography over that single buffer -- a caret consumes the current
-// page's glyphs, carries the grains across, and emits them into the next page's
-// letterforms. Nothing is created or destroyed; between pages the grains idle in
-// an hourglass at the page's anchor.
+// runs one choreography over that single buffer: a caret sweeps the current page
+// and everything it passes over burns out as a code character, it travels, and it
+// sweeps the next page typing each slot back into existence. Nothing is created
+// or destroyed -- the entry that manifests into a slot is the one that vacated
+// it -- and nothing idles anywhere in between.
 //
 // Runs only when index.html's head probe set `.matter` on <html> (WebGL present,
 // motion not reduced, viewport wide enough). Otherwise the page is already a
@@ -666,12 +667,16 @@ void main(){
           list.push({ el, fs, g, hero, l: r.left, r: r.right, cy: r.top + r.height / 2, top: r.top, loc });
         });
         list.sort((a, b) => a.top - b.top || a.l - b.l);
-        // Reserve grains for the idle hourglass, then thin proportionally --
-        // but never the name, which keeps every sample it took.
-        // 380 grains held back for the idle hourglass, and never more than 80% of
-        // the live budget spent on one page -- both proportions of NP now, so a
-        // smaller budget thins the pages instead of starving the loop.
-        const cap = Math.min(NP - 380, Math.round(NP * 0.8));
+        // Thin proportionally -- but never the name, which keeps every sample it
+        // took. Never more than 80% of the live budget on one page, so a page
+        // change always has grains that are already gone to manifest from.
+        //
+        // A flat 380 used to be held back on top of this, for grains to idle in
+        // the hourglass between pages. Nothing idles anywhere now. At the 9,000
+        // default the 80% term bound and the 380 was inert, which is why it
+        // survived the rewrite -- but below a 1,900 budget it took over, and the
+        // panel's slider goes down to 1,200.
+        const cap = Math.round(NP * 0.8);
         const heroTot = list.reduce((s, tg) => s + (tg.hero ? tg.loc.length : 0), 0);
         const tot = list.reduce((s, tg) => s + tg.loc.length, 0) - heroTot;
         const keep = tot > cap - heroTot ? (cap - heroTot) / tot : 1;
@@ -1839,9 +1844,14 @@ void main(){
       const ac = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#67e8f9';
       const tr = this.tr;
       if (tr && tr.full && tr.segs.length) {
-        const T = Math.min(1, tr.T);
-        const c = this.caretPos(T);
-        const c2 = this.caretPos(Math.max(0, T - 0.012));
+        // Not `T`. That is the knob object this whole file reads, and a local of
+        // the same name shadowed it here -- so `T.caretTilt` was a property of a
+        // Number, the clamp returned NaN, and `ctx.rotate(NaN)` is specified to
+        // do nothing. The caret has never once leaned, and its knob has never
+        // done anything, for as long as both have existed.
+        const at = Math.min(1, tr.T);
+        const c = this.caretPos(at);
+        const c2 = this.caretPos(Math.max(0, at - 0.012));
         // 0.3rad ≈ 17°, an italic caret. The old nozzle could lean to 0.45 and
         // still read as a cone; a bar at that angle reads as a slash.
         const tilt = CLAMP((c.x - c2.x) * 0.012, -T.caretTilt, T.caretTilt);

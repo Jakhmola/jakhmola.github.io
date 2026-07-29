@@ -99,7 +99,13 @@
         { k: 'kLabel', t: 'range', d: 1, min: 0.5, max: 2, step: 0.01, css: '--k-label', fx: 'resample', l: 'Scale · labels' },
         { k: 'wDisplay', t: 'range', d: 700, min: 300, max: 900, step: 10, css: '--w-display', fx: 'resample', l: 'Weight · display' },
         { k: 'wBody', t: 'range', d: 500, min: 200, max: 800, step: 10, css: '--w-body', fx: 'resample', l: 'Weight · body' },
-        { k: 'wdth', t: 'range', d: 125, min: 62, max: 150, step: 1, u: '%', css: '--wdth-display', fx: 'resample', l: 'Width axis' },
+        // Clamped to the axis range the font is actually fetched over -- see the
+        // `Archivo:wdth,wght@100..125,500..700` request in render.js and in
+        // DISPLAY_FONTS above. It used to run 62-150, and outside 100..125 the
+        // browser was synthesising or clamping an instance that was never loaded:
+        // a control with fake travel at both ends. Widening this means widening
+        // the font request in the same change.
+        { k: 'wdth', t: 'range', d: 125, min: 100, max: 125, step: 1, u: '%', css: '--wdth-display', fx: 'resample', l: 'Width axis' },
         { k: 'trDisplay', t: 'range', d: -0.02, min: -0.1, max: 0.2, step: 0.002, u: 'em', css: '--tr-display', fx: 'resample', l: 'Tracking · display' },
         { k: 'trStatement', t: 'range', d: -0.03, min: -0.1, max: 0.2, step: 0.002, u: 'em', css: '--tr-statement', fx: 'resample', l: 'Tracking · statement' },
         { k: 'trTagline', t: 'range', d: 0.14, min: 0, max: 0.5, step: 0.005, u: 'em', css: '--tr-tagline', l: 'Tracking · tagline' },
@@ -295,7 +301,7 @@
       str: 0.34, rdens: 0.28 },
     Sparse: { count: 4200, grain: 2.6, fill: 0.3, gridk: 52, restS: 1, heroS: 1.4, glint: 0.9,
       rsize: 1.5, rdens: 0.7, str: 0.8 },
-    Loud: { fs: 1.18, kDisplay: 1.15, wdth: 138, trDisplay: -0.035, ext: 30, cam: 0.9, wob: 0.8,
+    Loud: { fs: 1.18, kDisplay: 1.15, trDisplay: -0.035, ext: 30, cam: 0.9, wob: 0.8,
       glint: 1.1, sheen: 0.85, ember: 0.9, flow: 0.8, ergy: 1.9, msize: 3.4, mflash: 2.2 },
     Quiet: { fs: 0.92, kDisplay: 0.85, wdth: 100, vig: 1.4, bright: 0.85, ext: 9, cam: 0.3, wob: 0.13,
       trFull: 2.6, sheen: 0.14, ember: 0.2, flow: 0.18, sway: 0.18, str: 0.2, stail: 0.18,

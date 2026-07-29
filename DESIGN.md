@@ -97,7 +97,7 @@ spacing:
   block: "2.6vh"
 components:
   tag:
-    textColor: "{colors.ink-62}"
+    textColor: "{colors.ink-55}"
     rounded: "{rounded.pill}"
     padding: "2px 9px"
   tag-current:
@@ -196,7 +196,7 @@ A single cold cyan against a near-black instrument field, with every other value
 
 **The One Hue Rule.** The system has exactly one chromatic value. Every other color is a neutral or an alpha of the ink. A second hue breaks the claim that all matter on screen is the same matter. The rule has no exceptions, including borrowed chrome: the boot window quotes an OS titlebar, but its three dots are ink alphas (`--dim`, `--dimmer`, `--line`), not red/amber/green. They are window furniture, not status lights, and they are the first thing a visitor sees — a saturated trio there would spend the single-cyan reveal before the site has drawn a single grain.
 
-**The Specular Ceiling Rule**, which replaces The Additive Ceiling Rule. Signal Cyan is `rgb(0.404, 0.910, 0.976)`, so red is the channel with room to climb: push a grain's luminance past roughly 2.4 and red reaches green, and the pixel stops being cyan. The One Hue Rule breaks in the rendered output while every value in the stylesheet still complies.
+**The Specular Ceiling Rule.** This is what replaced The Additive Ceiling Rule. Signal Cyan is `rgb(0.404, 0.910, 0.976)`, so red is the channel with room to climb: push a grain's luminance past roughly 2.4 and red reaches green, and the pixel stops being cyan. The One Hue Rule breaks in the rendered output while every value in the stylesheet still complies.
 
 What changed is where that pressure comes from. Under `blendFunc(SRC_ALPHA, ONE)` it came from **stacking**, and density was the lever that had to be held. The blend is now `SRC_ALPHA, ONE_MINUS_SRC_ALPHA`: a grain occludes the grains behind it instead of adding to them, so no amount of crowding can core the field out. The only thing that can now is a **specular highlight** on a single grain — ambient plus diffuse plus specular plus rim, on one sprite, exceeding the ceiling on its own.
 
@@ -244,6 +244,8 @@ One finding stays open: **Projects carries 792 grains against home's 4,247.** On
 
 **Axes:** Archivo is loaded as a variable font over `wdth 100..125, wght 500..700` — the two widths and two weights the system uses, and nothing else. Width is a deliberate lever, not a decorative one: see The Two Widths Rule.
 
+**The panel's width slider is clamped to the loaded axis, and that is a rule, not a limitation.** It used to run 62–150% against a font fetched over `100..125`, so both ends of its travel were the browser synthesising an instance that was never downloaded — a control that appeared to work and was inventing glyphs. Widening the slider means widening the font request in the same change. The `Loud` preset, which asked for 138%, now asks for 125%.
+
 ### Hierarchy
 
 Everything at or above 26px is built from matter; everything below it is DOM text. The matter set is **Display, Statement, Headline and Figure** — four roles, down from eight. Tagline, Address and Title were demoted to DOM text (see each), which fixed a real defect in each case and freed roughly half the particle budget for the name. The 26px Floor now has no exceptions in either direction.
@@ -272,7 +274,9 @@ This replaced one uniform 2px grid for the whole page, which was itself a fix fo
 
 Floored at 2 because below that the sprite falls under a device pixel at any grain size that keeps The Grain Ratio Rule, and the row renders as a smudge rather than as grains.
 
-Per-page grain counts at 1440×900 and the default 9,000 budget: home 4,261, contact 5,188, experience 2,136, projects 802. Nothing is held back any more — the idle hourglass that used to reserve 380 of them no longer exists, and grains a page has no room for simply stay gone.
+Per-page grain counts at 1440×900 and the default 9,000 budget: home ~4,250, contact ~5,150, experience ~2,140, projects ~800. **Approximate on purpose** — interior thinning is a coin flip per cell, so the figures move by a few dozen between runs and quoting them to the unit implies a determinism the sampler does not have. An earlier draft of this file quoted two different exact pairs for the same measurement, which is what that costs.
+
+Nothing is held back any more. A flat 380 grains used to be reserved for the idle hourglass on top of the 80% cap; nothing idles anywhere now, and grains a page has no room for simply stay gone. At the default budget the cap bound and the reserve was inert, which is how it survived the rewrite — but below a 1,900 budget it took over, and the slider goes to 1,200.
 
 **The Grain Ratio Rule.** A grain sprite must stay near its sample spacing. Push it much past ~2× and neighbouring sprites merge before the eye resolves either, so the letterform reads as a brush stroke rather than as matter, and the extra coverage is spent on a halo outside the stroke.
 
@@ -354,7 +358,7 @@ Exactly one real shadow exists in the system, and it belongs to the boot termina
 
 ### Shadow Vocabulary
 
-- **Boot lift** (`box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6)`): The boot window only. Its job is to push the terminal in front of the site during the ~1.2s before the site exists.
+- **Boot lift** (`box-shadow: 0 30px 90px color-mix(in srgb, var(--cold) 60%, transparent)`): The boot window only. Its job is to push the terminal in front of the site during the ~1.2s before the site exists. Derived from Cold Start rather than from black, so it repalettes with the field instead of staying a hard-coded shadow the panel cannot reach.
 
 ### Named Rules
 
@@ -368,7 +372,16 @@ Square by default. Content has no corner radius at all — project rows, epoch c
 
 Three exceptions, each earned: tech tags are full pills (20px) because they are labels rather than surfaces; the boot window is softly rounded (10px) because it is a terminal quoting an OS convention; and the boot-bar dots are circles (50%).
 
-The one recurring silhouette is the hourglass — two triangles meeting at a slight waist. It is the site's mark, at 180×260 on the home page and 28×40 in the corner everywhere else, and it is a CSS clip-path in **both** readings. It is never an image file.
+The one recurring silhouette is the hourglass — two triangles meeting at a slight waist. It is the site's mark and a CSS clip-path in **both** readings, never an image file, at three sizes:
+
+| where | size |
+| --- | --- |
+| home page, matter reading | 180×260 |
+| home page, calm reading | 120×180 |
+| home page, below 820px | 84×126 |
+| corner, every page | 28×40 |
+
+The matter reading gets the largest because it has a whole viewport to itself and no copy below the fold competing for the eye.
 
 It used to be traced by whichever grains were idle between pages, and that state no longer exists — matter burns out and re-manifests in place rather than being parked anywhere. That is the better trade twice over: the particle hourglass was the one element that ever measured brighter than the name, and the CSS mark was already authored for the calm reading.
 
@@ -462,7 +475,9 @@ That is inside what the adaptive downscale can rescue — a first transition tha
 
 **The Reload-Free Rule.** A control takes effect on the frame after it moves. Three cannot: the reading (`auto`/`matter`/`calm`) and the boot terminal are decided before the panel exists, so they persist and reload. Everything else — including the particle budget, which is why the buffer is allocated once at a 22,000-grain ceiling and drawn to a live `NP` — resolves live.
 
-**The Panel Owns The Gesture Rule.** The matter site navigates on wheel, arrow keys, digits and swipe. While the panel is open it sets `data-tw="open"` on `<html>` and matter.js refuses all four, because a panel you cannot scroll without changing page is not a panel.
+**The Panel Owns The Gesture Rule.** The matter site navigates on wheel, arrow keys, digits and swipe. While the panel is open it sets `data-tw="open"` on `<html>` and matter.js refuses **three of the four** — because a panel you cannot scroll without changing page is not a panel.
+
+Digits stay live, and the exception is the rule's own argument taken seriously: it is about scrolling, and a digit is not a scroll. Nearly every control in the panel affects matter that appears on exactly one page, so refusing all four made the instrument unable to inspect the thing it instruments. The nav bar also translates clear of the panel while it is open, since the panel is pinned to the edge the nav lives on and was clipping the first link in half.
 
 **The Font Picker Exception.** The Two Faces Rule ends at this panel. Ten display faces and six monos are selectable, injected from the font CDN on first use; a face change repaints the glyph atlas and re-samples every heading once `document.fonts.ready` settles, because a point cloud measured against a fallback is a point cloud of the wrong shape. The rule still governs the *design*: Archivo and JetBrains Mono are the two faces the system ships as, and a third face is never added to the default.
 
