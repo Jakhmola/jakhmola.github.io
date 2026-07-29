@@ -55,16 +55,24 @@ for (const pg of ['home', 'exp', 'proj', 'contact']) {
       box: [x0, y0, x1, y1].map(Math.round),
     };
   });
-  // The quietest real words on the page, as the floor every heading has to beat.
-  // Taken from the DOM rather than from the point cloud: the bar for matter is
-  // the site's own body text, not another piece of matter.
-  const copy = (M.copies[pg] || [])[0];
-  if (copy) {
-    const r = copy.getBoundingClientRect();
+  // The DOM text every heading has to beat, loudest first.
+  //
+  // The bar used to be the *quietest* copy on the page, and that was a bar the
+  // headings could not lose against: a 54px heading built from matter measured
+  // against a 12px label. What a visitor's eye actually competes against is the
+  // loudest thing near it, so the three largest blocks are reported and the
+  // heading has to clear the top of that list, not the bottom.
+  const copies = (M.copies[pg] || [])
+    .map((el) => ({ el, fs: parseFloat(getComputedStyle(el).fontSize) || 0 }))
+    .sort((a, b) => b.fs - a.fs)
+    .slice(0, 3);
+  for (const c of copies) {
+    const r = c.el.getBoundingClientRect();
     out.pages[pg].push({
-      t: 'copy:' + (copy.textContent || '').trim().slice(0, 10),
+      t: 'dom:' + (c.el.textContent || '').trim().slice(0, 12),
       box: [r.left, r.top, r.right, r.bottom].map(Math.round),
       n: 0,
+      fs: Math.round(c.fs),
     });
   }
   void sec;

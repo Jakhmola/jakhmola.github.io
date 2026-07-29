@@ -64,6 +64,16 @@ for (const pg of ['exp', 'proj', 'contact', 'home', 'proj']) {
   });
 }
 
+// The adaptive downscale: a first full transition that misses ~48fps has to cap
+// the pixel ratio at 1 rather than cut the particle count, because the buffer is
+// sized once. Driven at 30fps here, which is the condition it exists for.
+M.perfChecked = false;
+M.dprCap = null;
+M.lastNavAt = -Infinity;
+M.goTo('exp');
+for (let k = 0; k < 300 && M.tr; k++) M.tick(1 / 30);
+out.downscale = { fired: M.dprCap === 1, ratio: M.r.pixelRatio() };
+
 out.ok = out.steps.every(
   (s) =>
     s.frames >= 0 &&

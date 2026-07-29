@@ -15,7 +15,7 @@
     {
       "year": "2019",
       "title": "Engineering foundations",
-      "body": "Full-stack and API engineering — RESTful services on WildFly, scraping pipelines, first computer-vision experiments.",
+      "body": "Full-stack and API engineering: RESTful services on WildFly, scraping pipelines, first computer-vision experiments.",
       "tags": ["Java", "Python", "OpenCV"]
     },
     {
@@ -27,7 +27,7 @@
     {
       "year": "2023",
       "title": "Applied ML systems",
-      "body": "RL agents playing Super Mario, sentiment analysis at scale, live speech-to-text bots — models shipped as working systems.",
+      "body": "RL agents playing Super Mario, sentiment analysis at scale, live speech-to-text bots. Models shipped as working systems.",
       "tags": ["RL", "NLP", "FastAPI"]
     },
     {

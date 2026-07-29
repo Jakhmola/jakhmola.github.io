@@ -1586,8 +1586,16 @@ void main(){
           const ph = A.rank[i] * 6.2832;
           const hx = A.homeX[i];
           const hy = A.homeY[i];
-          let px = hx + Math.sin(t * 1.3 + ph) * T.wob;
-          let py = hy + Math.cos(t * 1.1 + ph * 2) * T.wob;
+          // Every distance in this branch is in units of this grain's own sample
+          // spacing, never in pixels. The Grain Ratio Rule governs how far a
+          // grain may move exactly as it governs how large it may draw: 4px of
+          // flow is a third of a stroke on the name's 3px lattice and most of a
+          // stroke on a 42px figure's 2px one, so one pixel value cannot be
+          // right for both. `baseS` carries the lattice, with the grain's own
+          // scatter already in it.
+          const lat = A.baseS[i];
+          let px = hx + Math.sin(t * 1.3 + ph) * T.wob * lat;
+          let py = hy + Math.cos(t * 1.1 + ph * 2) * T.wob * lat;
           let amp = 1;
           // Flow: the contour drifts along its own stroke. The tangent is the
           // letterform's surface normal turned a quarter, and the normal is the
@@ -1596,7 +1604,7 @@ void main(){
           // what makes the motion read as the stroke flowing rather than as the
           // whole word sliding.
           if (T.flow > 0) {
-            const w = Math.sin(t * 0.8 + ph * 3) * T.flow;
+            const w = Math.sin(t * 0.8 + ph * 3) * T.flow * lat;
             px += -A.nhY[i] * w;
             py += A.nhX[i] * w;
           }
@@ -1634,11 +1642,16 @@ void main(){
               const ad = Math.sqrt(a2) || 1;
               const fq = 1 - ad / auraR;
               if (T.aura > 0) {
-                const fa = fq * fq * T.aura;
+                // Linear, not squared. Squared put almost all of the response
+                // inside the first fifth of the radius, where it is
+                // indistinguishable from the word's own idle shimmer -- so the
+                // one thing the visitor is directly causing was the one thing
+                // they could not attribute to themselves.
+                const fa = fq * T.aura;
                 amp += fa * 0.55;
                 size *= 1 + fa * 0.5;
-                px += (ax / ad) * fa * 7;
-                py += (ay / ad) * fa * 7;
+                px += (ax / ad) * fa * 1.6 * lat;
+                py += (ay / ad) * fa * 1.6 * lat;
               }
               // The share and the reach are one knob. `fq*fq*0.5` peaks at a
               // third of the radius out and falls to nothing at both ends, so
@@ -1890,10 +1903,23 @@ void main(){
         { passive: true },
       );
       addEventListener('keydown', (ev) => {
-        if (root.dataset.tw === 'open') return;
-        if (['ArrowDown', 'PageDown', 'ArrowRight'].includes(ev.key)) nav(1);
+        // A modified key belongs to the browser, not to this site. The audience
+        // this is built for has a dozen tabs open, and `Cmd/Ctrl+1..4` is how
+        // they switch between them -- claiming it means they come back to this
+        // tab and find it on a page they did not choose. Same for `Alt+Left`,
+        // which is Back.
+        if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+        // Digits stay live while the panel is open. The Panel Owns The Gesture
+        // Rule is an argument about scrolling -- a panel you cannot scroll
+        // without changing page is not a panel -- and a digit is not a scroll.
+        // Nearly every control in there affects matter that is only on one
+        // page, so with all five paths refused the instrument cannot be used to
+        // inspect the thing it instruments.
+        const panel = root.dataset.tw === 'open';
+        if (ev.key >= '1' && ev.key <= String(PAGES.length)) this.goTo(PAGES[+ev.key - 1]);
+        else if (panel) return;
+        else if (['ArrowDown', 'PageDown', 'ArrowRight'].includes(ev.key)) nav(1);
         else if (['ArrowUp', 'PageUp', 'ArrowLeft'].includes(ev.key)) nav(-1);
-        else if (ev.key >= '1' && ev.key <= String(PAGES.length)) this.goTo(PAGES[+ev.key - 1]);
       });
       let ty0 = null;
       addEventListener('touchstart', (ev) => {
@@ -1976,7 +2002,10 @@ void main(){
       const pad = (n) => String(n).padStart(2, '0');
       const tk = () => {
         const d = new Date(Date.now() + (330 + new Date().getTimezoneOffset()) * 60000);
-        clock.textContent = `GMT+5:30 IN ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        // Leading, and separated. `GMT+5:30 IN 02:33` parses as the
+        // preposition -- it reads as "in two and a half hours".
+        clock.textContent =
+          `IN · GMT+5:30 · ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
       };
       tk();
       setInterval(tk, 1000);

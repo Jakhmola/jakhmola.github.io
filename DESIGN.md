@@ -208,24 +208,25 @@ Note that **coverage is not the same lever as brightness**, and note also that t
 
 **The Name Reads First Rule.** The name is the one heading a visitor must be able to read, and it is held to that by measurement, not intent. It rests at a larger grain than anything else (`heroS`, against every other heading's `restS`), and the sampler never thins it when the budget gets tight. The bar is **lit coverage inside its own ink box**, which must stay above the site's own body copy on the same page.
 
-Measured at 1440×900 with `node tools/coverage.mjs`, every heading against the first block of copy on its page:
-
-| page | heading | grains | lit | its page's copy |
-| --- | --- | --- | --- | --- |
-| home | `SHUBHAM` | 2,121 | 48.4% | tagline 5.8% |
-| home | `JAKHMOLA` | 2,140 | 44.1% | tagline 5.8% |
-| exp | Experience | 996 | 21.7% | 5.1% |
-| exp | year markers | 269–298 | 32.4–44.5% | 5.1% |
-| proj | Projects | 802 | 20.7% | 7.8% |
-| contact | Let's build | 2,005 | 29.7% | — |
-| contact | something real. | 3,183 | 26.1% | — |
-
 The measurement is taken over the **ink box** — the extent of the sampled point cloud — not the layout box, because a `nowrap; fit-content` span runs well past its last stroke and coverage over that dead space measures the gap rather than the word.
 
-Two live findings this table exposes, both open:
+**It takes two numbers, and getting that wrong nearly cost the material its light.** `lit` is the share of the box carrying signal. `p95` is the 95th-percentile luminance inside it — how bright the mark actually gets. A first pass compared *mean* luminance over lit pixels and concluded matter was systematically dimmer than the DOM text beside it (matter 103–147, DOM 178–199), which read as a serious defect. It is an artifact of the metric: a solid DOM glyph is at full ink over nearly every lit pixel, so its mean sits near its peak, while a field of discrete anti-aliased sprites spends most of its lit pixels on soft edges. Comparing means says matter is dimmer when what it really is, is **sparser**. Chasing that phantom by raising `amb`, `bright` and `rim` bought 20 points of mean and pushed the name's achromatic core from 0.7% to 2.9% — past The Specular Ceiling — for nothing.
 
-- **The contact statement has no quiet copy to beat.** The first `.copy` block on that page is the email address, set large in Signal Cyan at 26.1% — level with the statement above it. The rule's floor is not violated so much as unavailable there; the email is a deliberate second focus, not body text.
-- **Projects carries 802 grains against home's 4,261.** Only `.mt` headings are matter, and that page has exactly one. It is not a regression and not a bug, but it is the page where the system's own claim is least visible.
+Measured at 1440×900 with `node tools/coverage.mjs`, every matter heading against the **loudest** DOM text on its page:
+
+| page | heading | grains | lit | p95 | loudest DOM text | lit | p95 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| home | `SHUBHAM` | 2,101 | 47.6% | 244 | tagline, 18px | 5.8% | 249 |
+| home | `JAKHMOLA` | 2,146 | 45.0% | 244 | tagline, 18px | 5.8% | 249 |
+| exp | Experience | 997 | 30.3% | 240 | epoch titles, 16.5px | — | 239 |
+| exp | year markers | 276–299 | 38.9–51.2% | 227–235 | epoch titles | — | 239 |
+| proj | Projects | 792 | 29.5% | 241 | repo names, 27px | 3.4–6.1% | 239 |
+| contact | Let's build | 2,008 | 28.9% | 237 | email, 28px | 26.1% | 249 |
+| contact | something real. | 3,121 | 26.3% | 237 | email, 28px | 26.1% | 249 |
+
+Matter reaches the same luminance as the type beside it (227–244 against 239–249) and carries four to nine times the ink. The bar is cleared on both counts, and the comparison is now against the loudest element rather than the quietest — the earlier version compared a 54px heading to a 12px label, which is a bar a heading cannot lose against. `tools/probes/align.js` emits the three largest copy blocks per page so the rule is capable of failing.
+
+One finding stays open: **Projects carries 792 grains against home's 4,247.** Only `.mt` headings are matter and that page has exactly one, so it is the page where the system's own claim is least visible. Not a regression, and not fixable inside the renderer.
 
 **Coverage alone was never the bar, and reading it as one is how the name got smeared once already.** Held to coverage only, the answer is always to grow the sprite until the letterform fills in — and at that point the strokes close into cotton wool that measures higher and reads as nothing. The bar is coverage *and* The Grain Ratio Rule, together, checked on the rendered page.
 
@@ -279,6 +280,10 @@ The ratio is now maintained by construction rather than by discipline: a slot ca
 
 Measured on the name: a 3px lattice, `baseS` 2.55–3.75, `heroS` 1.05, `grain` 1.75 and near-gain ~1.14 give a sprite of roughly **6.6px on a 3px grid — 2.2×**, right at the documented edge. It reads as discrete matter rather than as a stroke, and the reason it survives the edge is that the lit forms do not fill their own sprite: the `surface` form falls off from 0.55 of the radius, and the `chip` is a bowtie inside a square. A hard disc at 2.2× would merge. Change any of the three and re-measure the rendered page; do not re-derive it.
 
+**One ratio for every heading, and hierarchy from type size.** `restS` was 0.75 against the name's `heroS` 1.05, which put every non-hero heading at 1.55× its own lattice while the name sat at 2.2×. That is the ratio rule applied unevenly, and it showed: Experience and Projects measured ~20% lit and rendered as a scatter of dust rather than as letterforms, and the year figures were the least legible marks on the site — `2023` was genuinely ambiguous. `restS` is 1.0, which puts them at 2.0× and closes their strokes: Experience 20.6% → 30.3% lit, Projects 20.1% → 29.5%, the year figures 28–35% → 39–51%, with achromatic coring still under 0.5%. The name still dominates by being 114px against 54px, which is what should be carrying that job.
+
+**The rule governs motion as well as size, and in the same units.** How far a grain may travel from its home is bounded by the same spacing that bounds how large it may draw: past it, the grain has left its own place in the letterform. So `wob` and `flow` are multiples of the grain's own sample spacing, not pixel counts — `flow` was 4px, which is a third of a stroke on the name's 3px lattice and most of a stroke on a 42px figure's 2px one, and no single pixel value can be right for both. Measured over twelve seconds by `tools/probes/life.js`: worst-case drift **2.49px on a 3px lattice** with nobody pointing at the page, against 5.65px before. A hand may pull a grain half again as far, because that displacement *is* the effect and the visitor is causing it deliberately; the probe checks both bars separately and fails on either.
+
 **The 26px Floor.** Type below roughly 26px cannot be built from matter: the lattice floors at 2px, and a stroke that thin leaves no room under it. Anything smaller must be DOM text. This is a hard constraint of the renderer, not a preference — and CSS specificity is the usual way it gets violated, since any rule that shrinks a Matter Text element below the floor silently dissolves it.
 
 **The Two Faces Rule.** Archivo speaks as Shubham; JetBrains Mono speaks as the machine. A third face is never added, and neither face crosses into the other's role.
@@ -301,6 +306,8 @@ An expanded Display line measures roughly `7.16 × font-size` (verified: 120px r
 Any change to the display size, the tagline size, the sigil's `180px`, the gap cap, or the `1180px` container cap must be re-measured — not re-derived — at **821, 1024, 1279, 1920 and 3440px**. The previous version of this rule named its binding viewports confidently and its own arithmetic predicted the 1024px failure, which shipped anyway. Measure the rendered page.
 
 Last measured across 320 / 360 / 390 / 480 / 680 / 820 / 821 / 900 / 1024 / 1152 / 1200 / 1279 / 1440 / 1920 / 2560 / 2820 / 3440: the row holds at every width from 820px up, each name span occupies exactly one line, and `documentElement.scrollWidth` never exceeds the viewport. Below 820px the row wraps by design — that is the calm stacked reading, not the failure this rule guards.
+
+**Two caveats on how any of that is re-measured.** `tools/bench.mjs` clamps the browser window to a **500px minimum width**, so `--size 320x800` silently yields a 500px viewport: nothing under 500px is reproducible with the shipped harness, and the sub-500 figures above came from a device-emulation pass that is not in the repo. It also loses 87px of height to absent browser chrome, so every figure labelled 1440×900 in this document is a 1440×813 viewport. Neither affects a rule that binds on width above 500px; both matter to anyone re-running the numbers.
 
 **The Nowrap Rule.** Matter Text is measured as a single line. Every `.mt` element is `white-space: nowrap; width: fit-content` in the matter reading, because the sampler rasterizes one line of text at the element's computed font. A heading that wraps will sample wrong.
 
@@ -329,6 +336,19 @@ Everything the material does follows from them. Diffuse and specular are compute
 Depth is scaled by the type size it came from (`shade × fontSize / 120`), because a 42px figure and a 114px name cannot be extruded by the same pixel count without the small one separating into two ghosts of itself.
 
 **The Smallest Mark Bounds the Parallax Rule.** Extrusion and camera lean are single uniforms applied to every grain, so their budget is set by the *smallest* thing built from matter, never the largest. The depth scaling above is what buys the headroom: because the shear a grain receives is proportional to the size of the heading it belongs to, the corner mark and the year figures cannot be wobbled by a value chosen for the name.
+
+**The Hand Has To Be Attributable Rule.** A word answers a hand near it — grains lean toward it, swell and brighten, and a share of them reach for it. That response is worth nothing unless the visitor can tell it is *theirs*, and it is competing against the word's own idle shimmer for the same channel. Two things nearly lost it. The falloff was `(1 − d/r)²`, which puts almost the whole response inside the first fifth of the radius; and the idle terms were large enough (4px of flow on a 3px lattice) that everything past ~40px sat inside the shimmer's own variance. It is linear now, and the idle floor is a third of what it was.
+
+Measured by `tools/probes/life.js`, which isolates the aura by taking the hand away and advancing a *tenth* of a frame — the idle terms move by almost nothing in 1.6ms, and the aura is assigned rather than eased, so what is left is the aura alone at one instant:
+
+| distance from the hand | grains | brightening |
+| --- | --- | --- |
+| 0–60px | 368 | +14.8% |
+| 60–120px | 820 | +8.8% |
+| 120–180px | 1,029 | +2.6% |
+| past 167px | — | none, by construction |
+
+The structure is what matters more than the figures: the aura is a **coherent regional** lift over hundreds of grains, while the ember is **incoherent per-grain** noise on independent phases. A signal that is smaller per grain than the noise still reads, as long as it is the only one of the two that is spatially organised.
 
 Exactly one real shadow exists in the system, and it belongs to the boot terminal.
 
@@ -370,7 +390,9 @@ It used to be traced by whichever grains were idle between pages, and that state
 - **Hover:** Text scrambles through `!<>-_/[]{}=+*^?#$%&@01` and resolves left to right over 550ms. This is the site's only hover flourish and it belongs to links exclusively.
 - **Mobile:** Becomes a sticky translucent bar with a blur and a hairline bottom border, wrapping to two rows.
 
-**The 44px Thumb Rule.** Below 820px every link is a touch target and gets `padding-block: 14px`, which is what carries a 17px line to 45px. Padding, not `min-height`, so the text keeps its baseline inside the row it belongs to. All eighteen links on the calm reading failed this before it was written down, none of them by more than a few pixels of padding — it is the kind of thing that is invisible on a desk and constant on a phone.
+**The 44px Thumb Rule.** Below 820px every link is a touch target and gets `padding-block: 14px`. Padding, not `min-height`, so the text keeps its baseline inside the row it belongs to. All eighteen links on the calm reading failed this before it was written down, none of them by more than a few pixels of padding — it is the kind of thing that is invisible on a desk and constant on a phone.
+
+**14px of padding carries a *mono* line to 44–45px, and only a mono one.** The rule was written from the eleven links that share JetBrains Mono, where `normal` line-height resolves to ~1.32em: 12px → 16 + 28 = 44, 12.5px → 45, 13px → 45. The wordmark is the one link in the list set in the display face, and Archivo's `normal` at 14px resolves to a 15px box — so it measured **43px, one pixel under, at every width below 820px**, silently, for as long as the rule existed. It carries an explicit `line-height: calc(17 / 14)` rather than a second padding value, so the arithmetic is the same for all eighteen. Six of them sit at exactly 44px, which is on the boundary with no margin; a font-size change anywhere in that list has to be re-measured, not re-derived.
 
 ### Chips
 
@@ -416,7 +438,7 @@ The bar carries no grain-flow indicator. The characters burning out or manifesti
 
 ## The Tweak Layer
 
-Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 122 controls over eleven groups, in the order the material is understood in:
+Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 120 controls over eleven groups, in the order the material is understood in:
 
 **Palette · Type · Matter · Material · Life · Reach · Throw · Return · Motion · Layout · System**
 

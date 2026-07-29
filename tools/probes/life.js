@@ -7,7 +7,12 @@
 // seconds -- far longer than any of the periods involved -- and report the
 // alpha swing and the worst distance any settled grain reached from its home.
 //
-// The bar: swing well above 0, drift under a grain's own sample spacing.
+// The bar, and it is checked rather than eyeballed. Swing above 0.4, so the word
+// is not inert. Then The Grain Ratio Rule applied to motion, in two strengths: a
+// grain nobody is touching must stay inside its own sample spacing, because past
+// that it has left its place in the letterform; a grain leaning toward a hand
+// may go half again as far, because that displacement is the effect and the
+// visitor is causing it deliberately.
 
 await (document.fonts ? document.fonts.ready : Promise.resolve());
 await new Promise((r) => setTimeout(r, 2500));
@@ -98,10 +103,67 @@ function throwAndHeal() {
   return { tore: peak, healedAfterFrames: quiet, slotsChanged: moved };
 }
 
+// Can a visitor tell the aura is theirs?
+//
+// The aura's whole job is attribution: the word has to visibly answer the hand,
+// or two tweak groups and the system's fill-rate budget are spent on something
+// nobody can connect to their own mouse. Comparing two separate runs cannot
+// answer that, because the idle life differs between them by more than the aura
+// does. So park the hand, settle, record every grain's alpha -- then take the
+// hand away and advance a *tenth* of a frame. The idle terms move by almost
+// nothing over 1.6ms; the aura is assigned rather than eased, so it drops in
+// full. What is left is the aura alone, per grain, at the same instant.
+function auraByRing() {
+  const tg = M.tg[M.cur][0];
+  const hx = (tg.l + tg.r) / 2;
+  const hy = tg.cy;
+  M.mx = hx;
+  M.my = hy;
+  M.pvx = 0;
+  M.pvy = 0;
+  for (let k = 0; k < 40; k++) M.tick(1 / 60);
+  const held = new Float64Array(n);
+  for (let i = 0; i < n; i++) held[i] = A.aArr[i];
+  M.mx = -9999;
+  M.my = -9999;
+  M.tick(1 / 600);
+  const R = 60;
+  const sum = new Float64Array(7);
+  const cnt = new Float64Array(7);
+  for (let i = 0; i < n; i++) {
+    if (A.st[i] !== 0 || A.aArr[i] < 1e-6) continue;
+    const d = Math.hypot(A.homeX[i] - hx, A.homeY[i] - hy);
+    const b = Math.min(6, (d / R) | 0);
+    sum[b] += held[i] / A.aArr[i] - 1;
+    cnt[b]++;
+  }
+  return Array.from(sum, (v, b) =>
+    cnt[b] ? { upTo: (b + 1) * R + 'px', grains: cnt[b], lift: +((100 * v) / cnt[b]).toFixed(1) + '%' } : null,
+  ).filter(Boolean);
+}
+
 // The name's own middle, and a point 200px above it -- outside the pointer's
 // own radius, inside the aura's.
 const tg = M.tg[M.cur][0];
 const cx = (tg.l + tg.r) / 2;
 const untouched = run(-9999, -9999);
 const aura = run(cx, tg.cy - 200);
-return { untouched, aura, wound: throwAndHeal() };
+const wound = throwAndHeal();
+const auraLift = auraByRing();
+// The lattice these 4,000 grains were cut on. The probe scans the buffer's
+// prefix, which on the home page is the two name spans.
+const lattice = tg.g;
+return {
+  lattice,
+  untouched,
+  aura,
+  auraLift,
+  wound,
+  ok:
+    untouched.swing > 0.4 &&
+    untouched.maxDrift < lattice &&
+    aura.maxDrift < lattice * 1.5 &&
+    wound.tore > 0 &&
+    wound.healedAfterFrames >= 0 &&
+    wound.slotsChanged === 0,
+};

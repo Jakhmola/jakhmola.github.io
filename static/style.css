@@ -890,7 +890,15 @@ h2.mt {
 
   /* Every link here is a thumb target and all 18 measured under 44px tall --
    * 17px on the twelve inline links. Padding rather than min-height, so the
-   * text keeps its baseline inside the row it belongs to. */
+   * text keeps its baseline inside the row it belongs to.
+   *
+   * 14px of padding carries a *mono* line to 44-45px, and only a mono one. The
+   * wordmark is the one link in this list set in the display face, whose
+   * `normal` line-height at 14px resolves to a 15px box rather than mono's 17,
+   * so it landed at 43px -- one pixel under, at every width below 820px,
+   * silently, because the rule was written from the eleven links that share a
+   * face. It gets an explicit line-height instead of a second padding value, so
+   * the arithmetic is the same for all eighteen. */
   .brand,
   .navlinks a,
   .links a,
@@ -899,6 +907,10 @@ h2.mt {
   .email {
     display: inline-block;
     padding-block: 14px;
+  }
+
+  .brand {
+    line-height: calc(17 / 14);
   }
 
   .navlinks a {

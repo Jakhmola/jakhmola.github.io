@@ -116,7 +116,7 @@
         { k: 'count', t: 'range', d: 9000, min: 1200, max: 22000, step: 200, fx: 'count', l: 'Particle budget' },
         { k: 'grain', t: 'range', d: 1.75, min: 0.5, max: 6, step: 0.05, fx: 'uniform', l: 'Grain size' },
         { k: 'heroS', t: 'range', d: 1.05, min: 0.2, max: 2.4, step: 0.05, l: 'Grain · name' },
-        { k: 'restS', t: 'range', d: 0.75, min: 0.2, max: 2, step: 0.05, l: 'Grain · headings' },
+        { k: 'restS', t: 'range', d: 1.0, min: 0.2, max: 2, step: 0.05, l: 'Grain · headings' },
         { k: 'glyphs', t: 'select', d: 'terminal', opts: GLYPH_SETS, fx: 'atlas', l: 'Glyph set' },
         { k: 'glyphsCustom', t: 'text', d: '', fx: 'atlas', l: 'Custom glyphs', when: (v) => v.glyphs === 'custom' },
         { k: 'gridk', t: 'range', d: 36, min: 10, max: 80, step: 1, fx: 'resample', l: 'Sample density' },
@@ -166,13 +166,13 @@
         'a page left alone for an hour is exactly where it started. All of it off is a legal ' +
         'reading: the words hold still and the material still lights.',
       c: [
-        { k: 'wob', t: 'range', d: 0.8, min: 0, max: 6, step: 0.1, u: 'px', l: 'Wobble' },
-        { k: 'flow', t: 'range', d: 4, min: 0, max: 12, step: 0.1, u: 'px', l: 'Stroke flow' },
+        { k: 'wob', t: 'range', d: 0.22, min: 0, max: 1.5, step: 0.01, u: '×', l: 'Wobble' },
+        { k: 'flow', t: 'range', d: 0.34, min: 0, max: 2.5, step: 0.01, u: '×', l: 'Stroke flow' },
         { k: 'ember', t: 'range', d: 0.56, min: 0, max: 1.5, step: 0.02, l: 'Ember' },
         { k: 'sheen', t: 'range', d: 0.4, min: 0, max: 1.5, step: 0.02, l: 'Sheen' },
         { k: 'sheenT', t: 'range', d: 4, min: 1.5, max: 16, step: 0.5, u: 's', l: 'Sheen · period' },
         { k: 'sheenW', t: 'range', d: 90, min: 20, max: 400, step: 5, u: 'px', l: 'Sheen · band width' },
-        { k: 'aura', t: 'range', d: 0.58, min: 0, max: 1.5, step: 0.02, l: 'Hand · aura' },
+        { k: 'aura', t: 'range', d: 0.5, min: 0, max: 1.5, step: 0.02, l: 'Hand · aura' },
         { k: 'sreach', t: 'range', d: 2.2, min: 0.5, max: 8, step: 0.1, u: '×', l: 'Hand · felt within' },
         { k: 'sway', t: 'range', d: 0.5, min: 0, max: 1.5, step: 0.02, l: 'Light sway' },
       ],
@@ -295,10 +295,10 @@
       str: 0.34, rdens: 0.28 },
     Sparse: { count: 4200, grain: 2.6, fill: 0.3, gridk: 52, restS: 1, heroS: 1.4, glint: 0.9,
       rsize: 1.5, rdens: 0.7, str: 0.8 },
-    Loud: { fs: 1.18, kDisplay: 1.15, wdth: 138, trDisplay: -0.035, ext: 30, cam: 0.9, wob: 2.4,
-      glint: 1.1, sheen: 0.85, ember: 0.9, flow: 7, ergy: 1.9, msize: 3.4, mflash: 2.2 },
-    Quiet: { fs: 0.92, kDisplay: 0.85, wdth: 100, vig: 1.4, bright: 0.85, ext: 9, cam: 0.3, wob: 0.4,
-      trFull: 2.6, sheen: 0.14, ember: 0.2, flow: 1.6, sway: 0.18, str: 0.2, stail: 0.18,
+    Loud: { fs: 1.18, kDisplay: 1.15, wdth: 138, trDisplay: -0.035, ext: 30, cam: 0.9, wob: 0.8,
+      glint: 1.1, sheen: 0.85, ember: 0.9, flow: 0.8, ergy: 1.9, msize: 3.4, mflash: 2.2 },
+    Quiet: { fs: 0.92, kDisplay: 0.85, wdth: 100, vig: 1.4, bright: 0.85, ext: 9, cam: 0.3, wob: 0.13,
+      trFull: 2.6, sheen: 0.14, ember: 0.2, flow: 0.18, sway: 0.18, str: 0.2, stail: 0.18,
       msize: 1.4, mflash: 0.5 },
   };
 
@@ -464,7 +464,16 @@ background:var(--bg);color:var(--ink);font:400 11px/1.3 var(--mono)}
 .tw-row input[type=checkbox]{width:15px;height:15px;margin:0;accent-color:var(--accent);cursor:pointer}
 #tw-foot{padding:10px 14px;border-top:1px solid var(--line);font-size:10px;line-height:1.5;color:var(--dimmer)}
 @media (max-width:820px){#tw-panel{width:100vw}#tw-tab{top:auto;bottom:12px;writing-mode:horizontal-tb;
-border-right:1px solid var(--line);right:12px}}`;
+border-right:1px solid var(--line);right:12px}
+/* The tab is fixed over a document that scrolls, so without this it covers the
+   same strip of body copy on every screenful, with no way to dismiss it. */
+body{padding-bottom:56px}}
+/* The panel is pinned to the right edge and the nav lives there, so opening it
+   clipped the first nav link in half. Moving the bar out from under it is what
+   makes the digits kept live in matter.js usable: the current page stays
+   legible while a slider is being dragged. */
+html[data-tw=open] .topnav{translate:calc(-1 * min(340px,100vw)) 0}
+html[data-tw=open] .topnav{transition:translate .25s}`;
 
   let panel;
   let tab;

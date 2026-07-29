@@ -162,7 +162,7 @@ ${navLinks()}
   </nav>
 
   <p class="hud" aria-hidden="true">
-    <span id="hud-clock">GMT+5:30 IN --:--:--</span>
+    <span id="hud-clock">IN · GMT+5:30 · --:--:--</span>
     <span id="hud-page">01 / 04 &mdash; INDEX</span>
     <span>v4.0 &mdash; &#8727; MATTER IS CONSERVED</span>
   </p>
