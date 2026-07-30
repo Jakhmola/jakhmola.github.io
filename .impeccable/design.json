@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-29T22:42:35Z",
+  "generatedAt": "2026-07-30T01:45:00Z",
   "title": "Design System: Shubham Jakhmola — Matter",
   "extensions": {
     "colorMeta": {
@@ -496,7 +496,12 @@
       },
       {
         "name": "The Reach Is The Fill Rate Rule",
-        "body": "The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.33, page change 1.71, mid-throw 2.55; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine. That is inside what the adaptive downscale can rescue — a first transition that misses ~48fps caps the pixel ratio at 1 and takes four fifths of the cost back — but it is the number to watch, and it lives in the Reach group. Doubling `sreach` roughly quadruples the worst case. Re-measure with `tools/probes/fill.js` after any change there, not after a change to `count`.",
+        "body": "The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.34, hand sweeping a Trail 0.39, page change 1.75, mid-throw 2.52; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.",
+        "section": "tweak"
+      },
+      {
+        "name": "The Standing Cost Is Not The Peak Cost Rule",
+        "body": "The page change is allowed to be the most expensive thing here because it lasts 1.9 seconds and it is the thing people replay. A cost that never ends has to be judged against a different number: a new standing cost is measured against `idle` (0.22), and a new peak against `nav` (1.75).",
         "section": "tweak"
       },
       {
@@ -523,7 +528,8 @@
       "**Do** let mono speak for the machine (HUD, years, repo names, links, boot log) and Archivo speak for the person (name, headings).",
       "**Do** design both readings. Anything added to the matter site must also make sense in the calm scrolling document, because the same markup serves both.",
       "**Do** ship a control with anything new, in the same change. One line in `SCHEMA` — see The Every Knob Rule.",
-      "**Do** re-measure before changing a default. A slider is free; a default is a claim."
+      "**Do** re-measure before changing a default. A slider is free; a default is a claim.",
+      "**Do** give a new hand response that falls off with distance the radius the hand already has (`repelR × sreach`). The aura and the reach share the same 167px, and a third circle would make the hand's influence a set of unrelated ones instead of one field. The Trail is exempt because it has no falloff — it is emitted by travel, not by proximity, which is why it works over empty field."
     ],
     "donts": [
       "**Don't** add a shadow to content. The boot window is the only elevated surface in the system.",
@@ -533,7 +539,9 @@
       "**Don't** rely on a color difference *within* matter — every particle renders in the same uniform color regardless of the element's CSS.",
       "**Don't** introduce an image, illustration, gradient fill, or texture. Generated assets are unavailable to this project and the identity is built on that absence.",
       "**Don't** write a literal size, color, duration, or particle constant into `style.css` or `matter.js`. If it is worth choosing, it is worth exposing; if it is not worth exposing, it should not be a magic number either.",
-      "**Don't** let a page scroll or reveal a scrollbar in the matter reading."
+      "**Don't** let a page scroll or reveal a scrollbar in the matter reading.",
+      "**Don't** write a hover or pointer offset to `transform`. `.copy` owns `transform` for its reveal and the transition assigns `transform: none` to those elements directly. Use the standalone `translate` property, which composes with it — see Lean.",
+      "**Don't** draw a second pointer. The Caret is not one — it stays where the machine last wrote. The hand is answered by the Trail it writes and the Snap that absorbs it, and neither is an object following the cursor. A blob, a ring, a trailing dot or a full-viewport blend-mode layer is one pointer too many, and the last of those costs a compositing readback every frame besides."
     ]
   }
 }

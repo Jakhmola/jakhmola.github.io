@@ -49,6 +49,12 @@
   // so without this every screenshot of the aura and the reach is a screenshot
   // of the field with nobody in the room.
   const MX = QS.has('mx') ? +QS.get('mx') : null;
+  // `#mx2=900&my2=420` sweeps the hand from (mx,my) to (mx2,my2) across the scrub
+  // instead of parking it. A parked hand cannot produce a Trail at all -- the Trail
+  // is emitted per pixel of travel -- so without this every capture of it is a
+  // capture of a gesture nobody made, and the effect can only be judged by eye on a
+  // real machine. Which is how the first version of it shipped looking wrong.
+  const MX2 = QS.has('mx2') ? +QS.get('mx2') : null;
 
   const PAGES = ['home', 'exp', 'proj', 'contact'];
   const LABELS = { home: 'INDEX', exp: 'EXPERIENCE', proj: 'PROJECTS', contact: 'CONTACT' };
@@ -356,8 +362,21 @@ void main(){
       ['aZ', arrays.zArr, 1, 'land'],
       ['aShade', arrays.shArr, 1, 'land'],
       ['aN', arrays.nArr, 2, 'land'],
-      ['aRot', arrays.rArr, 1, 'once'],
-      ['aGlyph', arrays.gArr, 1, 'once'],
+      // Both of these were 'once', and that was a defect rather than a budget.
+      // `draw` re-sends the 'frame' group every frame and the 'land' group when a
+      // grain changes slot; nothing ever re-sends 'once'. So every runtime write to
+      // a grain's character or its angle was landing in a CPU array the GPU had
+      // stopped reading after seeding -- which silently cost four behaviours this
+      // file goes to some trouble to compute: the manifest flicker that is supposed
+      // to lick through a few glyphs before settling, the character a grain becomes
+      // as it burns out, `salign` aiming a reaching mark at the hand, and the tumble
+      // a thrown grain spins with. All of them worked; none of them were visible.
+      //
+      // Two more NP-float uploads a frame is ~72KB at the default budget. That is
+      // not the kind of cost this system is short of -- see The Reach Is The Fill
+      // Rate Rule, which is about fragments.
+      ['aRot', arrays.rArr, 1, 'frame'],
+      ['aGlyph', arrays.gArr, 1, 'frame'],
     ].map(([name, data, size, when]) => {
       const buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -506,11 +525,35 @@ void main(){
       this.parY = -0.5;
       this.t = 0;
       this.lastNavAt = -Infinity;
+      // The Trail. How many marks are down as of the last frame, how far the hand
+      // has travelled since it last put one down, and where it was when it did.
+      //
+      // Emitted per distance, never per frame: spacing is then a property of the
+      // gesture rather than of the refresh rate, so a slow hand lays a dense line
+      // and a fast one a sparse one -- which is what makes a trail read as a
+      // record of a movement instead of a stream of sparks.
+      this.marks = 0;
+      this.run = 0;
+      this.lx = -9999;
+      this.ly = -9999;
+      // Which grain the next mark comes from. A rotating scan, not the nearest
+      // eligible grain: taking from wherever the hand happens to be gouges one
+      // letter while the rest stays whole, and the hole is then a permanent
+      // feature of that letter rather than a cost spread over the word.
+      this.scan = 0;
+      // The element the pointer is currently absorbed into, the fill animating
+      // toward or away from it, and the element currently leaning. All three are
+      // null when no hand is on anything, and each is dropped the moment its
+      // animation has finished rather than parked at zero -- see stepSnap/stepLean.
+      this.snap = null;
+      this.snapAnim = null;
+      this.lean = null;
     }
 
     start() {
       this.initHudClock();
       this.initScramble();
+      this.initHover();
       this.initNav();
       this.initInput();
 
@@ -533,11 +576,41 @@ void main(){
      *  same URL lands on the same frame on any machine. A capture aims here and
      *  never at a wall-clock instant. Nothing at all without `#t0=`. */
     scrub() {
+      const my0 = MX !== null ? +QS.get('my') : 0;
       if (MX !== null) {
         this.mx = MX;
-        this.my = +QS.get('my');
+        this.my = my0;
       }
-      for (let k = 0; k < T0 * 60; k++) this.tick(1 / 60);
+      const n = T0 * 60;
+      for (let k = 0; k < n; k++) {
+        // Swept over the back half of the scrub, so the field has settled before the
+        // hand starts moving and the capture is of the gesture rather than of the
+        // opening transition with a hand dragged through it.
+        if (MX2 !== null) {
+          const f = Math.max(0, (k / n - 0.5) * 2);
+          this.mx = MX + (MX2 - MX) * f;
+          this.my = my0 + (+QS.get('my2') - my0) * f;
+        }
+        this.tick(1 / 60);
+      }
+      // A parked hand is a position, not a hover: `pointerenter` comes from real
+      // input, which a capture has none of. So the element the hand is actually over
+      // is told the hand arrived -- through the real listener, not by setting the
+      // attribute a shortcut would, since whether the Snap is reachable from a
+      // pointer position is most of what there is to get wrong about it.
+      //
+      // After the scrub, not before. `scrub` is called immediately after `startTr`,
+      // so a hover dispatched at the top of it arrives while a transition is live
+      // and the listener refuses it -- correctly; the caret owns the field. Doing it
+      // here cost one wrong screenshot to learn.
+      if (MX !== null && MX2 === null) {
+        const el = document.elementFromPoint(MX, my0);
+        const hit = el && el.closest('[data-scramble]');
+        if (hit) {
+          hit.dispatchEvent(new PointerEvent('pointerenter', { bubbles: false }));
+          for (let k = 0; k < 30; k++) this.tick(1 / 60);
+        }
+      }
     }
 
     /** Throw the field away and aim at `#t0=` again from a clean seeding.
@@ -750,7 +823,7 @@ void main(){
         pos: new Float32Array(MAXN * 2),
         anch: new Float32Array(MAXN * 2),
         vel: new Float32Array(MAXN * 2),
-        // 0 settled · 1 loose · 4 burning out · 5 gone · 6 manifesting.
+        // 0 settled · 1 loose · 2 trail mark · 4 burning out · 5 gone · 6 manifesting.
         // Numbered, not named, because the debug census prints them as a row and
         // the harness asserts on that row without knowing what they mean.
         st: new Uint8Array(MAXN),
@@ -1340,6 +1413,12 @@ void main(){
         // is standing on; a grain that is already gone has nothing to burn, and
         // simply waits for its cue on the other side.
         const st = A.st[i];
+        // Every mark is handed back before the caret schedules a single slot. The
+        // caret owns the field while it works, and a mark left lying in the middle
+        // of the viewport through a page change belongs to a gesture that is over.
+        // Demoted rather than aged out: the schedule below is about to give it an
+        // exit, and `st` was read once above so the burn timing is unaffected.
+        if (st === 2) A.st[i] = 1;
         if (st !== 4 && st !== 5) {
           A.hAt[i] =
             t0 +
@@ -1571,6 +1650,10 @@ void main(){
       // of it, rather than only by the grains directly under the cursor.
       const auraR = T.repelR * T.sreach;
       const auraR2 = auraR * auraR;
+      // Marks down this frame, for next frame's cap. Counted rather than kept as a
+      // running total, so it cannot drift out of step with the field: a transition
+      // hands marks back without going through the ageing path.
+      let marks = 0;
       // How much larger a loose or dying grain draws its character, so a mark
       // the size of a grain is legible as the symbol it always was.
       const sym1 = T.ssize - 1;
@@ -1590,6 +1673,56 @@ void main(){
         if (st !== 4 && st !== 5 && t >= A.hAt[i]) {
           this.die(i, 0.8);
           st = 4;
+        }
+
+        if (st === 2) {
+          /* ------------------------------------ trail: a mark laid down -- */
+          // Where the hand *was*, not where it is. A mark holds the spot it was put
+          // down on and ages out of it. Nothing here follows the pointer, and that
+          // is the whole difference between a trail and a wake: a trail is a record
+          // of a movement, so each mark has to stay put for the movement to be
+          // legible as a line.
+          const age = (t - A.hT[i]) / T.wlife;
+          if (age >= 1 || !T.trail) {
+            // Out by the same door as everything else: burn out as a character,
+            // then re-type into its own slot. No new ending was invented for this.
+            this.die(i, 0.6);
+            st = 4;
+          } else {
+            marks++;
+            // Full size almost at once, then tapering for the rest of its life, so
+            // the fat end of the trail is the end the hand is at and a still frame
+            // says which way it went. The first version ramped in over a fifth of a
+            // life -- 160ms -- which put the smallest marks at the head and read as
+            // a trail pointing backwards. 5% is enough to be an arrival rather than
+            // a pop, and the decode flash below is doing most of that work anyway.
+            const sym = 1 + sym1;
+            A.sArr[i] = A.baseS[i] * sym * T.wsize * Math.min(1, age * 20) * (1 - age * T.wtaper);
+            // Area paid for in alpha, as everywhere else, and then faded on top of
+            // that. Squared, so a mark holds its presence and then goes quickly
+            // rather than dimming visibly for its whole life.
+            A.aArr[i] = (A.baseA[i] * (1 + A.lead[i] * T.mflash) * (1 - age * age)) / Math.sqrt(sym);
+            A.lead[i] *= Math.exp(-dt * 9);
+            A.gyArr[i] = 1;
+            A.cArr[i] += (chip - A.cArr[i]) * Math.min(1, dt * 5);
+            A.rArr[i] += (A.rest[i] - A.rArr[i]) * Math.min(1, dt * 6);
+            // Both ends of the capsule coincide, so the shader takes its plain path
+            // and the mark is a character rather than a filament. A trail of
+            // filaments reads as hair; a trail of characters reads as typing.
+            A.anch[j] = A.pos[j];
+            A.anch[j + 1] = A.pos[j + 1];
+            A.nArr[j] = Math.cos(A.rArr[i]) * 0.55;
+            A.nArr[j + 1] = Math.sin(A.rArr[i]) * 0.55;
+            // Everything a live mark needs is done. Without this the chain below
+            // falls through to its final `else`, which is the manifest branch --
+            // and that eases `pos` back toward `homeX` and reassigns size and
+            // alpha, so every mark was being quietly dragged home the frame after
+            // it was laid and redrawn as something manifesting. A trail whose
+            // marks do not stay put is not a trail.
+            continue;
+          }
+          // Dead: fall through to the burn branch this frame, exactly as the
+          // lifecycle check above does.
         }
 
         if (st === 0) {
@@ -1840,6 +1973,11 @@ void main(){
         }
       }
 
+      this.marks = marks;
+
+      this.stepTrail();
+      this.stepSnap(dt);
+      this.stepLean(dt);
       this.r.draw();
       this.drawCaret(t);
       if (tr && tr.T >= 1) this.endTr();
@@ -2069,6 +2207,206 @@ void main(){
           if (raf) cancelAnimationFrame(raf);
           raf = null;
           restore();
+        });
+      });
+    }
+
+    /* -------------------------------------------------------------- trail -- */
+
+    /** Take one grain out of the word and put a mark where the hand is.
+     *
+     *  It leaves by the same door everything else does: the grain is placed here
+     *  already swelling from nothing with a decode flash on it, which is the
+     *  manifest's own vocabulary, and when its life is up it burns out as a
+     *  character and re-types into its own slot. So the claim holds unchanged --
+     *  the entry that returns to the word is the entry that left it, and nothing
+     *  on screen was created. */
+    drop(x, y) {
+      const A = this.A;
+      // A bounded walk from wherever the last one left off, not a search for the
+      // nearest eligible grain. Taking from under the hand gouges whichever letter
+      // it happens to be near and leaves the hole there; rotating spreads the cost
+      // across the whole word, where at these counts it is invisible. It also means
+      // the trail works with the hand nowhere near a heading, which a proximity
+      // pick cannot do.
+      for (let k = 0; k < 96; k++) {
+        const i = this.scan;
+        this.scan = (this.scan + 1) % NP;
+        if (A.st[i] !== 0 || A.rank[i] >= T.wshare) continue;
+        const j = i * 2;
+        A.st[i] = 2;
+        A.hT[i] = this.t;
+        A.hAt[i] = Infinity;
+        A.pos[j] = x;
+        A.pos[j + 1] = y;
+        A.anch[j] = x;
+        A.anch[j + 1] = y;
+        A.vel[j] = 0;
+        A.vel[j + 1] = 0;
+        A.sArr[i] = 0;
+        A.lead[i] = 1;
+        A.gyArr[i] = 1;
+        A.rArr[i] = A.rest[i];
+        // A different character every time one appears. Nudged when the hash lands
+        // on the one it was already wearing: "it changed" is the whole point, and a
+        // one-in-eight chance of visibly not changing is a bug a visitor notices
+        // before they could tell you why.
+        const g = glyphOf(i, (this.t * 1000) | 0);
+        A.gArr[i] = g === A.gArr[i] ? (g + 1) & 7 : g;
+        return true;
+      }
+      // The word is already lent out to the cap. Nothing to say about it.
+      return false;
+    }
+
+    /** Lay marks along the path the hand actually took, at a fixed spacing.
+     *
+     *  Interpolated across each frame's segment rather than dropped at wherever the
+     *  pointer ended up. A hand crosses 50px in a frame easily, and putting that
+     *  frame's marks all at one point turns a fast gesture into a clump of three
+     *  instead of a line of three -- which is the difference between a trail and a
+     *  stutter, and it only shows up at speed. */
+    stepTrail() {
+      const mx = this.mx;
+      const my = this.my;
+      // Absorbed into a snapped target, the pointer is not a pointer any more: it is
+      // the box. Nothing trails off it. This is the other half of the Snap, and it
+      // is why the two are one gesture rather than two features.
+      if (!T.trail || mx < -9000 || this.tr || this.snap) {
+        this.lx = mx;
+        this.ly = my;
+        this.run = 0;
+        return;
+      }
+      if (this.lx < -9000) {
+        this.lx = mx;
+        this.ly = my;
+        return;
+      }
+      const dx = mx - this.lx;
+      const dy = my - this.ly;
+      const d = Math.hypot(dx, dy);
+      if (d > 0.01) {
+        const step = Math.max(2, T.wstep);
+        let room = (T.wn | 0) - this.marks;
+        // Distance along this segment at which the next mark falls, given what was
+        // already banked before it started.
+        let at = step - this.run;
+        let last = -1;
+        while (at <= d && room > 0) {
+          if (!this.drop(this.lx + (dx * at) / d, this.ly + (dy * at) / d)) break;
+          last = at;
+          room--;
+          at += step;
+        }
+        // Banked, but never more than one step's worth. Letting a backlog build
+        // while the cap is full would dump the whole thing the instant a mark
+        // expired, which reads as a stutter caused by nothing the hand did.
+        this.run = last >= 0 ? d - last : Math.min(this.run + d, step);
+      }
+      this.lx = mx;
+      this.ly = my;
+    }
+
+    /* --------------------------------------------------------- snap, lean -- */
+
+    /** The pointer is absorbed by what it is over. The element fills with ink, its
+     *  label knocks out to the field colour, and the arrow stops being drawn on it
+     *  -- there is no cursor there any more, because the element became the cursor.
+     *
+     *  Driven from here rather than by a CSS transition on hover. Three of the four
+     *  element groups in this set already own their own `transition` lists at higher
+     *  specificity (`.navlinks a` owns opacity, `.copy` owns opacity and transform
+     *  for the reveal), so a transition declared for this would either lose to them
+     *  or clobber the reveal. One interpolated number, written as a custom property,
+     *  beats every stylesheet rule and fights none of them. */
+    stepSnap(dt) {
+      const S = this.snapAnim;
+      if (!S) return;
+      const live = S.el === this.snap;
+      const k = 1 - Math.exp((-dt * 1000) / T.snapMs);
+      S.k += ((live ? 1 : 0) - S.k) * k;
+      if (!live && S.k < 0.01) {
+        S.el.style.removeProperty('--snap-k');
+        delete S.el.dataset.snap;
+        this.snapAnim = null;
+        return;
+      }
+      S.el.style.setProperty('--snap-k', S.k.toFixed(3));
+    }
+
+    /** The hand pulls a little on the thing under it. Small and critically damped:
+     *  this system is cold and precise, and the elastic overshoot the effect is
+     *  usually built with reads as jelly rather than as magnetism.
+     *
+     *  Writes `translate`, never `transform`. `.copy` owns `transform` for its
+     *  reveal and endTr assigns `transform: none` to those elements directly, so a
+     *  lean written there would be wiped mid-hover on some elements and would wipe
+     *  the reveal on others. The two compose -- the panel already does exactly this
+     *  one level up, translating `.topnav` while its children keep their own
+     *  transforms. */
+    stepLean(dt) {
+      const L = this.lean;
+      if (!L) return;
+      const live = L.on && T.lean && !this.tr && this.mx > -9000 && root.dataset.tw !== 'open';
+      const tx = live ? (this.mx - L.cx) * T.leanF : 0;
+      const ty = live ? (this.my - L.cy) * T.leanF : 0;
+      const k = 1 - Math.exp(-dt * T.leanK);
+      L.x += (tx - L.x) * k;
+      L.y += (ty - L.y) * k;
+      // Home and released: the inline style comes off rather than being parked at
+      // `0px 0px`, so an element nobody is touching carries nothing from this.
+      if (!live && Math.abs(L.x) < 0.05 && Math.abs(L.y) < 0.05) {
+        L.el.style.translate = '';
+        this.lean = null;
+        return;
+      }
+      L.el.style.translate = `${L.x.toFixed(2)}px ${L.y.toFixed(2)}px`;
+    }
+
+    /** What the hand does to the shell, over the one set of interactive text the
+     *  site has. `[data-scramble]` is already on the nav, the brand, and every
+     *  source and social link, and it is the right set for this too: the Snap and
+     *  the scramble are one gesture -- the machine takes the word over and retypes
+     *  it -- so they share one pair of listeners.
+     *
+     *  The rect is read on enter and never in the frame loop. No page here scrolls
+     *  and none reflows while it is up, so one read is the whole measurement. */
+    initHover() {
+      document.querySelectorAll('[data-scramble]').forEach((el) => {
+        el.addEventListener('pointerenter', () => {
+          if (this.tr) return;
+          const r = el.getBoundingClientRect();
+          if (r.width < 2) return;
+          if (T.snap) {
+            this.snap = el;
+            el.dataset.snap = '';
+            if (!this.snapAnim || this.snapAnim.el !== el) {
+              if (this.snapAnim) {
+                this.snapAnim.el.style.removeProperty('--snap-k');
+                delete this.snapAnim.el.dataset.snap;
+              }
+              this.snapAnim = { el, k: 0 };
+            }
+          }
+          // While the panel is open it has translated the whole nav clear of itself,
+          // so every rect cached in here is wrong by 340px. Refusing is one line and
+          // is The Panel Owns The Gesture Rule applied to a measurement.
+          if (T.lean && root.dataset.tw !== 'open') {
+            const L = this.lean;
+            if (L && L.el !== el) L.el.style.translate = '';
+            // A rect read now is already displaced by whatever lean is still on the
+            // element, so a re-entry mid-return keeps the centre it was first
+            // measured at instead of measuring the displacement into itself.
+            this.lean =
+              L && L.el === el
+                ? ((L.on = true), L)
+                : { el, cx: r.left + r.width / 2, cy: r.top + r.height / 2, x: 0, y: 0, on: true };
+          }
+        });
+        el.addEventListener('pointerleave', () => {
+          if (this.snap === el) this.snap = null;
+          if (this.lean && this.lean.el === el) this.lean.on = false;
         });
       });
     }

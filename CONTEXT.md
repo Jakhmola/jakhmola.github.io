@@ -17,7 +17,7 @@ A repo whose auto-rank score (or a `portfolio-feature` topic) earns it a Project
 _Avoid_: pinned repo, highlight
 
 **Matter**:
-The single 6,000-particle buffer that draws every large heading. Sized once, never reallocated, and conserved across pages: grains are moved, never created or destroyed.
+The single particle buffer that draws every large heading — allocated once at a 22,000-grain ceiling, with 9,000 of them live at the default budget. Never reallocated, and conserved across pages: grains are moved, never created or destroyed.
 _Avoid_: particles (too generic), effect
 
 **Matter Text**:
@@ -25,8 +25,20 @@ A heading marked `.mt`, laid out by the browser for measurement but painted by M
 _Avoid_: headline, particle text
 
 **Caret**:
-The read/write head that drives a transition — it consumes the outgoing page's Matter Text, carries the grains, and emits them into the incoming page's letterforms.
+The read/write head that drives a transition — it consumes the outgoing page's Matter Text, carries the grains, and emits them into the incoming page's letterforms. Between transitions it parks at the end of the last heading and stays there — it never follows the mouse.
 _Avoid_: cursor, pointer (that means the mouse)
+
+**Trail**:
+What a moving hand writes with. Every few pixels of travel one grain leaves a heading, appears under the pointer as a code character, holds that spot, and burns home into its own slot — a different character each time it goes and each time it returns. A mark is Matter the word is currently missing, never new Matter.
+_Avoid_: particles following the mouse, cursor effect, wake
+
+**Snap**:
+What a hand does to interactive text: the element fills with ink, its label knocks out to the field colour, and the pointer is not drawn on it — the element has become the pointer.
+_Avoid_: magnetic cursor, hover highlight, active state
+
+**Lean**:
+The small pull a hand exerts on the interactive text under it — the element translates toward the pointer and springs back, critically damped. Rides with the Snap on the same hover.
+_Avoid_: magnetic cursor (that names a component this project does not have), hover bounce
 
 **Calm Site**:
 The same HTML read as a plain scrolling document, served to visitors with no JS, reduced motion, no WebGL, or a narrow viewport. A different, quiet site — not a degraded animation.

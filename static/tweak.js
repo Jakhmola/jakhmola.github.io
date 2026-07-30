@@ -203,6 +203,26 @@
       ],
     },
     {
+      g: 'Trail',
+      note:
+        'The hand writes with the word. Every few pixels of travel one grain leaves a heading and ' +
+        'appears under the pointer as a character, holds the spot it was put down on, and burns home ' +
+        'into its own slot — wearing a different character each time it goes and each time it comes ' +
+        'back. Nothing new arrives on screen: a mark is a grain the word is currently missing. ' +
+        'Marks are taken by a rotating scan rather than from under the hand, so the holes spread ' +
+        'across the whole word instead of gouging whichever letter you happen to be near — which is ' +
+        'also what lets the trail work with the hand nowhere near a heading.',
+      c: [
+        { k: 'trail', t: 'bool', d: true, l: 'Trail' },
+        { k: 'wstep', t: 'range', d: 15, min: 4, max: 60, step: 1, u: 'px', l: 'Mark every' },
+        { k: 'wlife', t: 'range', d: 0.8, min: 0.15, max: 3, step: 0.05, u: 's', l: 'Mark lasts' },
+        { k: 'wn', t: 'range', d: 44, min: 4, max: 200, step: 2, l: 'Marks at once · cap' },
+        { k: 'wsize', t: 'range', d: 1, min: 0.4, max: 2.5, step: 0.05, u: '×', l: 'Mark size' },
+        { k: 'wtaper', t: 'range', d: 0.55, min: 0, max: 1, step: 0.02, l: 'Older marks shrink by' },
+        { k: 'wshare', t: 'range', d: 0.18, min: 0.02, max: 1, step: 0.02, l: 'Share of a word it may borrow' },
+      ],
+    },
+    {
       g: 'Throw',
       note:
         'What a moving hand does. A parked hand does nothing at all — that is the aura’s job, in ' +
@@ -249,6 +269,12 @@
         { k: 'caretTilt', t: 'range', d: 0.3, min: 0, max: 0.8, step: 0.02, u: 'rad', l: 'Caret tilt' },
         { k: 'fade', t: 'range', d: 0.5, min: 0.05, max: 2, step: 0.05, u: 's', css: '--fade', l: 'Copy fade' },
         { k: 'rise', t: 'range', d: 8, min: 0, max: 40, step: 1, u: 'px', css: '--rise', l: 'Copy rise' },
+        { k: 'snap', t: 'bool', d: true, l: 'Hover snaps the target' },
+        { k: 'snapMs', t: 'range', d: 130, min: 30, max: 600, step: 10, u: 'ms', l: 'Snap · fill' },
+        { k: 'snapPad', t: 'range', d: 7, min: 0, max: 24, step: 1, u: 'px', css: '--snap-pad', l: 'Snap · block padding' },
+        { k: 'lean', t: 'bool', d: true, l: 'Links lean toward the hand' },
+        { k: 'leanF', t: 'range', d: 0.15, min: 0.02, max: 0.8, step: 0.01, l: 'Lean · pull' },
+        { k: 'leanK', t: 'range', d: 10, min: 1, max: 40, step: 0.5, u: '/s', l: 'Lean · response' },
         { k: 'scramble', t: 'bool', d: true, l: 'Link scramble' },
         { k: 'scrambleMs', t: 'range', d: 550, min: 100, max: 2000, step: 25, u: 'ms', l: 'Scramble' },
         { k: 'boot', t: 'bool', d: true, fx: 'reload', l: 'Boot terminal' },
