@@ -1287,6 +1287,54 @@ h2.mt {
   display: none;
 }
 
+/* ------------------------------------------------------------------ snap -- */
+
+/* The pointer is absorbed by what it is over: the element fills with ink, its
+ * label knocks out to the field colour, and the arrow is not drawn on it at all.
+ * There is no cursor there because the element became the cursor.
+ *
+ * `cursor: none` is scoped to the snapped element and never to the page. The
+ * system arrow is still the pointer everywhere else — see the Caret's rule. What
+ * dissolves is the pointer *on the thing it has been taken by*, which is the whole
+ * of the effect and none of the cost of a site-wide custom cursor.
+ *
+ * The fill is a pseudo-element rather than a background so that `--snap-pad` can
+ * extend it past the label without touching layout: a nav link that gained real
+ * padding on hover would shove the three links beside it. `z-index: -1` puts it
+ * behind the element's own text and in front of the page, which is transparent. */
+.matter a[data-snap],
+.matter [data-snap] {
+  position: relative;
+  cursor: none;
+  color: color-mix(in srgb, var(--bg) calc(var(--snap-k, 0) * 100%), currentColor);
+  /* Nav links rest at 0.75 and that alpha applies to the whole element, fill and
+   * all — so the first build of this produced a grey block with grey text in it
+   * instead of ink with the label knocked out. A snapped target is the one thing
+   * on screen the hand has hold of; it is not also a quiet one. The `a` selector
+   * is here only to out-specify `.matter .navlinks a`, which owns that 0.75 and
+   * whose own opacity transition then eases this in for free. */
+  opacity: 1;
+}
+
+.matter [data-snap]::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--snap-pad));
+  z-index: -1;
+  background: var(--ink);
+  /* Wipes in from the leading edge rather than fading up. A block that fades reads
+   * as a highlight; a block that is drawn reads as the machine taking the word,
+   * which is the same claim the scramble on this element is making. */
+  transform: scaleX(var(--snap-k, 0));
+  transform-origin: left center;
+}
+
+/* Square, like everything else that is not one of the three spent exceptions —
+ * except a tag, which is a pill, so its snap is one too. */
+.matter .tag[data-snap]::before {
+  border-radius: var(--r-pill);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

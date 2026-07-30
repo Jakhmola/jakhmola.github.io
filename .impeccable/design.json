@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-30T00:30:00Z",
+  "generatedAt": "2026-07-30T03:45:00Z",
   "title": "Design System: Shubham Jakhmola — Matter",
   "extensions": {
     "colorMeta": {
@@ -185,7 +185,11 @@
       },
       "figure": {
         "displayName": "Figure",
-        "purpose": "Epoch year markers, always Signal Cyan, built from matter at a fixed 42px."
+        "purpose": "Epoch year markers, calm reading only. Always Signal Cyan. The one rung on the ramp that no longer draws a grain: on the tape the year is Marker."
+      },
+      "marker": {
+        "displayName": "Marker",
+        "purpose": "The Epoch year on the tape, and the largest mono in the system. Always Signal Cyan. Floored at 64px because a Marker any smaller is Figure again, and capped at 120px so it never outgrows the name. Moving the year here from Figure took it from a 2px to a 3px lattice, which is what lifted the year figures from p95 227-235 to 243-244."
       },
       "address": {
         "displayName": "Address",
@@ -307,6 +311,14 @@
       "description": "A 52px/1fr grid: cyan mono index, then one column holding name, description and source link. The link sits under the description, never in a right rail.",
       "html": "<ul class=\"ds-projects\">\n  <li class=\"ds-project\">\n    <span class=\"ds-pnum\">/01</span>\n    <div class=\"ds-pbody\">\n      <h3 class=\"ds-pname\">matter-lab</h3>\n      <span class=\"ds-pdesc\">A conserved particle buffer that spells its own headings. One draw call, no engine.</span>\n      <a class=\"ds-psrc\" href=\"#\">source ↗</a>\n    </div>\n  </li>\n  <li class=\"ds-project\">\n    <span class=\"ds-pnum\">/02</span>\n    <div class=\"ds-pbody\">\n      <h3 class=\"ds-pname\">ledger-probe</h3>\n      <span class=\"ds-pdesc\">Rust. 41 stars. No summary yet — the README is on GitHub.</span>\n      <a class=\"ds-psrc\" href=\"#\">source ↗</a>\n    </div>\n  </li>\n</ul>",
       "css": ".ds-projects { display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 0; list-style: none; } .ds-project { display: grid; grid-template-columns: 52px 1fr; gap: 20px; align-items: baseline; border-bottom: 1px solid color-mix(in srgb, #e8edef 10.08%, transparent); padding: 0 6px 14px; } .ds-project:last-child { border-bottom: 0; padding-bottom: 0; } .ds-pnum { font: 400 12px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: #67e8f9; } .ds-pbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-pname { margin: 0; font: 700 clamp(22px, 2.2vw, 27px)/1.2 'JetBrains Mono', ui-monospace, Menlo, monospace; color: #e8edef; } .ds-pdesc { font: 500 13px/1.55 'Archivo', system-ui, sans-serif; color: color-mix(in srgb, #e8edef 62%, transparent); max-width: 620px; } .ds-psrc { align-self: start; margin-top: 4px; font: 400 12px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: color-mix(in srgb, #e8edef 55%, transparent); text-decoration: none; } .ds-psrc:hover { color: #67e8f9; } .ds-psrc:focus-visible { outline: 2px solid #67e8f9; outline-offset: 3px; } @media (max-width: 820px) { .ds-project { grid-template-columns: 40px 1fr; } .ds-psrc { display: inline-block; padding-block: 14px; margin-top: 0; } }"
+    },
+    {
+      "name": "Epoch Track",
+      "kind": "custom",
+      "refersTo": "tape-tick",
+      "description": "The Tape's timeline on the Experience page. Ticks are placed by real years, so the gap between two of them is how long that Epoch lasted; the current Epoch's run is filled. Covers tape-rail, tape-tick and tape-tick-current in one snippet. The Caret is drawn over this on its own canvas, so nothing here paints a playhead.",
+      "html": "<div class=\"ds-tape\"><div class=\"ds-tape-rail\"></div><button class=\"ds-tick\" style=\"--at:0%;--run:26.4%\">2019</button><button class=\"ds-tick\" aria-selected=\"true\" style=\"--at:26.4%;--run:26.4%\">2021</button><button class=\"ds-tick\" style=\"--at:52.8%;--run:26.4%\">2023</button><button class=\"ds-tick\" style=\"--at:79.2%;--run:20.8%\">NOW</button></div>",
+      "css": ".ds-tape { position: relative; height: 46px; min-width: 320px; }.ds-tape-rail { position: absolute; top: 0; left: 0; right: 0; height: 1px; background: color-mix(in srgb, var(--ink, #e8edef) 10%, transparent); }.ds-tick { position: absolute; top: 0; left: var(--at); width: var(--run); padding: 13px 10px 0 0; border: 0; background: none; text-align: left; cursor: pointer; color: color-mix(in srgb, var(--ink, #e8edef) 55%, transparent); font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 11px; line-height: 1; transition: color .3s ease; }.ds-tick::before { content: \"\"; position: absolute; top: 0; left: 0; width: 1px; height: 9px; background: color-mix(in srgb, var(--ink, #e8edef) 18%, transparent); }.ds-tick::after { content: \"\"; position: absolute; top: 0; left: 0; width: 100%; height: 9px; }.ds-tick:hover, .ds-tick:focus-visible { color: var(--ink, #e8edef); }.ds-tick:focus-visible { outline: 2px solid var(--accent, #67e8f9); outline-offset: 3px; }.ds-tick[aria-selected=\"true\"] { color: var(--accent, #67e8f9); }.ds-tick[aria-selected=\"true\"]::before { background: var(--accent, #67e8f9); }.ds-tick[aria-selected=\"true\"]::after { background: color-mix(in srgb, var(--accent, #67e8f9) 18%, transparent); }"
     },
     {
       "name": "Project Row — Empty State",
@@ -496,12 +508,12 @@
       },
       {
         "name": "The Reach Is The Fill Rate Rule",
-        "body": "The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.35, wake standing 0.39, wake dragged 0.57, page change 1.71, mid-throw 2.50; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.",
+        "body": "The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.35, hand sweeping a Trail 0.40, page change 1.71, mid-throw 2.52; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.",
         "section": "tweak"
       },
       {
         "name": "The Standing Cost Is Not The Peak Cost Rule",
-        "body": "The page change is allowed to be the most expensive thing here because it lasts 1.9 seconds and it is the thing people replay. The wake is not: it lasts as long as a hand rests on a word, and a cost that never ends has to be judged against a different number. So its cap is set where it adds no more than the whole idle field costs — 0.22 — rather than anywhere near the page change's 1.71. A new standing cost is measured against `idle`; a new peak is measured against `nav`.",
+        "body": "The page change is allowed to be the most expensive thing here because it lasts 1.9 seconds and it is the thing people replay. A cost that never ends has to be judged against a different number: a new standing cost is measured against `idle` (0.22), and a new peak against `nav` (1.71).",
         "section": "tweak"
       },
       {
@@ -518,6 +530,16 @@
         "name": "The Font Picker Exception",
         "body": "The Two Faces Rule ends at this panel. Ten display faces and six monos are selectable, injected from the font CDN on first use; a face change repaints the glyph atlas and re-samples every heading once `document.fonts.ready` settles, because a point cloud measured against a fallback is a point cloud of the wrong shape. The rule still governs the *design*: Archivo and JetBrains Mono are the two faces the system ships as, and a third face is never added to the default.",
         "section": "tweak"
+      },
+      {
+        "name": "The Views, Not Pages, Rule",
+        "body": "The sampling unit is the view and the navigational unit is the page, and they stopped being the same thing on the Tape. The reason is the grain budget, and it is not a small margin: sampled into one shared table the four Epochs ask for 22,118 grains - 2.46x the 9,000 budget, and above the 22,000-grain buffer ceiling. Keyed per view the worst Epoch asks for 6,116, nothing is truncated anywhere, and the page went from the sparsest to the densest on the site. Anything that adds a sequence inside a page adds views, not a second renderer.",
+        "section": "components"
+      },
+      {
+        "name": "The Playback Hands Over Rule",
+        "body": "The Tape plays itself forward once, on a 6s dwell, and the first deliberate input takes it for the rest of the visit - not for the rest of the page, and not until a timer resumes. A timer that resumed would keep taking the Tape back off the visitor, and then nothing on the page is attributable to them, which is the argument The Hand Has To Be Attributable Rule makes about the aura applied to time instead of to space. Deliberate means acted, not present: pointerdown, a key, a wheel, a touch - never pointermove.",
+        "section": "components"
       }
     ],
     "dos": [
@@ -529,7 +551,9 @@
       "**Do** design both readings. Anything added to the matter site must also make sense in the calm scrolling document, because the same markup serves both.",
       "**Do** ship a control with anything new, in the same change. One line in `SCHEMA` — see The Every Knob Rule.",
       "**Do** re-measure before changing a default. A slider is free; a default is a claim.",
-      "**Do** give a new hand response the radius the hand already has (`repelR × sreach`). The aura, the reach and the Wake all fall off over the same 167px, and a fourth number would make the hand's influence a set of unrelated circles instead of one field."
+      "**Do** add a *view* rather than a second renderer when something needs to sequence inside a page. The caret, the schedule and the budget all already work per view — see The Views, Not Pages, Rule.",
+      "**Do** make a measurement tool name its subjects from the field. `align.js` listed its own pages and went silent on the one that changed shape.",
+      "**Do** give a new hand response that falls off with distance the radius the hand already has (`repelR × sreach`). The aura and the reach share the same 167px, and a third circle would make the hand's influence a set of unrelated ones instead of one field. The Trail is exempt because it has no falloff — it is emitted by travel, not by proximity, which is why it works over empty field."
     ],
     "donts": [
       "**Don't** add a shadow to content. The boot window is the only elevated surface in the system.",
@@ -540,8 +564,10 @@
       "**Don't** introduce an image, illustration, gradient fill, or texture. Generated assets are unavailable to this project and the identity is built on that absence.",
       "**Don't** write a literal size, color, duration, or particle constant into `style.css` or `matter.js`. If it is worth choosing, it is worth exposing; if it is not worth exposing, it should not be a magic number either.",
       "**Don't** let a page scroll or reveal a scrollbar in the matter reading.",
+      "**Don't** let anything change page on its own. The tape advances an Epoch by itself and stops at the last one; that is the whole of what may move without being asked.",
+      "**Don't** space a sequence evenly when the intervals mean something. The tape's ticks are placed by real years, and the gap between two of them is the fact the page is there to carry.",
       "**Don't** write a hover or pointer offset to `transform`. `.copy` owns `transform` for its reveal and the transition assigns `transform: none` to those elements directly. Use the standalone `translate` property, which composes with it — see Lean.",
-      "**Don't** add a second drawn pointer. The Caret is the one, and it docks; a blob, a ring, a trailing dot, or a blend-mode cursor layer is one pointer too many and costs a full-viewport compositing readback every frame besides."
+      "**Don't** draw a second pointer. The Caret is not one — it stays where the machine last wrote. The hand is answered by the Trail it writes and the Snap that absorbs it, and neither is an object following the cursor. A blob, a ring, a trailing dot or a full-viewport blend-mode layer is one pointer too many, and the last of those costs a compositing readback every frame besides."
     ]
   }
 }

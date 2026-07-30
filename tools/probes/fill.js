@@ -73,6 +73,51 @@ M.pvy = 0;
 settleFor(60);
 const parked = frags();
 
+// The Trail, priced through the real implementation. A mark is a grain the word is
+// currently missing, so what it costs is only the difference between a mark's sprite
+// and the settled one it replaced -- which is why `drawn` is reported per row: the
+// count must not move, and if it does, something is being created.
+//
+// Two cases, because they are not the same cost. A hand held still lays nothing at
+// all: the Trail is emitted per pixel of travel, so a parked pointer is free. A hand
+// sweeping lays one mark every `wstep` and keeps `wlife` seconds of them alive at
+// once, and that is the standing figure.
+//
+// Measured on the intact field `parked` left behind, and never after the mid-throw
+// sweep below. The first version of this was ordered the other way and 50 marks
+// appeared to cost 0.93 overdraw with a 52px widest sprite -- an arithmetic
+// impossibility, and the tell that two thousand still-loose thrown grains were being
+// priced as the trail.
+const trailWas = V.trail;
+V.trail = true;
+M.mx = cx;
+M.my = tg.cy;
+M.pvx = 0;
+M.pvy = 0;
+settleFor(90);
+const trailParked = { ...frags(), marks: M.marks };
+
+// Swept across the name and out past it, at roughly the speed of a deliberate
+// gesture, sampling every frame. The peak is what a visitor actually pays.
+let trailSwept = trailParked;
+for (let k = 0; k <= 150; k++) {
+  const f = k / 150;
+  M.mx = tg.l - 100 + (tg.r - tg.l + 400) * f;
+  M.my = tg.cy + Math.sin(f * 3.1) * 60;
+  M.pvx = 0;
+  M.pvy = 0;
+  M.tick(1 / 60);
+  const g = frags();
+  if (g.overdraw > trailSwept.overdraw) trailSwept = { ...g, marks: M.marks };
+}
+
+// Off, then wait out a full return, so nothing below is measured on a field that is
+// still handing marks back.
+V.trail = trailWas;
+M.mx = -9999;
+M.my = -9999;
+settleFor(Math.ceil((V.wlife + V.burn + V.mgap + 0.2 + V.mgrow) * 60) + 120);
+
 // Mid-throw: the frame just after a fast sweep, when loose grains are both at
 // symbol size and streaking along their own velocity.
 let torn = idle;
@@ -112,6 +157,8 @@ return {
   note: 'overdraw is per device pixel at the dpr reported above',
   idle,
   parked,
+  trailParked,
+  trailSwept,
   torn,
   nav,
 };

@@ -25,15 +25,19 @@ A heading marked `.mt`, laid out by the browser for measurement but painted by M
 _Avoid_: headline, particle text
 
 **Caret**:
-The read/write head that drives a transition — it consumes the outgoing page's Matter Text, carries the grains, and emits them into the incoming page's letterforms. Between transitions it parks at the end of the last heading, or docks to the end of a link the hand is over. On the Tape it parks on the track instead, at the Epoch it has just written, where the head's position and the position on the recording are one fact.
+The read/write head that drives a transition — it consumes the outgoing page's Matter Text, carries the grains, and emits them into the incoming page's letterforms. Between transitions it parks at the end of the last heading and stays there — it never follows the mouse. On the Tape it parks on the track instead, at the Epoch it has just written, where the head's position and the position on the recording are one fact.
 _Avoid_: cursor, pointer (that means the mouse)
 
-**Wake**:
-The share of a heading's Matter that a nearby hand carries with it, on a leash one felt radius long, before it lets go and burns home into its own slot. The third thing a hand does to Matter, after the aura and the reach.
-_Avoid_: trail, cursor effect, particles following the mouse
+**Trail**:
+What a moving hand writes with. Every few pixels of travel one grain leaves a heading, appears under the pointer as a code character, holds that spot, and burns home into its own slot — a different character each time it goes and each time it returns. A mark is Matter the word is currently missing, never new Matter.
+_Avoid_: particles following the mouse, cursor effect, wake
+
+**Snap**:
+What a hand does to interactive text: the element fills with ink, its label knocks out to the field colour, and the pointer is not drawn on it — the element has become the pointer.
+_Avoid_: magnetic cursor, hover highlight, active state
 
 **Lean**:
-The small pull a hand exerts on the interactive text under it — the element translates toward the pointer and springs back, critically damped.
+The small pull a hand exerts on the interactive text under it — the element translates toward the pointer and springs back, critically damped. Rides with the Snap on the same hover.
 _Avoid_: magnetic cursor (that names a component this project does not have), hover bounce
 
 **Calm Site**:

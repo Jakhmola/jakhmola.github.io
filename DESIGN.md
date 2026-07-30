@@ -390,22 +390,18 @@ Measured by `tools/probes/life.js`, which isolates the aura by taking the hand a
 
 The structure is what matters more than the figures: the aura is a **coherent regional** lift over hundreds of grains, while the ember is **incoherent per-grain** noise on independent phases. A signal that is smaller per grain than the noise still reads, as long as it is the only one of the two that is spatially organised.
 
-**The Wake.** Past leaning and reaching, a hand near a word takes some of it. A share of the grains inside a tighter radius than the hand is felt within enter a carried state, travel with the hand as a loose formation, and let go when the leash runs out — at which point they burn out as code characters and their own slots type back in. It is the third and last thing the hand does to matter, and it is the only standing cost in the system: everything else expensive here is a page change, which lasts two seconds, while a wake lasts as long as a hand rests on a word.
+**The Trail.** The hand writes with the word. Every `wstep` pixels of travel, one grain leaves a heading, appears under the pointer as a code character, holds the spot it was put down on, and burns home into its own slot — wearing a different character each time it goes and each time it comes back. It is the third thing the hand does to matter, after the aura and the reach, and unlike either of those it works with the hand nowhere near a heading.
 
 Four decisions carry it, and each one is the answer to a way the first build was wrong:
 
-- **The leash is the felt radius, not a number of its own.** A grain may be carried one `repelR × sreach` — 167px at the defaults — out of its own letterform and no further, measured from home rather than from the hand, because a carried grain is by definition near the hand and measuring from it would be no leash at all. The aura, the reach filaments and the wake therefore share one falloff, and the hand has one zone of influence rather than three.
-- **Pickup is tighter than the leash.** 0.35 of it, 58px. A hand has to nearly touch a word to take anything, and a travelling hand then collects ahead of itself while the tail behind runs out of tether — which is what makes it a wake rather than a vacuum.
-- **Which grains are eligible is fixed, not sampled.** The same `rank` that decides which grains reach decides which may be carried, so 18% of a word is its mobile fraction and the rest is solid. That is a property of the word, not of the gesture, and it means the same letter does not dissolve differently on each pass.
-- **Each grain seeks its own place in the hand, not the pointer.** Sixty grains pursuing one point converge on it and stack into a single mark; the first build did exactly that, and a hand held still over the name produced one grain-sized blob rather than a wake. A 34px spread seeded from values each grain already carries makes it a formation travelling with the hand, and gives every filament in it its own length. At spread 0 it collapses back to the point, which is a legal reading and how the mistake stays inspectable.
+- **A mark holds still.** It records where the hand *was*, not where it is, and that is the whole difference between a trail and a wake: a line is only legible as a movement if its marks stay where the movement put them. The first build of this let its state fall through the frame loop's chain into the *manifest* branch, which eases position back toward the grain's home — so every mark was dragged into the word one frame after being laid, while the census read exactly right.
+- **Emission is per distance, never per frame.** Spacing is then a property of the gesture rather than of the refresh rate: a slow hand lays a dense line, a fast one a sparse one, and a hand held still lays nothing at all. It is also interpolated across each frame's segment, because a hand crosses 50px in a frame easily and putting that frame's three marks at one point is a clump rather than a line.
+- **Marks are borrowed by a rotating scan, not from under the hand.** Taking the nearest eligible grain gouges whichever letter the pointer is near and leaves the hole there; rotating spreads the cost over the whole word, where at these counts it is invisible. It is also what lets the trail exist over empty field, which a proximity pick cannot do.
+- **Full size at once, tapering after.** The fat end of the trail is the end the hand is at, so a still frame says which way it went. The first build ramped marks in over a fifth of their life — 160ms — which put the smallest marks at the head and read as a trail pointing backwards.
 
-**Nothing new arrives on screen, and that is measurable rather than asserted.** `tools/probes/fill.js` reports the same `drawn` count with 50 carried grains as with 800: the wake is grains the word is currently missing, and what it costs is only the difference between a carried grain's sprite and the settled one it replaced. The lifecycle is the one that already existed — a released grain takes the thrown grain's path home, and the entry that manifests into a slot is the entry that vacated it.
+**Nothing new arrives on screen, and that is measured rather than asserted.** `tools/probes/fill.js` reports the same `drawn` count with no marks as with fourteen: a mark is a grain the word is currently missing, and what it costs is only the difference between its sprite and the settled one it replaced. Marks are handed back in bulk at the start of a transition, before the Caret schedules a slot — the Caret owns the field while it works, and a mark lying in the viewport through a page change belongs to a gesture that is over.
 
-Released in bulk at the start of a transition, before the Caret schedules a single slot. The Caret owns the field while it works, and a grain still chasing the pointer through a page change would be the one thing on screen not answering to it.
-
-**Measured, by `tools/probes/wake.js` and `fill.js` at 1440×900:** a hand held on the name carries 67 grains and adds 0.04 overdraw; dragged, it peaks at 138 and adds 0.22 — which is where the cap is set, because the wake may cost at most what the whole idle field costs. Cost is linear at 0.0011 overdraw per carried grain, four times that at a 2× pixel ratio.
-
-**And it does not cost legibility — it relieves the aura's hot spot.** Measured by `tools/coverage.mjs` with a hand on the page, the name's lit share is unchanged (45.6% with nobody there, 48.3% with a hand, 47.8% with the wake on) while the *cored* share falls back toward the unattended figure: SHUBHAM 0.67% → 1.17% under a hand → 0.71% with the wake. Because the grains the wake takes are the most-strained ones nearest the hand, fewer of them are left to stack past the achromatic point. The Specular Ceiling Rule is easier to hold with the wake on than with it off.
+**Measured at 1440×900:** a hand held still costs nothing at all, because emission is per pixel of travel — 0 marks, 0.35 overdraw, which is the hand-parked figure with no trail in it. Swept, it peaks at 14 marks and 0.40, so the whole effect adds **0.05** overdraw, under a quarter of what the idle field costs.
 
 Exactly one real shadow exists in the system, and it belongs to the boot terminal.
 
@@ -524,11 +520,19 @@ The bar carries no grain-flow indicator. The characters burning out or manifesti
 
 **The mouse pointer is the system arrow.** No custom cursor canvas, no `cursor: none`. The Caret is the only drawn pointer on this site; a second one competing with it is one pointer too many.
 
-**It docks to the word under the hand.** On `pointerenter` of any interactive text — the `[data-scramble]` set: the nav, the brand, and every source and social link — the Caret leaves park, travels to one bar-width past the end of that label, and step-blinks there. The travel is a 170ms time constant, so it arrives in about half a second. The gap is derived from the Caret's own width rather than chosen, because the parked Caret's 14px is a figure for a 114px heading and would put this one halfway across the nav.
+**It does not follow the hand.** The Caret marks where the machine last wrote — the end of the last heading — and it stays there between transitions. A read/write head that chases the mouse is a cursor: a different object with a different job, and having the one impersonate the other cost the transition its anchor and read as the caret wandering off. The hand has its own two answers, below, and neither is the Caret.
 
-This is the other half of the gesture the link scramble already is: the machine has put its write head on a word and is retyping it, so the Caret goes where the retyping is happening. The two share one pair of listeners over one set of elements for exactly that reason. The label's rect is read on enter and never in the frame loop — no page here scrolls and none reflows while it is up, so one read is the whole measurement.
+### Snap
 
-Docking is refused while a transition is live: the Caret is mid-sentence and belongs to the choreography. And the parked or docked Caret hides entirely while a non-collapsed text selection exists, because a drawn caret beside a real one is two carets and the browser's is the one the visitor is driving. The working Caret is exempt from that — stopping the transition because someone dragged across a paragraph would break it.
+The pointer is absorbed by what it is over. On `pointerenter` of any interactive text — the `[data-scramble]` set: the nav, the brand, and every source and social link — the element fills with a block of ink from its leading edge, its label knocks out to the field colour, and the arrow stops being drawn on it. There is no cursor there any more, because the element became the cursor. Leaving reverses it and the block wipes back out.
+
+**`cursor: none` is scoped to the snapped element and never to the page.** The system arrow is still the pointer everywhere else. What dissolves is the pointer *on the thing that has taken it*, which is the whole of the effect and none of the cost — or the accessibility loss — of a site-wide custom cursor.
+
+The fill is a pseudo-element rather than a background, so `--snap-pad` can extend it past the label without touching layout: a nav link that gained real padding on hover would shove the three links beside it. It wipes in on `scaleX` rather than fading, because a block that fades reads as a highlight while a block that is drawn reads as the machine taking the word — the same claim the scramble on that element is already making.
+
+It is driven from the frame loop as one interpolated custom property, not by a CSS transition on hover. Three of the four element groups in this set already own their own `transition` lists at higher specificity, so a transition declared here would either lose to them or clobber the reveal. One number written as a property beats every stylesheet rule and fights none of them.
+
+**A snapped target is not also a quiet one.** Nav links rest at 75% opacity and that alpha applies to the whole element, fill included — so the first build produced a grey block with grey text in it. Snapped, they go to full.
 
 ### Lean
 
@@ -540,11 +544,11 @@ Refused while the panel is open, because the panel has translated the whole nav 
 
 ## The Tweak Layer
 
-Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 141 controls over thirteen groups, in the order the material is understood in:
+Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 142 controls over thirteen groups, in the order the material is understood in:
 
-**Palette · Type · Matter · Material · Life · Reach · Wake · Throw · Return · Motion · Tape · Layout · System**
+**Palette · Type · Matter · Material · Life · Reach · Trail · Throw · Return · Motion · Tape · Layout · System**
 
-— what it is made of, what it is made of visually, what it does when nobody is there, what it does when a hand is near, what a hand takes from it, what a hand does to it, how it comes back, the page change, the recording, the page, the machine. Save writes to `localStorage`; Reset restores exactly what this document describes.
+— what it is made of, what it is made of visually, what it does when nobody is there, what it does when a hand is near, what a hand writes with it, what a hand does to it, how it comes back, the page change, the recording, the page, the machine. Save writes to `localStorage`; Reset restores exactly what this document describes.
 
 Tape carries seven: whether the recording plays itself, the Epoch dwell, the Marker scale, the track's offset, its tick height and run fill, and whether the caret parks on the track. Two of them re-measure rather than resolving on the next frame — the tick height and the head's parked position are the same number, and the park is only recomputed on a transition, so without it the head would sit at the old tick height until the visitor happened to navigate.
 
@@ -560,9 +564,11 @@ The panel is instrumentation, not a second design: it borrows the site's own tok
 
 The measurement is a command, not a judgement call: `node tools/coverage.mjs` screenshots every page and reports lit and cored coverage per heading, and `node tools/bench.mjs probe dist/index.html tools/probes/fill.js` reports what the frame costs. Anything imported from elsewhere has to be re-measured *here* — the reach radius arrived from the lab at 5 and had to be cut to 2.2, because on this page 5 radii is the entire name and the word vanished under its own filaments.
 
-**The Reach Is The Fill Rate Rule.** The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.35, wake standing 0.39, wake dragged 0.57, page change 1.71, mid-throw 2.50; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.
+**The Reach Is The Fill Rate Rule.** The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.35, hand sweeping a Trail 0.40, page change 1.71, mid-throw 2.52; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.
 
-**The Standing Cost Is Not The Peak Cost Rule.** The page change is allowed to be the most expensive thing here because it lasts 1.9 seconds and it is the thing people replay. The wake is not: it lasts as long as a hand rests on a word, and a cost that never ends has to be judged against a different number. So its cap is set where it adds no more than the whole idle field costs — 0.22 — rather than anywhere near the page change's 1.71. A new standing cost is measured against `idle`; a new peak is measured against `nav`.
+**The Standing Cost Is Not The Peak Cost Rule.** The page change is allowed to be the most expensive thing here because it lasts 1.9 seconds and it is the thing people replay. A cost that never ends has to be judged against a different number: a new standing cost is measured against `idle` (0.22), and a new peak against `nav` (1.71).
+
+The Trail passes this by not being a standing cost at all. Emission is per pixel of travel, so a hand resting on the page lays nothing and pays nothing, and the 0.05 it adds exists only while the hand is moving — which is also the only time anyone is looking at it. An earlier design carried grains along with the pointer instead, and that version *was* standing: it cost 0.04 for as long as a hand sat anywhere near a word, forever, for something a still frame could barely show.
 
 Both of those rows are `fill.js`'s business and neither transfers off a headless box as an fps figure. What made them trustworthy was measuring on an intact field: the wake rows were first taken after the mid-throw sweep, and 50 carried grains appeared to cost 0.93 overdraw with a 52px widest sprite — an arithmetic impossibility, and the tell that two thousand still-loose thrown grains were being priced as the wake. Every row now reports `drawn` for that reason.
 
@@ -590,7 +596,7 @@ Digits stay live, and the exception is the rule's own argument taken seriously: 
 - **Do** re-measure before changing a default. A slider is free; a default is a claim.
 - **Do** add a *view* rather than a second renderer when something needs to sequence inside a page. The caret, the schedule and the budget all already work per view — see The Views, Not Pages, Rule.
 - **Do** make a measurement tool name its subjects from the field. `align.js` listed its own pages and went silent on the one that changed shape.
-- **Do** give a new hand response the radius the hand already has (`repelR × sreach`). The aura, the reach and the Wake all fall off over the same 167px, and a fourth number would make the hand's influence a set of unrelated circles instead of one field.
+- **Do** give a new hand response that falls off with distance the radius the hand already has (`repelR × sreach`). The aura and the reach share the same 167px, and a third circle would make the hand's influence a set of unrelated ones instead of one field. The Trail is exempt because it has no falloff — it is emitted by travel, not by proximity, which is why it works over empty field.
 
 ### Don't:
 
@@ -605,4 +611,4 @@ Digits stay live, and the exception is the rule's own argument taken seriously: 
 - **Don't** let anything change page on its own. The tape advances an Epoch by itself and stops at the last one; that is the whole of what may move without being asked.
 - **Don't** space a sequence evenly when the intervals mean something. The tape's ticks are placed by real years, and the gap between two of them is the fact the page is there to carry.
 - **Don't** write a hover or pointer offset to `transform`. `.copy` owns `transform` for its reveal and the transition assigns `transform: none` to those elements directly. Use the standalone `translate` property, which composes with it — see Lean.
-- **Don't** add a second drawn pointer. The Caret is the one, and it docks; a blob, a ring, a trailing dot, or a blend-mode cursor layer is one pointer too many and costs a full-viewport compositing readback every frame besides.
+- **Don't** draw a second pointer. The Caret is not one — it stays where the machine last wrote. The hand is answered by the Trail it writes and the Snap that absorbs it, and neither is an object following the cursor. A blob, a ring, a trailing dot or a full-viewport blend-mode layer is one pointer too many, and the last of those costs a compositing readback every frame besides.
