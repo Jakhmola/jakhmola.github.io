@@ -306,6 +306,7 @@
       c: [
         { k: 'plateRaise', t: 'range', d: 650, min: 150, max: 2000, step: 25, u: 'ms', css: '--plate-raise', l: 'Raise' },
         { k: 'plateInset', t: 'range', d: 7.5, min: 0, max: 22, step: 0.5, u: '%', css: '--plate-inset', l: 'Card inset' },
+        { k: 'plateInsetY', t: 'range', d: 12, min: 2, max: 30, step: 0.5, u: 'vh', css: '--plate-inset-y', l: 'Card inset · vertical' },
         { k: 'plateA', t: 'range', d: 96, min: 40, max: 100, step: 1, u: '%', css: '--plate-a', l: 'Card fill' },
         // How far a name's grains come apart. The one being read holds together
         // more than the four that are not -- the hierarchy is spatial, not an

@@ -555,13 +555,13 @@ Refused while the panel is open, because the panel has translated the whole nav 
 
 ## The Tweak Layer
 
-Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 148 controls over fourteen groups, in the order the material is understood in:
+Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 149 controls over fourteen groups, in the order the material is understood in:
 
 **Palette · Type · Matter · Material · Life · Reach · Trail · Throw · Return · Motion · Tape · Plate · Layout · System**
 
 — what it is made of, what it is made of visually, what it does when nobody is there, what it does when a hand is near, what a hand writes with it, what a hand does to it, how it comes back, the page change, the recording, the index and what rises out of it, the page, the machine. Save writes to `localStorage`; Reset restores exactly what this document describes.
 
-Plate carries eight: the raise, the card's inset and fill, how far the index comes apart and how much the row being read holds together, the Schematic's grown scale and edge alpha, and whether a hover forms a specimen at all. Two of them are read by matter.js rather than written to a custom property, because grains come apart in the frame loop and not in the stylesheet.
+Plate carries nine: the raise, the card's two insets and its fill, how far the index comes apart and how much the row being read holds together, the Schematic's grown scale and edge alpha, and whether a hover forms a specimen at all. Two of them are read by matter.js rather than written to a custom property, because grains come apart in the frame loop and not in the stylesheet.
 
 Tape carries seven: whether the recording plays itself, the Epoch dwell, the Marker scale, the track's offset, its tick height and run fill, and whether the caret parks on the track. Two of them re-measure rather than resolving on the next frame — the tick height and the head's parked position are the same number, and the park is only recomputed on a transition, so without it the head would sit at the old tick height until the visitor happened to navigate.
 

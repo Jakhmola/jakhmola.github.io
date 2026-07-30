@@ -138,6 +138,9 @@
   /* The inset always leaves an outside, because clicking the outside is the only
    * advertised way to lower a plate. */
   --plate-inset: 7.5%;
+  /* The vertical inset is its own value: the card has to clear the nav above it
+   * and the HUD strip below, and neither is a percentage of the viewport. */
+  --plate-inset-y: 12vh;
   --plate-a: 96%;
   /* How much larger the Schematic is drawn once its card is up. The preview and
    * the full drawing are one object at two sizes, not a thumbnail and an image. */
@@ -655,6 +658,15 @@ h2.mt {
   fill: var(--ink65);
 }
 
+/* The drawing's own type is in viewBox units, not on the document's ramp, and it
+ * is the one place in the stylesheet that is true. The geometry around it is
+ * computed at build time against exactly this size, so a rung that scaled with
+ * `--fs` would push labels out of a viewBox that cannot follow them -- and SVG
+ * clips whatever leaves it. The drawing scales as a whole instead, through
+ * `--schem-k`, which is the single control it gets.
+ *
+ * 10 for both, and the hierarchy is carried by ink rather than by size: an edge
+ * label at 9.5 was a font-size that resolved to no step on the ramp at all. */
 .schem .st {
   fill: var(--ink85);
   font-family: var(--mono);
@@ -665,7 +677,7 @@ h2.mt {
 .schem .sl {
   fill: var(--quiet);
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .schem .se {
@@ -1268,9 +1280,9 @@ h2.mt {
  * the transition it sits next to. */
 .matter .project.up {
   position: fixed;
-  top: 12vh;
+  top: var(--plate-inset-y);
   right: var(--plate-inset);
-  bottom: 11vh;
+  bottom: calc(var(--plate-inset-y) - 1vh);
   left: var(--plate-inset);
   /* Above the caret canvas at 40, below the corner mark at 45 and the nav at 50:
    * the writing head must not draw across a raised card, and the nav has to stay
