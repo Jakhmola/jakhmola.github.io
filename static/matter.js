@@ -52,6 +52,38 @@
 
   const PAGES = ['home', 'exp', 'proj', 'contact'];
   const LABELS = { home: 'INDEX', exp: 'EXPERIENCE', proj: 'PROJECTS', contact: 'CONTACT' };
+
+  // A *view* is the unit the field is sampled and scheduled in; a *page* is the
+  // unit the nav, the HUD and the URL talk about. They were the same thing until
+  // the Experience page became a tape, where one Epoch owns the viewport and the
+  // other three are laid out behind it so they can be measured.
+  //
+  // Keying the point clouds by view rather than by page is the whole of the tape.
+  // `sampleAll` cuts one cloud per Epoch, `startTr` burns the old view's slots
+  // out and types the new view's in, and an Epoch change is therefore mechanically
+  // a page change -- the same caret, the same schedule, no second code path. It
+  // also means only the Epoch on screen spends grain: sampling all four titles
+  // against one budget would ask for roughly four times what the page has.
+  const EPN = document.querySelectorAll('#pg-exp .epoch').length;
+  const VIEWS = PAGES.flatMap((p) =>
+    p === 'exp' && EPN ? Array.from({ length: EPN }, (_, i) => `exp:${i}`) : [p],
+  );
+  const pageOf = (v) => (v && v.split(':')[0]) || v;
+  const epOf = (v) => {
+    const i = v ? v.indexOf(':') : -1;
+    return i < 0 ? -1 : +v.slice(i + 1);
+  };
+  // The view a page is entered at from outside it. Always its first: arriving on
+  // Experience from the nav should start the tape at the beginning, not resume
+  // wherever it was left.
+  const firstView = (p) => VIEWS.find((v) => pageOf(v) === p) || p;
+  const isView = (v) => VIEWS.includes(v);
+  // The element a view's `.mt` and `.copy` are read from. An Epoch view sees only
+  // its own subtree, which is what scopes the sample.
+  const rootOf = (v) => {
+    const ep = epOf(v);
+    return ep < 0 ? $('pg-' + v) : $('pg-exp').querySelector(`.epoch[data-ep="${ep}"]`);
+  };
   // The buffer is allocated once at the panel's ceiling and never reallocated;
   // `NP` is how many of those grains are live. Moving the budget changes what is
   // simulated and drawn, not what is allocated, so it stays a slider rather than
@@ -506,11 +538,84 @@ void main(){
       this.parY = -0.5;
       this.t = 0;
       this.lastNavAt = -Infinity;
+      // How many grains the hand was carrying as of the last frame. A field-wide
+      // count cannot be known part-way through the frame that is computing it,
+      // so the wake's cap reads last frame's census -- see tick().
+      this.marks = 0;
+      // How far the hand has travelled since it last put a mark down. The Trail is
+      // emitted per distance rather than per frame, so its spacing is a property of
+      // the gesture and not of the refresh rate.
+      this.run = 0;
+      this.lx = -9999;
+      this.ly = -9999;
+      // Tape playback: live while it is running, taken once a hand has driven it.
+      // `taken` lasts the rest of the visit, not the rest of the page.
+      this.tapeLive = false;
+      this.tapeTaken = false;
+      this.tapeT = null;
+    }
+
+    /* -------------------------------------------------------------- tape -- */
+
+    /** The tape plays itself, once, and then it is the visitor's.
+     *
+     *  Playback is the machine's idle behaviour rather than a carousel. It runs
+     *  forward through the Epochs, parks on the last one, and never wraps round
+     *  or carries on to the next page -- this site does not change page without
+     *  being asked, and an Epoch is the only thing on it that moves by itself.
+     *
+     *  The first deliberate input hands control over for the rest of the visit
+     *  rather than pausing. A timer that resumed would keep taking the tape back
+     *  off the visitor, and then nothing on the page is attributable to them --
+     *  the argument The Hand Has To Be Attributable Rule makes about the aura,
+     *  applied to time instead of to space. Finite, self-terminating and stopped
+     *  by any interaction is also the shape that needs no pause control bolted on.
+     *
+     *  Deliberate means acted, not present: a pointer crossing the field is
+     *  someone watching, and the material answering a hand is not a request to
+     *  stop the recording. Only pointerdown, a key, a wheel or a touch take it. */
+    armTape() {
+      if (T0 || DBG || !EPN || !T.tape || this.tapeTaken) return;
+      this.tapeLive = true;
+      const EVS = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
+      const take = () => {
+        this.tapeTaken = true;
+        this.stopTape();
+        for (const ev of EVS) removeEventListener(ev, take);
+      };
+      for (const ev of EVS) addEventListener(ev, take, { passive: true });
+    }
+
+    stopTape() {
+      this.tapeLive = false;
+      clearTimeout(this.tapeT);
+      this.tapeT = null;
+    }
+
+    /** Queue the next Epoch, or stop because the tape has run out. */
+    cueTape(view) {
+      clearTimeout(this.tapeT);
+      this.tapeT = null;
+      if (!this.tapeLive) return;
+      const ep = epOf(view);
+      const next = ep < 0 ? null : `exp:${ep + 1}`;
+      // Parked on the last Epoch: the recording is over. Stopping here instead of
+      // advancing is the whole of "never auto-navigates off the page", and it
+      // leaves the tape resting at the end where the exit forward is one gesture
+      // away.
+      if (!next || !isView(next)) {
+        this.stopTape();
+        return;
+      }
+      this.tapeT = setTimeout(() => {
+        if (this.tapeLive && !this.tr) this.goTo(next);
+      }, T.tapeMs);
     }
 
     start() {
       this.initHudClock();
       this.initScramble();
+      this.initHover();
       this.initNav();
       this.initInput();
 
@@ -522,8 +627,10 @@ void main(){
         this.ready = true;
         // `#pg-contact` is the visitor's form; `pg=contact` is the harness's,
         // because the two cannot share a hash and a capture has to name a page.
+        // `pg=exp` enters the tape at its first Epoch; `pg=exp:2` names one, so a
+        // capture can aim at a single Epoch without driving the gesture layer.
         const want = QS.get('pg') || location.hash.replace('#pg-', '');
-        this.want = PAGES.includes(want) ? want : 'home';
+        this.want = isView(want) ? want : PAGES.includes(want) ? firstView(want) : 'home';
         this.startTr(this.want, true);
         this.scrub();
       });
@@ -549,10 +656,33 @@ void main(){
       this.cur = null;
       this.t = 0;
       this.sampleAll();
-      this.ancT = this.want === 'home' ? this.ancHome : this.ancSigil;
+      this.ancT = pageOf(this.want) === 'home' ? this.ancHome : this.ancSigil;
       this.seedGone();
       this.startTr(this.want, true);
       this.scrub();
+    }
+
+    /** Which sections and which Epochs are visible.
+     *
+     *  Epochs are toggled exactly the way pages are -- `visibility`, never
+     *  `display` -- because the sampler has to go on measuring the three that are
+     *  off screen, and a `display:none` Epoch measures 0x0 and samples nothing. */
+    showOnly(views) {
+      const live = views.filter(Boolean);
+      const pgs = live.map(pageOf);
+      for (const p of PAGES) {
+        const sec = $('pg-' + p);
+        if (sec) sec.style.visibility = pgs.includes(p) ? 'visible' : 'hidden';
+      }
+      if (!EPN) return;
+      const eps = live.map(epOf).filter((i) => i >= 0);
+      // No Epoch named means the tape is not involved, so leave the Epochs where
+      // they were -- otherwise navigating away from Experience would blank the
+      // page the caret is still consuming.
+      if (!eps.length) return;
+      for (const el of $('pg-exp').querySelectorAll('.epoch')) {
+        el.style.visibility = eps.includes(+el.dataset.ep) ? 'visible' : 'hidden';
+      }
     }
 
     /** Hand the page back to the calm scrolling document and stop everything. */
@@ -566,6 +696,9 @@ void main(){
         sec.style.visibility = '';
         sec.style.pointerEvents = '';
       }
+      document.querySelectorAll('.epoch').forEach((el) => {
+        el.style.visibility = '';
+      });
       document.querySelectorAll('.copy').forEach((el) => {
         el.style.opacity = '';
         el.style.transform = '';
@@ -574,7 +707,13 @@ void main(){
 
     /* ------------------------------------------------------------ sample -- */
 
-    /** Rasterize every `.mt` heading to a point cloud in viewport coordinates. */
+    /** Rasterize every `.mt` heading to a point cloud in viewport coordinates.
+     *
+     *  One cloud per *view*, not per page: on the Experience tape each Epoch is
+     *  its own view, so its year and title are cut separately and only the Epoch
+     *  on screen is ever in the slot table. All four Epochs are laid out at the
+     *  same box behind each other for exactly this reason -- see the tape block
+     *  in style.css. */
     sampleAll() {
       const off = document.createElement('canvas');
       const octx = off.getContext('2d', { willReadFrequently: true });
@@ -583,8 +722,9 @@ void main(){
       this.copies = {};
       this.sweep = {};
       this.slots = {};
-      for (const pg of PAGES) {
-        const sec = $('pg-' + pg);
+      for (const pg of VIEWS) {
+        const sec = rootOf(pg);
+        if (!sec) continue;
         const list = [];
         sec.querySelectorAll('.mt').forEach((el) => {
           const r = el.getBoundingClientRect();
@@ -750,7 +890,7 @@ void main(){
         pos: new Float32Array(MAXN * 2),
         anch: new Float32Array(MAXN * 2),
         vel: new Float32Array(MAXN * 2),
-        // 0 settled · 1 loose · 4 burning out · 5 gone · 6 manifesting.
+        // 0 settled · 1 loose · 2 carried · 4 burning out · 5 gone · 6 manifesting.
         // Numbered, not named, because the debug census prints them as a row and
         // the harness asserts on that row without knowing what they mean.
         st: new Uint8Array(MAXN),
@@ -1058,7 +1198,7 @@ void main(){
       this.needMeasure = false;
       this.nRM = (this.nRM || 0) + 1;
       this.sampleAll();
-      this.ancT = !this.cur || this.cur === 'home' ? this.ancHome : this.ancSigil;
+      this.ancT = !this.cur || pageOf(this.cur) === 'home' ? this.ancHome : this.ancSigil;
       if (this.cur) {
         this.assignInstant(this.cur);
         this.parkCaret(this.cur);
@@ -1106,7 +1246,7 @@ void main(){
 
     manifest(i) {
       const A = this.A;
-      const S = this.slots[this.slotPg];
+      const S = this.slots[this.slotView];
       // Past this page's slot count there is nothing to be part of. The grain
       // stays gone -- still allocated, still counted, simply not this page.
       if (!S || i >= S.n) {
@@ -1175,9 +1315,13 @@ void main(){
 
     /* --------------------------------------------------------- transition -- */
 
-    goTo(page) {
-      if (!this.ready || this.tr || page === this.cur) return;
-      this.startTr(page, false);
+    /** Accepts a view or a page. A page resolves to its first view, so a nav click
+     *  on Experience starts the tape at the beginning and a click on the page it
+     *  is already showing is still a no-op. */
+    goTo(target) {
+      const view = isView(target) ? target : firstView(target);
+      if (!this.ready || this.tr || view === this.cur) return;
+      this.startTr(view, false);
     }
 
     /** Timeline of caret segments: consume the old page, travel, emit the new. */
@@ -1322,7 +1466,7 @@ void main(){
       const sl = this.slots[page];
       // The table the grains' slot indices currently point into. Read before it
       // is moved on, because the consume sweep is timed off the old page.
-      const osl = this.slots[this.slotPg];
+      const osl = this.slots[this.slotView];
       const sd = this.buildSegs(full, oldPg && full ? this.tg[oldPg] : null, ntgs);
       const dur = full ? (first ? T.trFirst : T.trFull) : T.trQuick;
       const t0 = this.t;
@@ -1340,6 +1484,13 @@ void main(){
         // is standing on; a grain that is already gone has nothing to burn, and
         // simply waits for its cue on the other side.
         const st = A.st[i];
+        // Anything the hand was carrying is handed back here, before the caret
+        // schedules a single slot. The caret owns the field while it works, and
+        // a grain still chasing the pointer through a transition would be the one
+        // thing on screen not answering to it. Demoted to loose rather than
+        // released: the schedule below is about to give it an exit anyway, and
+        // `st` is read once, above, so the burn-out timing is unaffected.
+        if (st === 2) A.st[i] = 1;
         if (st !== 4 && st !== 5) {
           A.hAt[i] =
             t0 +
@@ -1359,7 +1510,7 @@ void main(){
             : Infinity;
         if (st === 5) A.hAt[i] = A.mAt[i];
       }
-      this.slotPg = page;
+      this.slotView = page;
 
       for (const el of oldPg ? this.copies[oldPg] : []) el.style.opacity = '0';
       const newCopies = this.copies[page] || [];
@@ -1371,13 +1522,14 @@ void main(){
           : 0.45 + (0.4 * ix) / nc;
         return { el, at, done: false };
       });
-      for (const p of PAGES) {
-        const sec = $('pg-' + p);
-        sec.style.pointerEvents = 'none';
-        if (p === page || p === oldPg) sec.style.visibility = 'visible';
-      }
-      this.ancT = page === 'home' ? this.ancHome : this.ancSigil;
+      for (const p of PAGES) $('pg-' + p).style.pointerEvents = 'none';
+      this.showOnly([page, oldPg]);
+      this.ancT = pageOf(page) === 'home' ? this.ancHome : this.ancSigil;
       this.park = null;
+      // The caret is about to be the transition's, so it cannot also be a label's.
+      // Its cached rect is stale from this point anyway: the page underneath it is
+      // being replaced.
+      this.dock = null;
       this.tr = { T: 0, dur, full, page, oldPg, segs: sd.segs, rv, frames: 0, acc: 0 };
       this.setHud(page);
       this.navActive(page);
@@ -1411,11 +1563,9 @@ void main(){
       // it left the page; the last few characters go on settling into flesh
       // behind it, on their own clock, which is what the tail of a sentence
       // being typed actually looks like.
+      this.showOnly([tr.page]);
       for (const p of PAGES) {
-        const sec = $('pg-' + p);
-        const on = p === tr.page;
-        sec.style.visibility = on ? 'visible' : 'hidden';
-        sec.style.pointerEvents = on ? 'auto' : 'none';
+        $('pg-' + p).style.pointerEvents = p === pageOf(tr.page) ? 'auto' : 'none';
       }
       for (const r of tr.rv) {
         if (!r.done) {
@@ -1426,11 +1576,24 @@ void main(){
       this.cur = tr.page;
       this.lastNavAt = performance.now();
       try {
-        history.replaceState(null, '', '#pg-' + tr.page);
+        // The page, not the view. The calm reading marks its active nav item with
+        // `:has(#pg-x:target)`, so the hash has to stay a page id -- and an Epoch
+        // is a position on a page rather than a place of its own.
+        history.replaceState(null, '', '#pg-' + pageOf(tr.page));
       } catch (err) {
         /* file:// origin — the URL just stays put */
       }
       this.parkCaret(tr.page);
+      // Playback belongs to being on the tape. Arriving on it arms the recording;
+      // moving to any other page stops it. Arming on arrival rather than once at
+      // startup is what makes the timer reach a visitor who wheeled here, since
+      // that wheel would otherwise have taken the tape before they ever saw it.
+      if (epOf(tr.page) >= 0) {
+        if (epOf(tr.oldPg) < 0) this.armTape();
+        this.cueTape(tr.page);
+      } else {
+        this.stopTape();
+      }
       // Adaptive downscale: if the first full transition missed ~48fps, halve the
       // fill cost rather than the particle count -- the buffer is sized once.
       if (tr.full && !this.perfChecked && tr.frames > 20) {
@@ -1447,6 +1610,33 @@ void main(){
 
     parkCaret(page) {
       const tgs = this.tg[page] || [];
+      // On the tape the head rests on the track, at the Epoch it has just written.
+      // This is the one place in the system where the pointer metaphor and the
+      // timeline metaphor are the same object: where the read head sits *is* the
+      // position on the recording, so a separate playhead would be a second thing
+      // saying what the caret already says. The caret still sweeps the year and
+      // the title on the way in -- only where it comes to rest has changed.
+      //
+      // Measured here rather than in the frame loop: parkCaret runs once per
+      // transition, which is what The Measure-Once Rule allows.
+      const ep = epOf(page);
+      if (ep >= 0 && T.tapeHead) {
+        const tk = $('tk-' + ep);
+        const rail = document.querySelector('.tape-rail');
+        if (tk && rail) {
+          const r = tk.getBoundingClientRect();
+          const rr = rail.getBoundingClientRect();
+          this.park = {
+            x: r.left,
+            y: rr.top + T.tapeTickH / 2,
+            // Slightly over the tick's own height, so the head reads as sitting on
+            // the track rather than as one more mark printed on it.
+            h: Math.max(5, T.tapeTickH * 0.85),
+          };
+          this.cpos = null;
+          return;
+        }
+      }
       if (!tgs.length) {
         this.park = null;
         return;
@@ -1472,7 +1662,7 @@ void main(){
     assignInstant(page) {
       const A = this.A;
       const S = this.slots[page];
-      this.slotPg = page;
+      this.slotView = page;
       for (let i = 0; i < NP; i++) {
         if (i < S.n) {
           this.manifest(i);
@@ -1564,13 +1754,27 @@ void main(){
       const drag = Math.exp(-T.drag * dt);
       // The band's position on this page's own travel, and the falloff that
       // gives it a soft edge. Hoisted: both are the same for every grain.
-      const sw = this.sweep[this.slotPg] || [0, 1];
+      const sw = this.sweep[this.slotView] || [0, 1];
       const shPos = sw[0] + ((t / T.sheenT) % 1) * (sw[1] - sw[0]);
       const shInv = 1 / (2 * T.sheenW * T.sheenW);
       // Far enough out that a hand resting anywhere near a word is felt by all
       // of it, rather than only by the grains directly under the cursor.
       const auraR = T.repelR * T.sreach;
       const auraR2 = auraR * auraR;
+      // The wake. Picked up inside a tighter radius than the hand is felt
+      // within, so a travelling hand collects grains as it goes instead of
+      // promoting the whole neighbourhood the instant it arrives -- and the
+      // leash below is the felt radius itself, so the hand keeps one zone of
+      // influence rather than acquiring a third number of its own.
+      //
+      // `wn` is what is left of the cap this frame: the running total is last
+      // frame's census, and this frame's own promotions are counted exactly. So
+      // the cap can be exceeded by at most one frame of newly-eligible grains,
+      // which the pickup radius already bounds.
+      const wtake = T.wake && seen && !tr;
+      const wpickR2 = auraR2 * T.wpick * T.wpick;
+      let wn = wtake ? Math.max(0, (T.wn | 0) - this.carried) : 0;
+      let carried = 0;
       // How much larger a loose or dying grain draws its character, so a mark
       // the size of a grain is legible as the symbol it always was.
       const sym1 = T.ssize - 1;
@@ -1590,6 +1794,45 @@ void main(){
         if (st !== 4 && st !== 5 && t >= A.hAt[i]) {
           this.die(i, 0.8);
           st = 4;
+        }
+
+        if (st === 2) {
+          /* --------------------------------------- carried: the wake -- */
+          // The hand has this grain and is dragging it. A damped pursuit rather
+          // than a spring to the pointer: a spring overshoots, and a wake that
+          // overshoots orbits the hand instead of trailing it. `Throw · Air drag`
+          // damps this too, on the fall-through below, so the two together set
+          // how much the tail overruns when the hand stops.
+          //
+          // Each grain seeks its own place in the hand rather than the pointer
+          // itself. Sixty grains pursuing one point converge on it and stack into
+          // a single mark -- the first build did exactly that, and a hand held
+          // still over the name produced one grain-sized blob instead of a wake.
+          // The offset is seeded from values the grain already carries, so a
+          // wake is a formation travelling with the hand, and every filament in
+          // it has its own length. At spread 0 it collapses back to the point,
+          // which is a legal reading and how the mistake stays inspectable.
+          const wr = T.wspread * (0.4 + (A.rest[i] + 0.35) * 0.857);
+          const wa = A.rank[i] * 6.2832;
+          A.vel[j] += (mx + Math.cos(wa) * wr - A.pos[j]) * T.wseek * dt;
+          A.vel[j + 1] += (my + Math.sin(wa) * wr - A.pos[j + 1]) * T.wseek * dt;
+          const wd = Math.exp(-T.wlag * dt);
+          A.vel[j] *= wd;
+          A.vel[j + 1] *= wd;
+          // The leash, measured from home and not from the hand: a grain may be
+          // carried one felt-radius out of its own letterform and no further.
+          // Measuring from the hand would be no leash at all, because a carried
+          // grain is by definition near the hand.
+          const ox = A.pos[j] - A.homeX[i];
+          const oy = A.pos[j + 1] - A.homeY[i];
+          if (!seen || !T.wake || ox * ox + oy * oy > auraR2) {
+            // Let go into the return that already exists. Nothing here is a new
+            // ending: the grain burns out as a character and its own slot types
+            // back in, exactly as a thrown grain does.
+            A.st[i] = 1;
+            st = 1;
+            A.hAt[i] = t + T.delay * (0.7 + Math.random() * 0.6);
+          } else carried++;
         }
 
         if (st === 0) {
@@ -1649,11 +1892,30 @@ void main(){
           let reach = 0;
           let rdx = 0;
           let rdy = 0;
-          if (seen && !tr && (T.aura > 0 || stretch)) {
+          if (seen && !tr && (T.aura > 0 || stretch || wtake)) {
             const ax = mx - hx;
             const ay = my - hy;
             const a2 = ax * ax + ay * ay;
             if (a2 < auraR2) {
+              // The hand takes one. Riding this block rather than scanning for
+              // its own candidates is the whole reason the wake costs nothing
+              // per frame: the distance to the hand is already in hand here, for
+              // every grain the hand could possibly reach.
+              //
+              // `rank` fixes which grains are ever eligible, exactly as it fixes
+              // which ones reach. So the wake is always the same share of a word
+              // rather than a different random handful on each pass -- a word has
+              // a mobile fraction and a solid one, and that is a property of the
+              // word, not of the gesture.
+              if (wn > 0 && a2 < wpickR2 && A.rank[i] < T.wshare) {
+                A.st[i] = 2;
+                A.vel[j] = 0;
+                A.vel[j + 1] = 0;
+                wn--;
+                // Settled this frame, carried from the next. Taking it now would
+                // leave its position and sprite a frame stale, which reads as a
+                // pop at the moment the hand touches the word.
+              }
               const ad = Math.sqrt(a2) || 1;
               const fq = 1 - ad / auraR;
               if (T.aura > 0) {
@@ -1704,8 +1966,13 @@ void main(){
           // read as the same word turned brighter.
           A.aArr[i] = (A.baseA[i] * amp) / Math.sqrt(1 + (T.rsize - 1) * A.gyArr[i]);
           A.cArr[i] += (chip - A.cArr[i]) * Math.min(1, dt * 5);
-        } else if (st === 1) {
-          /* ---------------------------------------------- loose: thrown -- */
+        } else if (st === 1 || st === 2) {
+          /* -------------------------------- loose: thrown, or carried -- */
+          // One body for both, because a carried grain and a thrown one are the
+          // same thing to look at: matter off its letterform, drawn as the
+          // character it was made of, aimed at the hand while the hand is near.
+          // Only how the velocity is arrived at differs, and that is settled
+          // above. The wake therefore costs no drawing code at all.
           A.vel[j] *= drag;
           A.vel[j + 1] *= drag;
           A.pos[j] += A.vel[j] * dt;
@@ -1840,14 +2107,21 @@ void main(){
         }
       }
 
+      // This frame's census, for next frame's cap. Counted rather than kept as a
+      // running total on promote and release, so it cannot drift out of step with
+      // the field it is supposed to describe -- startTr hands grains back without
+      // going through the release path, and a counter would have to know that.
+      this.carried = carried;
+
+      this.stepLean(dt);
       this.r.draw();
-      this.drawCaret(t);
+      this.drawCaret(t, dt);
       if (tr && tr.T >= 1) this.endTr();
     }
 
     /* ------------------------------------------------------------- caret -- */
 
-    drawCaret(t) {
+    drawCaret(t, dt) {
       const cx = this.cctx;
       cx.clearRect(0, 0, this.ccw, this.cch);
       if (!T.caret) return;
@@ -1867,6 +2141,10 @@ void main(){
         const tilt = CLAMP((c.x - c2.x) * 0.012, -T.caretTilt, T.caretTilt);
         this.caretBar(cx, c.x, c.y, c.h, ac, t, c.mode, tilt);
       } else if (!tr && this.park) {
+        // The caret does not travel to whatever the hand is over. It marks where
+        // the machine last wrote, which is the end of the last heading, and a
+        // read/write head that chases the mouse is a cursor -- a different object
+        // with a different job. The hand's own answer is the Trail and the Snap.
         this.caretBar(cx, this.park.x, this.park.y, this.park.h, ac, t, 'idle', 0);
       }
     }
@@ -1896,6 +2174,17 @@ void main(){
           this.goTo(el.dataset.nav);
         });
       });
+      // The track. Click a tick to put the head on that Epoch; the arrow keys and
+      // the wheel step through them via nav(), and focus inside the tab strip gets
+      // the same arrows for free, so nothing extra is bound here for keyboard.
+      //
+      // ponytail: click, not drag. A drag would be a control that answers about
+      // one movement in four -- every step is a real transition behind the nav
+      // cooldown, so a continuous scrub would silently drop most of the gesture.
+      // Three ways in (tick, arrows, wheel) all of which the transition can honour.
+      document.querySelectorAll('.tick').forEach((el) => {
+        el.addEventListener('click', () => this.goTo('exp:' + el.dataset.ep));
+      });
     }
 
     initInput() {
@@ -1905,8 +2194,13 @@ void main(){
         // While the panel is open the wheel, the arrows and a swipe belong to it.
         if (this.tr || !this.ready || root.dataset.tw === 'open') return;
         if (performance.now() - (this.lastNav || 0) < T.navLock) return;
-        const nx = PAGES.indexOf(this.cur) + dir;
-        if (nx >= 0 && nx < PAGES.length) this.goTo(PAGES[nx]);
+        // Along VIEWS, not PAGES -- which is the whole of the nested advance. A
+        // wheel on Experience steps to the next Epoch and, once the tape runs out,
+        // the same gesture continues to Projects. Every input path funnels through
+        // here, so the wheel, both arrow axes, PageUp/Down and a swipe all get it
+        // at once and cannot drift apart.
+        const nx = VIEWS.indexOf(this.cur) + dir;
+        if (nx >= 0 && nx < VIEWS.length) this.goTo(VIEWS[nx]);
       };
       addEventListener(
         'wheel',
@@ -1953,19 +2247,52 @@ void main(){
       }, { passive: true });
     }
 
-    setHud(page) {
+    setHud(view) {
+      const page = pageOf(view);
+      const ep = epOf(view);
       const el = $('hud-page');
       const n = PAGES.indexOf(page) + 1;
-      if (el) el.textContent = `0${n} / 0${PAGES.length} — ${LABELS[page]}`;
-      // The HUD itself is aria-hidden, so the page change is announced here.
+      // The Epoch counter rides the page counter rather than replacing it: the
+      // visitor is on page two of four *and* Epoch three of four, and dropping
+      // either number leaves the tape looking like it lost the site's rhythm.
+      const tail = ep >= 0 ? ` · EPOCH ${ep + 1} / ${EPN}` : '';
+      if (el) el.textContent = `0${n} / 0${PAGES.length} — ${LABELS[page]}${tail}`;
+      // The HUD itself is aria-hidden, so the change is announced here. An Epoch
+      // change is a content change with no page change, which is precisely the
+      // case a live region exists for.
       const live = $('pg-live');
-      if (live) live.textContent = `${LABELS[page]}, page ${n} of ${PAGES.length}`;
+      if (!live) return;
+      if (ep < 0) {
+        live.textContent = `${LABELS[page]}, page ${n} of ${PAGES.length}`;
+        return;
+      }
+      const art = $('pg-exp').querySelector(`.epoch[data-ep="${ep}"]`);
+      const year = art ? (art.querySelector('.year')?.textContent || '').trim() : '';
+      const title = art ? (art.querySelector('.etitle')?.textContent || '').trim() : '';
+      live.textContent = `${year}, ${title}. Epoch ${ep + 1} of ${EPN}, on ${LABELS[page]}.`;
     }
 
-    navActive(page) {
+    navActive(view) {
+      const page = pageOf(view);
       for (const p of PAGES) {
         const el = $('nl-' + p);
         if (el) el.setAttribute('aria-current', p === page ? 'page' : 'false');
+      }
+      // The tape's tab strip, marked from the same call that marks the nav, so the
+      // two can never disagree about where the read head is.
+      const ep = epOf(view);
+      for (const tk of document.querySelectorAll('.tick')) {
+        const on = +tk.dataset.ep === ep;
+        tk.setAttribute('aria-selected', on ? 'true' : 'false');
+        tk.tabIndex = on ? 0 : -1;
+      }
+      if (!EPN) return;
+      for (const art of $('pg-exp').querySelectorAll('.epoch')) {
+        // Set here rather than in the markup: the tablist these belong to is
+        // matter-reading furniture, and a tabpanel with no tablist would be a lie
+        // the calm document tells a screen reader.
+        art.setAttribute('role', 'tabpanel');
+        art.setAttribute('aria-labelledby', 'tk-' + art.dataset.ep);
       }
     }
 
@@ -2070,6 +2397,82 @@ void main(){
           raf = null;
           restore();
         });
+      });
+    }
+
+    /** The hand pulls a little on the thing under it. Small and critically damped:
+     *  this system is cold and precise, and the elastic overshoot the effect is
+     *  usually built with reads as jelly rather than as magnetism.
+     *
+     *  Writes `translate`, never `transform`. `.matter .copy` owns `transform` for
+     *  its reveal and endTr assigns `transform: none` on those elements directly,
+     *  so a lean written there would be wiped mid-hover on some elements and would
+     *  wipe the reveal on others. The two properties compose -- the panel already
+     *  does exactly this one level up, translating `.topnav` while its children
+     *  keep their own transforms. */
+    stepLean(dt) {
+      const L = this.lean;
+      if (!L) return;
+      const live = L.on && T.lean && !this.tr && this.mx > -9000 && root.dataset.tw !== 'open';
+      const tx = live ? (this.mx - L.cx) * T.leanF : 0;
+      const ty = live ? (this.my - L.cy) * T.leanF : 0;
+      const k = 1 - Math.exp(-dt * T.leanK);
+      L.x += (tx - L.x) * k;
+      L.y += (ty - L.y) * k;
+      // Home, and released: the inline style comes off rather than being left at
+      // `0px 0px`, so an element nobody is touching carries nothing from this.
+      if (!live && Math.abs(L.x) < 0.05 && Math.abs(L.y) < 0.05) {
+        L.el.style.translate = '';
+        this.lean = null;
+        return;
+      }
+      L.el.style.translate = `${L.x.toFixed(2)}px ${L.y.toFixed(2)}px`;
+    }
+
+    /** What the hand does to the shell, over the one set of interactive text the
+     *  site has. `[data-scramble]` is already on the nav, the brand, and every
+     *  source and social link, and it is the right set for this too -- the Dock
+     *  is the other half of the gesture the scramble is: the machine has put its
+     *  write head on a word and is retyping it, so the caret goes there.
+     *
+     *  The rect is read on enter and never in the frame loop. No page on this site
+     *  scrolls and none reflows while it is up, so one read is the whole
+     *  measurement -- see The Measure-Once Rule. */
+    initHover() {
+      document.querySelectorAll('[data-scramble]').forEach((el) => {
+        el.addEventListener('pointerenter', () => {
+          if (this.tr) return;
+          const r = el.getBoundingClientRect();
+          if (r.width < 2) return;
+          const h = r.height / 2;
+          if (T.caretDock) {
+            // Past the last glyph by one bar-width, the way a caret sits one space
+            // past the end of a line. Derived from the caret's own width knob
+            // rather than picked, because the parked caret's 14px is a figure for a
+            // 114px heading and would put this one halfway across the nav.
+            this.dock = { el, x: r.right + Math.max(2, h * T.caretW) * 2, y: r.top + h, h };
+          }
+          // While the panel is open it has translated the whole nav 340px clear of
+          // itself, so every rect cached in here is wrong by that much. Refusing is
+          // one line and consistent with The Panel Owns The Gesture Rule;
+          // re-reading rects on a panel toggle is not worth the code.
+          if (T.lean && root.dataset.tw !== 'open') {
+            const L = this.lean;
+            if (L && L.el !== el) L.el.style.translate = '';
+            // A rect read now is already displaced by whatever lean is still on the
+            // element, so a re-entry mid-return keeps the centre it was first
+            // measured at rather than measuring the displacement into itself.
+            this.lean = L && L.el === el ? ((L.on = true), L) : { el, cx: r.left + r.width / 2, cy: r.top + h, x: 0, y: 0, on: true };
+          }
+        });
+        el.addEventListener('pointerleave', () => {
+          this.dock = null;
+          if (this.lean && this.lean.el === el) this.lean.on = false;
+        });
+      });
+      document.addEventListener('selectionchange', () => {
+        const s = getSelection();
+        this.selecting = !!s && !s.isCollapsed;
       });
     }
 

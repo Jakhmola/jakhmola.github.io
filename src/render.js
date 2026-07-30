@@ -57,16 +57,74 @@ function navLinks() {
   ).join('\n');
 }
 
-function epoch(ep) {
-  return `        <article class="epoch${ep.current ? ' now' : ''}">
+// An Epoch runs from its own start to the next one's; the last one is open and
+// runs to the present. Derived rather than stored, so there is exactly one date
+// per Epoch to keep true and no pair that can contradict itself.
+function spanLabel(ep, i, all, nowYear) {
+  const end = i + 1 < all.length ? all[i + 1].start : null;
+  return `${ep.start} → ${end ?? 'present'}`;
+}
+
+// The facts register. Anything absent is omitted rather than rendered empty --
+// an Epoch is a period first, and only some of them are also a job.
+function facts(ep, i, all, nowYear) {
+  const rows = [
+    ['Span', spanLabel(ep, i, all, nowYear)],
+    ['Role', ep.role],
+    ['Org', ep.employer],
+    ['Place', ep.location],
+  ].filter(([, v]) => v);
+  // Each pair is wrapped, because the two readings group them differently: rows
+  // in the calm document, an inline run on the tape. A bare dt/dd sequence can
+  // be laid out as one or the other, never as both.
+  return `<dl class="facts">${rows
+    .map(([k, v]) => `<div><dt>${e(k)}</dt><dd>${e(v)}</dd></div>`)
+    .join('')}</dl>`;
+}
+
+// `data-ep` is the tape's index: matter.js keys one sampled view per Epoch off
+// it, so an Epoch change runs the same burn-out/manifest schedule a page change
+// does. The `.mt` pair (year, title) is what the caret rewrites; everything
+// else is `.copy` and fades.
+function epoch(ep, i, all, nowYear) {
+  // `role="tabpanel"` and `aria-labelledby` are added by matter.js rather than
+  // written here: the tablist they belong to is matter-reading furniture, and a
+  // tabpanel with no tablist anywhere is a lie the calm document would be
+  // telling a screen reader.
+  return `        <article class="epoch${ep.current ? ' now' : ''}" id="ep-${i}" data-ep="${i}">
           <div class="rule copy"></div>
           <p class="mt year">${e(ep.year)}</p>
-          <div class="copy">
-            <h3>${e(ep.title)}</h3>
+          <h3 class="mt etitle">${e(ep.title)}</h3>
+          <div class="copy ebody">
+            ${facts(ep, i, all, nowYear)}
             <p>${e(ep.body)}</p>
             <ul class="tags">${(ep.tags || []).map((t) => `<li>${e(t)}</li>`).join('')}</ul>
           </div>
         </article>`;
+}
+
+// The track, spaced by real time rather than evenly: each tick sits at its own
+// start, and the right edge is now. The gap between two ticks is therefore the
+// length of an Epoch, which is the one fact a timeline exists to carry and the
+// one the previous four-column layout threw away.
+//
+// Matter reading only -- the calm document shows every Epoch at once, so a
+// control for choosing between them would select something already on screen.
+function tape(eps, nowYear) {
+  const t0 = eps[0].start;
+  const span = Math.max(1, nowYear - t0);
+  const at = (y) => (((y - t0) / span) * 100).toFixed(3);
+  return `        <div class="tape matter-only">
+          <div class="tape-rail" aria-hidden="true"></div>
+          <div class="tape-ticks" role="tablist" aria-label="Epoch">
+${eps
+  .map((ep, i) => {
+    const end = i + 1 < eps.length ? eps[i + 1].start : nowYear;
+    return `            <button type="button" class="tick" role="tab" data-ep="${i}" id="tk-${i}" aria-controls="ep-${i}" aria-selected="${i === 0}" tabindex="${i === 0 ? '0' : '-1'}" style="--at:${at(ep.start)}%;--run:${(((end - ep.start) / span) * 100).toFixed(3)}%"><span class="tick-y">${e(ep.year)}</span></button>`;
+  })
+  .join('\n')}
+          </div>
+        </div>`;
 }
 
 // Every summary-less repo emitting one identical sentence reads as a bug rather
@@ -114,6 +172,9 @@ function emptyProjects(config) {
 export function renderPage({ config, featured, summaries, builtAt = new Date() }) {
   const [line1, line2] = config.contactHeadline;
   const [first, ...surname] = config.name.split(' ');
+  // The tape's right edge is now, to the month, so the open Epoch's run grows on
+  // its own between rebuilds instead of waiting for someone to edit a number.
+  const nowYear = builtAt.getUTCFullYear() + builtAt.getUTCMonth() / 12;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -192,15 +253,21 @@ ${navLinks()}
       </div>
     </section>
 
+    <!-- The page heading is calm-reading furniture. On the tape the page is
+         named by the nav and the HUD, and one Epoch fills the viewport, so an
+         "Experience" headline above it would be a Headline-sized hole in the
+         composition and ~1,000 grains spent saying what two other elements
+         already say. -->
     <section id="pg-exp" class="page" aria-label="Experience">
       <div class="page-in">
-        <div class="page-head">
-          <h2 class="mt">Experience</h2>
-          <p class="copy accent">${config.experience.length} epochs &middot; ${e(config.experience[0].year)} &rarr; now</p>
+        <div class="page-head calm-only">
+          <h2>Experience</h2>
+          <p class="accent">${config.experience.length} epochs &middot; ${e(config.experience[0].year)} &rarr; now</p>
         </div>
         <div class="epochs">
-${config.experience.map(epoch).join('\n')}
+${config.experience.map((ep, i) => epoch(ep, i, config.experience, nowYear)).join('\n')}
         </div>
+${tape(config.experience, nowYear)}
       </div>
     </section>
 

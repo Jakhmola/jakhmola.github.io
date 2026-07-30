@@ -52,6 +52,7 @@
   --k-statement: 1;
   --k-headline: 1;
   --k-figure: 1;
+  --k-marker: 1;
   --k-title: 1;
   --k-body: 1;
   --k-label: 1;
@@ -61,6 +62,11 @@
   --t-statement: calc(clamp(38px, 6vw, 84px) * var(--fs) * var(--k-statement));
   --t-headline: calc(clamp(34px, 4.4vw, 54px) * var(--fs) * var(--k-headline));
   --t-figure: calc(42px * var(--fs) * var(--k-figure));
+  /* Marker: the year on the tape, where one Epoch owns the viewport and the
+   * figure is the mark that says where the read head is. Mono, so it is the
+   * machine speaking. Floored at 64px rather than at the 26px matter floor
+   * because a Marker that small is just Figure again. */
+  --t-marker: calc(clamp(64px, 8vw, 120px) * var(--fs) * var(--k-marker));
   --t-address: calc(clamp(18px, 3vw, 28px) * var(--fs) * var(--k-title));
   --t-title: calc(clamp(22px, 2.2vw, 27px) * var(--fs) * var(--k-title));
   --t-tagline: calc(clamp(13px, 1.45vw, 18px) * var(--fs) * var(--k-label));
@@ -109,6 +115,13 @@
   --sigil-lg: 1;
   --r-window: 10px;
   --r-pill: 20px;
+
+  /* ---------------------------------------------------------------- tape -- */
+  /* The Epoch track. Its ticks are placed from real years at build time, so
+   * nothing here sets a position -- only how the furniture is drawn. */
+  --tape-gap: 3.2vh;
+  --tape-tick-h: 9px;
+  --tape-run-a: 18%;
 }
 
 *,
@@ -429,6 +442,50 @@ h2.mt {
   font-weight: 700;
 }
 
+/* The facts register, in the calm reading: a definition list read as rows. Mono
+ * because these are the machine's four fields about a period, not prose. */
+/* One rhythm, set in one place, so neither reading depends on a default <p>
+ * margin it did not choose. */
+.ebody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ebody p {
+  margin: 0;
+}
+
+.facts {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-caption);
+}
+
+.facts > div {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 12px;
+}
+
+.facts dt {
+  color: var(--quiet);
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--ink65);
+}
+
+/* Anything the tape needs and the calm document does not. The counterpart of
+ * .calm-only: display:none here keeps the tape's tab controls out of the tab
+ * order on the reading that has every Epoch on screen at once. */
+.matter-only {
+  display: none;
+}
+
 /* Scoped to .copy: a bare `.epoch p` would outrank `.year` and shrink the
  * matter-built year to body size, which is below the resolvable floor. */
 .epoch .copy p {
@@ -745,6 +802,169 @@ h2.mt {
   margin: 0;
 }
 
+/* ------------------------------------------------------------------ tape -- */
+
+.matter .matter-only {
+  display: block;
+}
+
+/* One Epoch owns the viewport; the other three stay laid out so the sampler can
+ * measure them, which is the same reason pages are never toggled with
+ * display:none. All four occupy the same box, so changing Epoch changes which
+ * point cloud is manifested and never the layout the clouds were cut from. */
+.matter .epochs {
+  display: block;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+
+.matter .epoch {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--block);
+  visibility: hidden;
+}
+
+/* The Epoch the tape starts on, so nothing flashes before matter.js runs. */
+.matter .epoch[data-ep='0'] {
+  visibility: visible;
+}
+
+.matter .epoch .rule {
+  margin: 0;
+}
+
+.matter .year {
+  font-size: var(--t-marker);
+}
+
+.matter .etitle {
+  margin: 0;
+  font-size: var(--t-statement);
+  letter-spacing: var(--tr-statement);
+  line-height: var(--lh-statement);
+}
+
+.matter .ebody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--block);
+  max-width: 62ch;
+}
+
+/* An inline run rather than rows: the tape has no vertical space to spend on
+ * four label lines, and four short pairs read fine on one. */
+.matter .facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin: 0;
+}
+
+.matter .facts > div {
+  display: flex;
+  gap: 8px;
+}
+
+/* The track. A hairline with the Epoch starts marked on it, and the run of the
+ * current Epoch filled -- the gap between two ticks is how long that period
+ * lasted. The caret is drawn over this on the caret canvas; nothing here draws
+ * a playhead, because there is already exactly one in the system. */
+.matter .tape {
+  position: relative;
+  flex: 0 0 auto;
+  height: calc(var(--tape-gap) + 34px);
+  margin-top: var(--tape-gap);
+}
+
+.matter .tape-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--line-soft);
+}
+
+.matter .tape-ticks {
+  position: absolute;
+  inset: 0;
+}
+
+/* The tick spans its own Epoch: `left` is when it started and `width` is how long
+ * it lasted, both computed from real years at build time. Sizing the button to
+ * the run rather than to its label is what makes the run band measure the period
+ * -- a percentage inside a label-width button resolves against the label, so the
+ * band was ~8px instead of a quarter of the track. It also makes the whole
+ * period the click target instead of four characters of year. */
+.matter .tick {
+  position: absolute;
+  top: 0;
+  left: var(--at);
+  width: var(--run);
+  padding: 13px 10px 0 0;
+  border: 0;
+  background: none;
+  color: var(--quiet);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: var(--t-caption);
+  line-height: 1;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--scale-nav) ease;
+}
+
+/* The tick mark itself, and the run it opens. Drawn on the button so the whole
+ * label is the hit area rather than a 1px line. */
+.matter .tick::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: var(--tape-tick-h);
+  background: var(--line-strong);
+}
+
+/* How long this Epoch lasted, as a band from its own tick to the next one's.
+ * The width is real time, computed at build; a 1px rule at this alpha was
+ * invisible, and the duration is the one fact the previous four-column layout
+ * threw away, so it has to be legible. */
+.matter .tick::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--tape-tick-h);
+  background: none;
+}
+
+.matter .tick:hover,
+.matter .tick:focus-visible {
+  color: var(--ink);
+}
+
+.matter .tick[aria-selected='true'] {
+  color: var(--accent);
+}
+
+.matter .tick[aria-selected='true']::before {
+  background: var(--accent);
+}
+
+/* The current Epoch's run, lit along the rail. Alpha rather than a second hue,
+ * and no glow -- brightness in this system belongs to the material. */
+.matter .tick[aria-selected='true']::after {
+  background: color-mix(in srgb, var(--accent) var(--tape-run-a), transparent);
+}
+
 /* ------------------------------------------------------------------ boot -- */
 
 .matter #boot {
@@ -944,6 +1164,56 @@ h2.mt {
 
   .matter .calm-only {
     display: block;
+  }
+
+  /* The tape does not exist below this width -- the calm document shows every
+   * Epoch at once, so its tab controls would select something already on screen,
+   * and leaving them in the tab order would be four stops that do nothing. */
+  .matter .matter-only {
+    display: none;
+  }
+
+  /* Undo the tape's stacking: back to a scrolling grid of Epochs, each in flow. */
+  .matter .epochs {
+    display: grid;
+    gap: 2.4vw;
+  }
+
+  .matter .epoch {
+    position: static;
+    gap: 0;
+    visibility: visible;
+  }
+
+  .matter .epoch .rule {
+    margin-bottom: 20px;
+  }
+
+  .matter .year {
+    font-size: var(--t-figure);
+  }
+
+  .matter .etitle {
+    margin: 13px 0 7px;
+    font-size: var(--t-subtitle);
+    letter-spacing: normal;
+    line-height: normal;
+  }
+
+  .matter .facts {
+    display: grid;
+    gap: 3px;
+  }
+
+  .matter .ebody {
+    gap: 12px;
+    max-width: none;
+  }
+
+  .matter .facts > div {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 12px;
   }
 
   .matter .sigil::before,

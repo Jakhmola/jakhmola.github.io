@@ -14,26 +14,42 @@
   "experience": [
     {
       "year": "2019",
+      "start": 2019,
       "title": "Engineering foundations",
-      "body": "Full-stack and API engineering: RESTful services on WildFly, scraping pipelines, first computer-vision experiments.",
+      "employer": "[employer]",
+      "role": "[role]",
+      "location": "[location]",
+      "body": "I started on the server side, building RESTful services on WildFly and the scraping pipelines that fed them. Most of it was unglamorous work: schema design, error paths, keeping a job alive when an upstream page changed shape overnight. Late in this stretch I wired OpenCV into a pipeline for the first time and hit a problem no query could answer. That was the turn. Everything after it is the same instinct pointed at models instead of endpoints.",
       "tags": ["Java", "Python", "OpenCV"]
     },
     {
       "year": "2021",
+      "start": 2021,
       "title": "Deep learning research",
-      "body": "Brain-tumor segmentation on BraTS 2020 — U-Net vs ResNet vs VGG. Behavioral-biometric identification at 94.7% accuracy.",
+      "employer": "[employer]",
+      "role": "[role]",
+      "location": "[location]",
+      "body": "Research, properly: brain-tumor segmentation on BraTS 2020, training U-Net, ResNet and VGG against the same volumes so the comparison meant something. I learned more from the failures than from the architectures. Class imbalance on small tumour regions will hand you a metric that looks good and is mostly counting background. Alongside it I worked on behavioral-biometric identification, reaching 94.7% accuracy. The habit I took out of this period was measuring before believing, which is the only reason anything later shipped.",
       "tags": ["PyTorch", "TensorFlow", "U-Net"]
     },
     {
       "year": "2023",
+      "start": 2023,
       "title": "Applied ML systems",
-      "body": "RL agents playing Super Mario, sentiment analysis at scale, live speech-to-text bots. Models shipped as working systems.",
+      "employer": "[employer]",
+      "role": "[role]",
+      "location": "[location]",
+      "body": "This was the period models had to leave the notebook. I trained reinforcement-learning agents to play Super Mario, ran sentiment analysis at a size where throughput mattered more than the last point of accuracy, and built speech-to-text bots that had to keep up with live audio. Serving turned out to be the hard half: batching, latency budgets, and what happens to a request while the model is still loading. FastAPI in front of everything.",
       "tags": ["RL", "NLP", "FastAPI"]
     },
     {
       "year": "NOW",
+      "start": 2025,
       "title": "LLM agents & retrieval",
-      "body": "Autonomous coding agents, RAG search engines, AI ticket triage — LLM systems that actually ship. Including this site.",
+      "employer": "[employer]",
+      "role": "[role]",
+      "location": "[location]",
+      "body": "Now it is agents and retrieval. Autonomous coding agents that write and execute their own code, RAG search over real document corpora rather than a demo index, and automated ticket triage that has to be right often enough to be trusted with a queue. This site is part of the same work: it rebuilds itself nightly from the GitHub API, ranks the repos with a pure function, and writes its own summaries with an LLM. If a system needs me to remember to update it, I consider it unfinished.",
       "tags": ["LLM Agents", "RAG", "Claude API"],
       "current": true
     }

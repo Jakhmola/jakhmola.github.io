@@ -24,8 +24,14 @@ const out = {
   worst: 0,
   pages: {},
 };
-for (const pg of ['home', 'exp', 'proj', 'contact']) {
-  const sec = document.getElementById('pg-' + pg);
+// The views the renderer actually sampled, read off the field rather than listed
+// here. This used to be a hard-coded page list, and the day the Experience page
+// became a tape -- four Epoch views, no plain `exp` key -- that list quietly
+// reported zero headings for it. The rule this tool exists to enforce would have
+// gone silent on the one page that had just been rewritten, which is the exact
+// failure mode of a check that names its own subjects.
+for (const pg of Object.keys(M.tg)) {
+  const sec = document.getElementById('pg-' + pg.split(':')[0]);
   // Every page but the current one is `visibility:hidden`, which still lays out.
   out.pages[pg] = (M.tg[pg] || []).map((tg) => {
     const now = tg.el.getBoundingClientRect();

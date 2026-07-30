@@ -42,6 +42,12 @@ typography:
     fontWeight: 700
     lineHeight: 1
     letterSpacing: "normal"
+  marker:
+    fontFamily: "JetBrains Mono, ui-monospace, Menlo, monospace"
+    fontSize: "clamp(64px, 8vw, 120px)"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "normal"
   address:
     fontFamily: "JetBrains Mono, ui-monospace, Menlo, monospace"
     fontSize: "clamp(18px, 3vw, 28px)"
@@ -142,6 +148,19 @@ components:
     textColor: "{colors.ink-55}"
     rounded: "{rounded.none}"
     padding: "14px 7px"
+  tape-rail:
+    backgroundColor: "{colors.hairline}"
+    rounded: "{rounded.none}"
+    height: "1px"
+  tape-tick:
+    textColor: "{colors.ink-55}"
+    typography: "{typography.label}"
+    rounded: "{rounded.none}"
+    padding: "13px 10px 0 0"
+  tape-tick-current:
+    textColor: "{colors.signal-cyan}"
+    rounded: "{rounded.none}"
+    padding: "13px 10px 0 0"
 ---
 
 # Design System: Shubham Jakhmola — Matter
@@ -202,7 +221,9 @@ What changed is where that pressure comes from. Under `blendFunc(SRC_ALPHA, ONE)
 
 That is a different rule with a different remedy. Density is no longer the lever; `spec`, `shin`, `rim` and `bright` are. And unlike stacking, a small amount of it is correct: a lit solid with no blown highlight anywhere does not read as lit.
 
-Last measured at 1440×900 (`node tools/coverage.mjs`), share of each heading's ink box that has gone achromatic: `SHUBHAM` 0.62%, `JAKHMOLA` 0.59%, Experience 0.13%, the year markers 0.18–0.45%, `NOW` 1.20%, Projects 0.24%, the contact statement 0.20–0.23%. `NOW` is the highest because it is the smallest box and one highlight is a larger share of it. Nothing here is a violation; the figure to watch is whether any heading crosses ~2%, which would mean the key light, not the density, has been pushed too far.
+Last measured at 1440×900 (`node tools/coverage.mjs`), share of each heading's ink box that has gone achromatic: `SHUBHAM` 0.70%, `JAKHMOLA` 0.80%, the Epoch years 0.50–0.69%, the Epoch titles 0.52–0.56%, Projects 0.39%, the contact statement 0.30–0.48%. Nothing here is a violation; the figure to watch is whether any heading crosses ~2%, which would mean the key light, not the density, has been pushed too far.
+
+The year figures rose from 0.18–0.45% to 0.50–0.69% when they moved to Marker scale, and that is the expected direction rather than a drift: a larger mark on a coarser lattice wears larger sprites, and a lit solid with no blown highlight anywhere does not read as lit. `NOW` used to be the highest on the site at 1.20% because it was the smallest box and one highlight was a large share of it; at Marker scale it is 0.60%, so growing the mark bought headroom rather than spending it.
 
 Note that **coverage is not the same lever as brightness**, and note also that the coverage numbers themselves changed meaning when the blend did. Under additive blending "lit" measured accumulated glow, and the name's 21% was a smear at 30%. Under solid alpha it measures **painted area** — so the name's 48% today is not comparable to that 21%, and is not a regression. See The Name Reads First Rule for what the number has to clear now.
 
@@ -214,19 +235,27 @@ The measurement is taken over the **ink box** — the extent of the sampled poin
 
 Measured at 1440×900 with `node tools/coverage.mjs`, every matter heading against the **loudest** DOM text on its page:
 
-| page | heading | grains | lit | p95 | loudest DOM text | lit | p95 |
+| view | heading | grains | lit | p95 | loudest DOM text | lit | p95 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| home | `SHUBHAM` | 2,101 | 47.6% | 244 | tagline, 18px | 5.8% | 249 |
-| home | `JAKHMOLA` | 2,146 | 45.0% | 244 | tagline, 18px | 5.8% | 249 |
-| exp | Experience | 997 | 30.3% | 240 | epoch titles, 16.5px | — | 239 |
-| exp | year markers | 276–299 | 38.9–51.2% | 227–235 | epoch titles | — | 239 |
-| proj | Projects | 792 | 29.5% | 241 | repo names, 27px | 3.4–6.1% | 239 |
-| contact | Let's build | 2,008 | 28.9% | 237 | email, 28px | 26.1% | 249 |
-| contact | something real. | 3,121 | 26.3% | 237 | email, 28px | 26.1% | 249 |
+| home | `SHUBHAM` | 2,127 | 49.9% | 245 | pitch block, 15px | 18.1% | 153 |
+| home | `JAKHMOLA` | 2,148 | 45.8% | 244 | pitch block, 15px | 18.1% | 153 |
+| exp:0 | `2019` | 890 | 36.8% | 244 | epoch body block | 12.6% | 154 |
+| exp:0 | Engineering foundations | 5,229 | 37.0% | 242 | epoch body block | 12.6% | 154 |
+| exp:1 | `2021` | 888 | 35.9% | 243 | epoch body block | 13.8% | 154 |
+| exp:1 | Deep learning research | 4,720 | 35.7% | 243 | epoch body block | 13.8% | 154 |
+| exp:2 | `2023` | 913 | 37.3% | 244 | epoch body block | 12.2% | 154 |
+| exp:2 | Applied ML systems | 4,176 | 36.4% | 243 | epoch body block | 12.2% | 154 |
+| exp:3 | `NOW` | 857 | 46.8% | 244 | epoch body block | 13.7% | 154 |
+| exp:3 | LLM agents & retrieval | 4,540 | 35.4% | 243 | epoch body block | 13.7% | 154 |
+| proj | Projects | 794 | 29.9% | 242 | repo names, 27px | 3.1–5.6% | 239 |
+| contact | Let's build | 2,019 | 41.1% | 243 | email, 28px | 26.1% | 249 |
+| contact | something real. | 3,179 | 37.2% | 242 | email, 28px | 26.1% | 249 |
 
-Matter reaches the same luminance as the type beside it (227–244 against 239–249) and carries four to nine times the ink. The bar is cleared on both counts, and the comparison is now against the loudest element rather than the quietest — the earlier version compared a 54px heading to a 12px label, which is a bar a heading cannot lose against. `tools/probes/align.js` emits the three largest copy blocks per page so the rule is capable of failing.
+Matter reaches the same luminance as the type beside it (242–245 against 153–249) and carries two to nine times the ink. The bar is cleared on both counts, and the comparison is now against the loudest element rather than the quietest — the earlier version compared a 54px heading to a 12px label, which is a bar a heading cannot lose against. `tools/probes/align.js` emits the three largest copy blocks per view so the rule is capable of failing.
 
-One finding stays open: **Projects carries 792 grains against home's 4,247.** Only `.mt` headings are matter and that page has exactly one, so it is the page where the system's own claim is least visible. Not a regression, and not fixable inside the renderer.
+**The probe names its subjects from the field, not from a list, and that is a rule now.** `align.js` iterated a hard-coded `['home','exp','proj','contact']` and read `M.tg['exp']`. The day the Experience page became a tape that key stopped existing — four `exp:N` views replaced it — and the tool reported zero headings for the page that had just been rewritten, silently. It reads `Object.keys(M.tg)` instead. A check that enumerates its own subjects goes quiet exactly when the thing it checks changes shape.
+
+**The old open finding is half closed.** Experience used to carry 2,140 grains against home's 4,250 and was, with Projects, where the system's own claim was least visible. On the tape it carries **5,000–6,100 in a single Epoch** and is now the densest view on the site. Projects still carries 794 against home's 4,275: only `.mt` headings are matter and that page has exactly one. Not a regression, and not fixable inside the renderer.
 
 **Coverage alone was never the bar, and reading it as one is how the name got smeared once already.** Held to coverage only, the answer is always to grow the sprite until the letterform fills in — and at that point the strokes close into cotton wool that measures higher and reads as nothing. The bar is coverage *and* The Grain Ratio Rule, together, checked on the rendered page.
 
@@ -248,12 +277,15 @@ One finding stays open: **Projects carries 792 grains against home's 4,247.** On
 
 ### Hierarchy
 
-Everything at or above 26px is built from matter; everything below it is DOM text. The matter set is **Display, Statement, Headline and Figure** — four roles, down from eight. Tagline, Address and Title were demoted to DOM text (see each), which fixed a real defect in each case and freed roughly half the particle budget for the name. The 26px Floor now has no exceptions in either direction.
+Everything at or above 26px is built from matter; everything below it is DOM text. The matter set is **Display, Statement, Headline and Marker** — four roles. Tagline, Address and Title were demoted to DOM text (see each), which fixed a real defect in each case and freed roughly half the particle budget for the name. The 26px Floor now has no exceptions in either direction.
+
+**Figure left the matter set when the Experience page became a tape.** The year it carried is now Marker on the tape and Figure only in the calm reading, so Figure is the one rung on the ramp that no longer draws a grain anywhere. It stays because the calm document still sets four year markers in it.
 
 - **Display** (700, expanded, clamp(52px, 7.9vw, 120px), 1.02): The name, and only the name. Two lines, tight tracking, widest width in the system. The cap is 120px rather than a rounder 140px because expanded glyphs run ~27% wider — see The Sigil Budget Rule. Below 820px it becomes **Display-narrow** (700, *normal* width, clamp(26px, 8.6vw, 120px)) — the ramp's only responsive width change, argued at The Two Widths Rule. The 26px floor binds below a 302px viewport and exists so the clamp has one; every real phone reads off the `8.6vw` middle.
-- **Statement** (700, expanded, clamp(38px, 6vw, 84px), 1.05, -0.03em): The contact headline — the largest type on the site after the name, and the only place two lines carry different colors in the calm reading.
-- **Headline** (700, clamp(34px, 4.4vw, 54px), 1.1): Page headings — "Experience", "Projects".
-- **Figure** (mono, 700, 42px, 1): Epoch year markers. Always Signal Cyan.
+- **Statement** (clamp(38px, 6vw, 84px), 1.05, -0.03em): Two things. The contact headline, at 700 and **expanded** — the largest type on the site after the name, and the only place two lines carry different colors in the calm reading. And the Epoch title on the tape, at 700 and **normal width**, where one Epoch owns the viewport and its title is the second mark the caret writes. The size rung is shared; the width axis is not, so The Two Widths Rule is untouched — see it for why the tape does not get the wide cut.
+- **Headline** (700, clamp(34px, 4.4vw, 54px), 1.1): Page headings. "Projects" is the only one left in the matter reading; "Experience" is calm-reading furniture now, because on the tape the page is named by the nav and the HUD and one Epoch fills the viewport. It was ~1,000 grains spent restating what two other elements already said.
+- **Marker** (mono, 700, clamp(64px, 8vw, 120px), 1): The Epoch year on the tape, and the largest mono in the system. Always Signal Cyan. Floored at 64px rather than at the 26px matter floor because a Marker any smaller is Figure again, and capped at 120px so it never outgrows the name. It exists because on the tape the year is not a label beside a column — it is the mark that says where the read head is, and at 42px it could not carry that. The move from a 2px to a 3px lattice is what fixed the year figures being the least legible marks on the site: p95 went 227–235 → 243–244 and `2023` stopped being ambiguous.
+- **Figure** (mono, 700, 42px, 1): Epoch year markers, **calm reading only**. Always Signal Cyan.
 - **Address** (mono, 700, clamp(18px, 3vw, 28px)): The contact email. **DOM text, not matter.** It computed below the 26px floor at every width from 821 to 866px, and as Matter Text it inherited `opacity: 0`, which composited away its own focus ring — the site's primary call to action was a focusable element that a keyboard user could neither read nor see focused. It is Signal Cyan at 13.52:1 and clickable at every width.
 - **Title** (mono, 700, clamp(22px, 2.2vw, 27px)): Repo names on the Projects page. **DOM text, not matter.** It computes below 26px at every width from 821 to 1181px — 22px at 1024px — and there it did not resolve: five of them measured 1.03:1 against the field while spending roughly a third of the grain budget. Raising the floor instead would have made repo names the largest mono on the site, which is not the hierarchy the page wants.
 - **Tagline** (mono, 500, clamp(13px, 1.45vw, 18px), 0.14em): The role line under the name. **DOM text, not matter.** At its former fixed 26px it was both the widest element in the home column at every width under ~1500px and 53px wider than the viewport below 878px, where `overflow: hidden` silently cut the end of the line. Scaling it fixes both, and puts it below the floor. It steps to 16px below 820px.
@@ -319,7 +351,11 @@ Last measured across 320 / 360 / 390 / 480 / 680 / 820 / 821 / 900 / 1024 / 1152
 
 Each page is exactly one viewport: `position: fixed; inset: 0`, vertically centred content, `8vw` side gutters (`6vw` under 820px), and page chrome pinned at `3.2vw` inline padding. Only one page is visible at a time; the others stay laid out at `visibility: hidden` so the sampler can measure them, which is why pages are never toggled with `display: none`.
 
-Content stacks in a single column with a `4.5vh` rhythm between major blocks and `2.6vh` within them. The Experience page is the one grid — four equal epoch columns via `repeat(auto-fit, minmax(210px, 1fr))`. The Projects page is a `52px 1fr auto` row grid: index, body, source link.
+Content stacks in a single column with a `4.5vh` rhythm between major blocks and `2.6vh` within them. The Projects page is a `52px 1fr` row grid: index, body, source link.
+
+**The Experience page is a tape, and it is the only page with a state.** One Epoch owns the viewport — Marker year, Statement title, an inline facts register, body copy at a 62ch measure, tags — over a track pinned above the HUD. The other Epochs are `position: absolute; inset: 0` at the same box and `visibility: hidden`, never `display: none`, for exactly the reason pages are: the sampler has to keep measuring them. All four therefore occupy one box, so changing Epoch changes which point cloud is manifested and never the layout the clouds were cut from.
+
+The four-equal-column grid it replaced (`repeat(auto-fit, minmax(210px, 1fr))`) survives as the calm reading, which is the reading where showing every Epoch at once is right.
 
 Below 820px the whole model is abandoned. The calm reading takes over: static positioning, `9vh` page padding, a sticky translucent nav, hairline dividers between pages, and normal document scroll. This is not a breakpoint adjustment; it is the other site.
 
@@ -353,6 +389,23 @@ Measured by `tools/probes/life.js`, which isolates the aura by taking the hand a
 | past 167px | — | none, by construction |
 
 The structure is what matters more than the figures: the aura is a **coherent regional** lift over hundreds of grains, while the ember is **incoherent per-grain** noise on independent phases. A signal that is smaller per grain than the noise still reads, as long as it is the only one of the two that is spatially organised.
+
+**The Wake.** Past leaning and reaching, a hand near a word takes some of it. A share of the grains inside a tighter radius than the hand is felt within enter a carried state, travel with the hand as a loose formation, and let go when the leash runs out — at which point they burn out as code characters and their own slots type back in. It is the third and last thing the hand does to matter, and it is the only standing cost in the system: everything else expensive here is a page change, which lasts two seconds, while a wake lasts as long as a hand rests on a word.
+
+Four decisions carry it, and each one is the answer to a way the first build was wrong:
+
+- **The leash is the felt radius, not a number of its own.** A grain may be carried one `repelR × sreach` — 167px at the defaults — out of its own letterform and no further, measured from home rather than from the hand, because a carried grain is by definition near the hand and measuring from it would be no leash at all. The aura, the reach filaments and the wake therefore share one falloff, and the hand has one zone of influence rather than three.
+- **Pickup is tighter than the leash.** 0.35 of it, 58px. A hand has to nearly touch a word to take anything, and a travelling hand then collects ahead of itself while the tail behind runs out of tether — which is what makes it a wake rather than a vacuum.
+- **Which grains are eligible is fixed, not sampled.** The same `rank` that decides which grains reach decides which may be carried, so 18% of a word is its mobile fraction and the rest is solid. That is a property of the word, not of the gesture, and it means the same letter does not dissolve differently on each pass.
+- **Each grain seeks its own place in the hand, not the pointer.** Sixty grains pursuing one point converge on it and stack into a single mark; the first build did exactly that, and a hand held still over the name produced one grain-sized blob rather than a wake. A 34px spread seeded from values each grain already carries makes it a formation travelling with the hand, and gives every filament in it its own length. At spread 0 it collapses back to the point, which is a legal reading and how the mistake stays inspectable.
+
+**Nothing new arrives on screen, and that is measurable rather than asserted.** `tools/probes/fill.js` reports the same `drawn` count with 50 carried grains as with 800: the wake is grains the word is currently missing, and what it costs is only the difference between a carried grain's sprite and the settled one it replaced. The lifecycle is the one that already existed — a released grain takes the thrown grain's path home, and the entry that manifests into a slot is the entry that vacated it.
+
+Released in bulk at the start of a transition, before the Caret schedules a single slot. The Caret owns the field while it works, and a grain still chasing the pointer through a page change would be the one thing on screen not answering to it.
+
+**Measured, by `tools/probes/wake.js` and `fill.js` at 1440×900:** a hand held on the name carries 67 grains and adds 0.04 overdraw; dragged, it peaks at 138 and adds 0.22 — which is where the cap is set, because the wake may cost at most what the whole idle field costs. Cost is linear at 0.0011 overdraw per carried grain, four times that at a 2× pixel ratio.
+
+**And it does not cost legibility — it relieves the aura's hot spot.** Measured by `tools/coverage.mjs` with a hand on the page, the name's lit share is unchanged (45.6% with nobody there, 48.3% with a hand, 47.8% with the wake on) while the *cored* share falls back toward the unattended figure: SHUBHAM 0.67% → 1.17% under a hand → 0.71% with the wake. Because the grains the wake takes are the most-strained ones nearest the hand, fewer of them are left to stack past the achromatic point. The Specular Ceiling Rule is easier to hold with the wake on than with it off.
 
 Exactly one real shadow exists in the system, and it belongs to the boot terminal.
 
@@ -421,6 +474,26 @@ It used to be traced by whichever grains were idle between pages, and that state
 - **Empty state:** With zero featured repos the list renders one `.project.empty` row — a dimmed `/--` index, one line saying the API came back with nothing, and the GitHub link. The build runs unattended on a nightly cron against a live API, so this is a state the site ships in.
 - **Note:** The repo name is DOM text. See Title under Typography.
 
+### The Tape
+
+The Experience page, and the only sequence inside a page in the system.
+
+- **Structure:** one Epoch per viewport, over a track pinned above the HUD. The track is a hairline at 10% ink with one tick per Epoch, and the current Epoch's **run** — its own tick to the next one's — filled at 18% cyan.
+- **The ticks are placed by real time, not evenly.** Each sits at its own start year, normalised against a span whose right edge is the month the site was last rebuilt. So the gap between two ticks is how long that period lasted, and the open Epoch's run grows on its own between rebuilds rather than waiting for someone to edit a number. This is the one fact a timeline exists to carry and the one the four-column layout threw away: `2019 → 2021` and `2023 → NOW` rendered as the same `2.4vw` gap.
+- **An Epoch change is a page change.** The point clouds are keyed by *view* rather than by page — `home`, `exp:0…3`, `proj`, `contact` — so `sampleAll` cuts one cloud per Epoch and `startTr` burns the old view's slots out and types the new view's in. There is no second code path, no second choreography, and the Epoch change costs what a page change costs: **1.73 overdraw against the page change's 1.71**.
+- **Gesture:** nested. All five input paths funnel through one `nav(dir)`, which walks the view list instead of the page list — so a wheel on Experience steps to the next Epoch and, once the tape runs out, the same gesture continues to Projects. Clicking a tick jumps to it. Digits still jump pages directly, which is the unconditional way out.
+- **States:** playing (before any input), driven (after), and parked on the last Epoch.
+- **Below 820px it does not exist.** The calm reading shows every Epoch at once, so the track would offer a choice between things already on screen, and its four tab stops would do nothing. `display: none` rather than hiding, so they leave the tab order.
+- **Rule:** the tape never scrolls, never wraps, and never changes page by itself.
+
+**The Views, Not Pages, Rule.** The sampling unit is the view and the navigational unit is the page, and they stopped being the same thing here. The reason is the grain budget, and it is not a small margin: sampled into one shared table the four Epochs ask for **22,118 grains** — 2.46× the 9,000 budget, and above the 22,000-grain buffer ceiling. Keyed per view the worst Epoch asks for **6,116**, nothing is truncated anywhere, and the page went from the sparsest to the densest on the site. Anything that adds a sequence inside a page adds views, not a second renderer.
+
+**The Playback Hands Over Rule.** The tape plays itself forward once, on a 6s dwell, and the first deliberate input takes it for the rest of the visit — not for the rest of the page, and not until a timer resumes. A timer that resumed would keep taking the tape back off the visitor, and then nothing on the page is attributable to them, which is the argument The Hand Has To Be Attributable Rule makes about the aura applied to time instead of to space.
+
+Deliberate means **acted, not present**: `pointerdown`, a key, a wheel, a touch. A pointer crossing the field is someone watching, and the material answering a hand is not a request to stop the recording — so `pointermove` does not take it.
+
+Playback is armed on *arriving* at the tape rather than once at startup, because the visitor almost always arrives by the same wheel that would otherwise have taken it before they ever saw it move. It parks on the last Epoch and stops: it does not wrap round to the first, and it does not carry on to Projects. Finite, self-terminating, and stopped by any interaction is also the shape that needs no pause control bolted onto it.
+
 ### Boot Terminal
 
 - **Style:** A macOS-convention window — traffic-light dots, a mono title, a log body at 12.5px with 2.1 line-height — on a backdrop one step darker than the page.
@@ -441,6 +514,8 @@ It used to be traced by whichever grains were idle between pages, and that state
 
 The read/write head that drives every transition, drawn as the thing it actually is: a text caret. A Signal Cyan bar on a 2D canvas above the particle field, spanning the full height of the type it is working on (`h × 2`, where `h` is roughly half the line) and `h × 0.12` wide, so it scales with the heading rather than sitting at one size. It tilts into its own horizontal velocity. Solid while it consumes, travels or emits; parked, it step-blinks on a 1s cycle at 55% duty — the same blink as the `▮` in the boot log. When idle it parks 14px past the last stroke of the last heading, like a caret at the end of a line.
 
+**On the tape it parks on the track**, at the Epoch it has just written, instead of 14px past the last stroke. This is the one place in the system where the pointer metaphor and the timeline metaphor are the same object: where the read head rests *is* the position on the recording, so a second drawn playhead would be repeating what the caret already says. It still sweeps the year and the title on the way in — only where it comes to rest has changed. The knob is `tapeHead`.
+
 **It schedules rather than carries.** Nothing follows it across the viewport. Sweeping a heading, it hands every slot it passes over a time to burn out; sweeping the next page's heading, it hands every slot a time to be typed back in. The choreography is therefore entirely in the timeline, not in the physics, and the transition costs no per-frame work beyond one comparison per grain.
 
 It also stops being responsible for finishing. The last few characters go on settling into flesh behind it after it has parked, which is what the tail of a sentence being typed looks like.
@@ -449,13 +524,29 @@ The bar carries no grain-flow indicator. The characters burning out or manifesti
 
 **The mouse pointer is the system arrow.** No custom cursor canvas, no `cursor: none`. The Caret is the only drawn pointer on this site; a second one competing with it is one pointer too many.
 
+**It docks to the word under the hand.** On `pointerenter` of any interactive text — the `[data-scramble]` set: the nav, the brand, and every source and social link — the Caret leaves park, travels to one bar-width past the end of that label, and step-blinks there. The travel is a 170ms time constant, so it arrives in about half a second. The gap is derived from the Caret's own width rather than chosen, because the parked Caret's 14px is a figure for a 114px heading and would put this one halfway across the nav.
+
+This is the other half of the gesture the link scramble already is: the machine has put its write head on a word and is retyping it, so the Caret goes where the retyping is happening. The two share one pair of listeners over one set of elements for exactly that reason. The label's rect is read on enter and never in the frame loop — no page here scrolls and none reflows while it is up, so one read is the whole measurement.
+
+Docking is refused while a transition is live: the Caret is mid-sentence and belongs to the choreography. And the parked or docked Caret hides entirely while a non-collapsed text selection exists, because a drawn caret beside a real one is two carets and the browser's is the one the visitor is driving. The working Caret is exempt from that — stopping the transition because someone dragged across a paragraph would break it.
+
+### Lean
+
+The same `[data-scramble]` set leans toward the hand: the element translates by 15% of the pointer's offset from its own centre, on a 10/s response, which settles in about a third of a second. Inside a nav link that is at most about four pixels of travel. Critically damped, with no overshoot — the elastic ease this effect is usually built with reads as jelly, and this system is cold and precise.
+
+**It is written to `translate`, never to `transform`.** `.copy` owns `transform` for its reveal and the transition assigns `transform: none` to those elements directly, so a lean written there would be wiped mid-hover on some elements and would wipe the reveal on others. The two properties compose, and the panel already proves the pattern one level up: it translates `.topnav` clear of itself while the links inside keep their own transforms. The inline style is removed rather than left at `0px 0px` when a lean returns home, so an element nobody is touching carries nothing from this.
+
+Refused while the panel is open, because the panel has translated the whole nav 340px clear of itself and every rect cached in here is wrong by that much. That is The Panel Owns The Gesture Rule applied to a measurement rather than to a scroll.
+
 ## The Tweak Layer
 
-Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 120 controls over eleven groups, in the order the material is understood in:
+Everything above is the default state of a system a visitor can take apart. `static/tweak.js` ships a panel — a hairline tab on the right edge, `T` to toggle — with 141 controls over thirteen groups, in the order the material is understood in:
 
-**Palette · Type · Matter · Material · Life · Reach · Throw · Return · Motion · Layout · System**
+**Palette · Type · Matter · Material · Life · Reach · Wake · Throw · Return · Motion · Tape · Layout · System**
 
-— what it is made of, what it is made of visually, what it does when nobody is there, what it does when a hand is near, what a hand does to it, how it comes back, the page change, the page, the machine. Save writes to `localStorage`; Reset restores exactly what this document describes.
+— what it is made of, what it is made of visually, what it does when nobody is there, what it does when a hand is near, what a hand takes from it, what a hand does to it, how it comes back, the page change, the recording, the page, the machine. Save writes to `localStorage`; Reset restores exactly what this document describes.
+
+Tape carries seven: whether the recording plays itself, the Epoch dwell, the Marker scale, the track's offset, its tick height and run fill, and whether the caret parks on the track. Two of them re-measure rather than resolving on the next frame — the tick height and the head's parked position are the same number, and the park is only recomputed on a transition, so without it the head would sit at the old tick height until the visitor happened to navigate.
 
 **`SCHEMA` in tweak.js is the source of truth for every default in the system, and this file is its prose.** A control declares its key, its type, the custom property or data attribute it writes, and which expensive thing matter.js has to redo when it moves (`uniform`, `atlas`, `resample`, `count`, `blend`, `dpr`, `font`, `reload`). Adding a knob is one line; the storage, the row, the live preview and the re-measure are already there.
 
@@ -469,7 +560,11 @@ The panel is instrumentation, not a second design: it borrows the site's own tok
 
 The measurement is a command, not a judgement call: `node tools/coverage.mjs` screenshots every page and reports lit and cored coverage per heading, and `node tools/bench.mjs probe dist/index.html tools/probes/fill.js` reports what the frame costs. Anything imported from elsewhere has to be re-measured *here* — the reach radius arrived from the lab at 5 and had to be cut to 2.2, because on this page 5 radii is the entire name and the word vanished under its own filaments.
 
-**The Reach Is The Fill Rate Rule.** The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.33, page change 1.71, mid-throw 2.55; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.
+**The Reach Is The Fill Rate Rule.** The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.35, wake standing 0.39, wake dragged 0.57, page change 1.71, mid-throw 2.50; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.
+
+**The Standing Cost Is Not The Peak Cost Rule.** The page change is allowed to be the most expensive thing here because it lasts 1.9 seconds and it is the thing people replay. The wake is not: it lasts as long as a hand rests on a word, and a cost that never ends has to be judged against a different number. So its cap is set where it adds no more than the whole idle field costs — 0.22 — rather than anywhere near the page change's 1.71. A new standing cost is measured against `idle`; a new peak is measured against `nav`.
+
+Both of those rows are `fill.js`'s business and neither transfers off a headless box as an fps figure. What made them trustworthy was measuring on an intact field: the wake rows were first taken after the mid-throw sweep, and 50 carried grains appeared to cost 0.93 overdraw with a 52px widest sprite — an arithmetic impossibility, and the tell that two thousand still-loose thrown grains were being priced as the wake. Every row now reports `drawn` for that reason.
 
 That is inside what the adaptive downscale can rescue — a first transition that misses ~48fps caps the pixel ratio at 1 and takes four fifths of the cost back — but it is the number to watch, and it lives in the Reach group. Doubling `sreach` roughly quadruples the worst case. Re-measure with `tools/probes/fill.js` after any change there, not after a change to `count`.
 
@@ -493,6 +588,9 @@ Digits stay live, and the exception is the rule's own argument taken seriously: 
 - **Do** design both readings. Anything added to the matter site must also make sense in the calm scrolling document, because the same markup serves both.
 - **Do** ship a control with anything new, in the same change. One line in `SCHEMA` — see The Every Knob Rule.
 - **Do** re-measure before changing a default. A slider is free; a default is a claim.
+- **Do** add a *view* rather than a second renderer when something needs to sequence inside a page. The caret, the schedule and the budget all already work per view — see The Views, Not Pages, Rule.
+- **Do** make a measurement tool name its subjects from the field. `align.js` listed its own pages and went silent on the one that changed shape.
+- **Do** give a new hand response the radius the hand already has (`repelR × sreach`). The aura, the reach and the Wake all fall off over the same 167px, and a fourth number would make the hand's influence a set of unrelated circles instead of one field.
 
 ### Don't:
 
@@ -504,3 +602,7 @@ Digits stay live, and the exception is the rule's own argument taken seriously: 
 - **Don't** introduce an image, illustration, gradient fill, or texture. Generated assets are unavailable to this project and the identity is built on that absence.
 - **Don't** write a literal size, color, duration, or particle constant into `style.css` or `matter.js`. If it is worth choosing, it is worth exposing; if it is not worth exposing, it should not be a magic number either.
 - **Don't** let a page scroll or reveal a scrollbar in the matter reading.
+- **Don't** let anything change page on its own. The tape advances an Epoch by itself and stops at the last one; that is the whole of what may move without being asked.
+- **Don't** space a sequence evenly when the intervals mean something. The tape's ticks are placed by real years, and the gap between two of them is the fact the page is there to carry.
+- **Don't** write a hover or pointer offset to `transform`. `.copy` owns `transform` for its reveal and the transition assigns `transform: none` to those elements directly. Use the standalone `translate` property, which composes with it — see Lean.
+- **Don't** add a second drawn pointer. The Caret is the one, and it docks; a blob, a ring, a trailing dot, or a blend-mode cursor layer is one pointer too many and costs a full-viewport compositing readback every frame besides.
