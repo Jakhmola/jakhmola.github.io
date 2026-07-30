@@ -13,6 +13,8 @@
 //     become four fixed pages whose headings are built from GPU particles.
 // Everything a reader needs is in the HTML either way.
 
+import { derive } from './derive.js';
+
 export function escapeHtml(s) {
   return String(s)
     .replaceAll('&', '&amp;')
@@ -138,20 +140,160 @@ function fallbackBlurb(repo) {
     : 'No summary yet — the README is on GitHub.';
 }
 
+// The Schematic, drawn as drafting rather than as Matter Text: hairline edges,
+// solid nodes, mono labels. Nothing here is built from particles, so the card
+// costs nothing against the grain budget and the home page's claim that every
+// glyph is conserved matter stays literally true.
+//
+// SVG rather than a canvas because the drawing is static once derived: it is in
+// the HTML at build time, so the calm reading gets a real diagram for free, it
+// needs no JS, and it scales with the type instead of against it. `--sw` carries
+// the natural width so the stylesheet can enlarge it inside a raised card
+// without re-deriving anything.
+function schematicSvg(plan, graph) {
+  const pad = 3;
+  const w = plan.width + pad * 2;
+  const h = plan.height + pad * 2;
+  const at = (v) => Math.round(v * 10) / 10;
+  const nodes = plan.nodes
+    .map((n) => {
+      const lines = n.lines
+        .map(
+          (line, i) =>
+            `<tspan x="${at(n.x + pad + n.slab + plan.fs * 0.7)}" y="${at(
+              n.y + pad + plan.lineH * (i + 0.72),
+            )}">${e(line)}</tspan>`,
+        )
+        .join('');
+      return (
+        `<rect class="sn" x="${at(n.x + pad)}" y="${at(n.y + pad)}" width="${n.slab}" height="${at(n.h)}"/>` +
+        `<text class="st">${lines}</text>`
+      );
+    })
+    .join('');
+  const edges = plan.edges
+    .map((edge) => {
+      const line = `<polyline class="se" points="${edge.pts
+        .map(([x, y]) => `${at(x + pad)},${at(y + pad)}`)
+        .join(' ')}"/>`;
+      if (!edge.lines.length) return line;
+      const label = edge.lines
+        .map(
+          (l, i) =>
+            `<tspan x="${at(edge.lx + pad)}" y="${at(
+              edge.ly + pad + edge.lineH * (i - (edge.lines.length - 1) / 2) + plan.fs * 0.34,
+            )}">${e(l)}</tspan>`,
+        )
+        .join('');
+      return line + `<text class="sl">${label}</text>`;
+    })
+    .join('');
+  // `role="img"` with one label, rather than leaving a screen reader to walk
+  // twenty loose <tspan>s in layout order and reassemble the pipeline itself.
+  const spoken = graph.nodes.join(' → ');
+  return (
+    `<svg class="schem-svg" style="--sw:${w}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"` +
+    ` role="img" aria-label="${e(`${graph.heading}: ${spoken}`)}">${edges}${nodes}</svg>`
+  );
+}
+
+// The facts register, reusing the Epoch component verbatim -- same markup, same
+// stylesheet, same rows-or-inline-run behaviour on the two readings.
+//
+// Stars are printed at zero rather than omitted. The omit-when-absent rule an
+// Epoch follows is about fields that do not apply; a star count of nought
+// applies, and a portfolio that prints only its flattering fields is the kind a
+// reader checks once and stops trusting.
+function projFacts(repo) {
+  const rows = [
+    ['Language', repo.language],
+    ['Mass', repo.size ? `${(repo.size / 1024).toFixed(1)} MB` : null],
+    ['Opened', (repo.created_at || '').slice(0, 10) || null],
+    ['Pushed', (repo.pushed_at || '').slice(0, 10) || null],
+    ['Stars', String(repo.stargazers_count ?? 0)],
+  ].filter(([, v]) => v);
+  return `<dl class="facts">${rows
+    .map(([k, v]) => `<div><dt>${e(k)}</dt><dd>${e(v)}</dd></div>`)
+    .join('')}</dl>`;
+}
+
+// Above this many characters a repo name cannot be Matter Text, and the row
+// keeps the DOM-text treatment it has always had.
+//
+// Measured, not guessed. Archivo 700 at normal width runs at most 0.522em per
+// character over the alphabet repo names actually use; 820px is the binding
+// viewport, because it is the narrowest the matter reading runs at and the name
+// track offers 623px there. At The 26px Floor that admits 623 / (26 * 0.522) =
+// 45 characters. The longest name in this account is 35, so nothing is demoted
+// today -- but the featured set is chosen by a nightly job with nobody watching,
+// and a name that overran would be sampled past the edge of its own column.
+const MATTER_NAME_MAX = 45;
+
 // The source link sits under the description, not in a right rail: at 1920 the rail
 // put it 418px from the text it belonged to, and below 820px it landed closer
 // to the divider than to its own row.
 //
 // ponytail: not the whole row as one <a>. That would swallow text selection of
 // the description, and the link is now adjacent to it anyway.
+//
+// The row is the Plate. Its name is the only element large enough to be built
+// from grain; everything else it carries lives in `.plate`, which the calm
+// reading shows outright and the matter reading raises on a click. Nothing in
+// `.plate` is marked `.copy`, because on the matter reading it is `display:none`
+// until raised and so is never in flight during a page transition -- see the
+// class contract at the top of this file, and the lowering matter.js does on nav.
 function projectRow(repo, summary, index) {
   const n = String(index + 1).padStart(2, '0');
-  return `        <li class="project">
+  const d = derive(repo);
+  const matterName = repo.name.length <= MATTER_NAME_MAX;
+  const blocks = [];
+
+  blocks.push(`<p class="pdesc">${e(summary || repo.description || fallbackBlurb(repo))}</p>`);
+
+  if (d.plan) {
+    blocks.push(
+      `<figure class="schem">${schematicSvg(d.plan, d.schematic)}` +
+        `<figcaption>parsed &middot; ${e(d.schematic.origin)}, verbatim from &ldquo;${e(
+          d.schematic.heading,
+        )}&rdquo;</figcaption></figure>`,
+    );
+  }
+
+  blocks.push(projFacts(repo));
+
+  if (d.stack.length) {
+    blocks.push(
+      `<ul class="tags">${d.stack
+        .map((s) => `<li${s.kind === 'language' ? ' class="lang"' : ''}>${e(s.label)}</li>`)
+        .join('')}</ul>`,
+    );
+  }
+
+  if (d.decisions.length) {
+    blocks.push(
+      `<dl class="calls"><dt class="blk-h">Decisions</dt>${d.decisions
+        .map((c) => `<div><dt>${e(c.term)}</dt><dd>${e(c.gloss)}</dd></div>`)
+        .join('')}</dl>`,
+    );
+  }
+
+  if (d.figures.length) {
+    blocks.push(
+      `<div class="figs"><p class="blk-h">Reported</p><ul>${d.figures
+        .map((f) => `<li>${e(f.text)}</li>`)
+        .join('')}</ul></div>`,
+    );
+  }
+
+  blocks.push(`<a class="psrc" href="${e(repo.html_url)}" data-scramble>source &#8599;</a>`);
+
+  return `        <li class="project" data-proj="${index}">
           <span class="copy pnum">/${n}</span>
           <div class="pbody">
-            <h3 class="copy pname">${e(repo.name)}</h3>
-            <span class="copy pdesc">${e(summary || repo.description || fallbackBlurb(repo))}</span>
-            <a class="copy psrc" href="${e(repo.html_url)}" data-scramble>source &#8599;</a>
+            <h3 class="${matterName ? 'mt' : 'copy'} pname" style="--ch:${repo.name.length}">${e(repo.name)}</h3>
+            <div class="plate" id="plate-${index}">
+              ${blocks.join('\n              ')}
+            </div>
           </div>
         </li>`;
 }
@@ -271,15 +413,26 @@ ${tape(config.experience, nowYear)}
       </div>
     </section>
 
+    <!-- The page heading is calm-reading furniture here for the same reason it is
+         on Experience: on the matter reading the page is named by the nav and the
+         HUD, and the index *is* the five names. A "Projects" Headline above them
+         would be a second Headline-sized mark competing with the one a visitor
+         came to read, and ~800 grains spent saying what two other elements
+         already say. The outbound GitHub link stays on both readings, because it
+         is what stands in for every repo the ranking left off. -->
     <section id="pg-proj" class="page" aria-label="Projects">
       <div class="page-in">
         <div class="page-head">
-          <h2 class="mt">Projects</h2>
+          <h2 class="calm-only">Projects</h2>
           <a class="copy" href="${e(config.github)}" data-scramble>all repos on github &#8599;</a>
         </div>
         <ul class="projects">
 ${featured.length ? featured.map((r, i) => projectRow(r, summaries[r.full_name], i)).join('\n') : emptyProjects(config)}
         </ul>
+        <!-- The open gesture is taught; the close gesture is taught once a plate
+             is up. Esc stays wired and unadvertised -- a labelled way out reads
+             as application chrome, and this page is meant to be walked into. -->
+        <p id="plate-hint" class="copy matter-only phint" aria-hidden="true">click a name to raise its plate</p>
       </div>
     </section>
 

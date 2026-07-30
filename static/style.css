@@ -122,6 +122,27 @@
   --tape-gap: 3.2vh;
   --tape-tick-h: 9px;
   --tape-run-a: 18%;
+
+  /* --------------------------------------------------------------- plate -- */
+  /* What a repo name is actually offered, derived from the same tokens the row's
+   * grid is built from rather than guessed at again. 84px is the row's own
+   * chrome: 12px of padding, the 52px index column, the 20px gap. Measured
+   * against the rendered page -- 617px at 820, 776 at 1024, 1096 at 1440 and
+   * above -- and the narrow query drops it to 72px where the index column does. */
+  --ptrack: calc(min(var(--maxw), 100vw - 2 * var(--gutter)) - 84px);
+  /* The raise. 650ms on transform and opacity only, so it composites: a card
+   * that costs a layout pass per frame would take the transition budget the page
+   * change already spends. */
+  --plate-raise: 650ms;
+  --plate-ease: cubic-bezier(0.16, 0.84, 0.24, 1);
+  /* The inset always leaves an outside, because clicking the outside is the only
+   * advertised way to lower a plate. */
+  --plate-inset: 7.5%;
+  --plate-a: 96%;
+  /* How much larger the Schematic is drawn once its card is up. The preview and
+   * the full drawing are one object at two sizes, not a thumbnail and an image. */
+  --schem-grow: 1.7;
+  --schem-edge-a: 42%;
 }
 
 *,
@@ -550,21 +571,181 @@ h2.mt {
   min-width: 0;
 }
 
-/* DOM text, not matter. At 22-27px this was measurably the least legible content
- * on the site -- 1.03:1 against the background -- and five of them spent ~a
- * third of the grain budget at a size the sample grid cannot resolve. Below The
- * 26px Floor there is no version of this that works as particles. */
+/* Matter Text, at the Headline rung.
+ *
+ * This reverses an earlier measurement, and the number that changed is the face,
+ * not the tolerance. At the Title rung -- mono, clamp(22px, 2.2vw, 27px) -- a
+ * repo name computed *below* The 26px Floor at every width from 821 to 1181px,
+ * did not resolve, and measured 1.03:1 against the field. Headline is the
+ * smallest rung that clears the floor at every width the matter reading runs at
+ * (34px at its own minimum), and Archivo carries a 35-character name inside the
+ * track where mono at 27px could not.
+ *
+ * Not expanded: The Two Widths Rule reserves that for the two things a person
+ * says outright, and a repo name is neither.
+ *
+ * The second term of the min() is the fit. 0.522em is the widest per-character
+ * advance Archivo 700 normal runs over the alphabet repo names use, measured
+ * over this account's names at 820, 1024, 1440 and 1920. It is a worst case on
+ * purpose: a mostly-lowercase name measures nearer 0.45em and simply renders
+ * smaller than it had to, which costs a few percent of size and can never
+ * overflow. Overflow is the failure that matters -- `.mt` is nowrap at
+ * fit-content, so a name past its track is sampled past the edge of the page and
+ * then drawn off it, silently. See MATTER_NAME_MAX in src/render.js for the
+ * length at which the build stops trying and hands the name back to DOM text. */
 .pname {
+  font-family: var(--display);
+  font-size: min(var(--t-headline), calc(var(--ptrack) / (var(--ch, 20) * 0.522)));
+  font-weight: var(--w-display);
+  letter-spacing: var(--tr-display);
+  line-height: var(--lh-headline);
+}
+
+/* A name too long for the rung above keeps exactly the treatment repo names had
+ * before the Plate: mono at the Title rung, as DOM text. Reached by the build,
+ * not by a media query -- it is a property of the name, not of the viewport. */
+.copy.pname {
   font-family: var(--mono);
   font-size: var(--t-title);
   font-weight: 700;
+  letter-spacing: normal;
+}
+
+/* Everything a Project Row carries under its name. In the calm reading this is
+ * simply the rest of the document; on the matter reading it is the plate. */
+.plate {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
 }
 
 .pdesc {
+  margin: 0;
   font-size: var(--t-body-sm);
   line-height: 1.55;
   color: var(--dim);
   max-width: 620px;
+}
+
+/* The Schematic: drafting, not matter. Hairline edges, solid nodes, mono labels,
+ * and no fill anywhere -- so it costs nothing against the grain budget and the
+ * home page's claim that every glyph on screen is conserved matter stays
+ * literally true of the implementation.
+ *
+ * Sized from its own natural width (`--sw`, written by the build) rather than
+ * stretched to the column: a six-node chain and a seven-node hub are different
+ * shapes and neither should be distorted into the other's box. Wider than the
+ * column it scrolls, which keeps the labels at their authored size instead of
+ * scaling them under the ramp's smallest step. */
+.schem {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.schem-svg {
+  display: block;
+  width: calc(var(--sw) * 1px * var(--schem-k, 1));
+  height: auto;
+}
+
+/* The node: a solid slab, the one thing in the drawing that is not a hairline. */
+.schem .sn {
+  fill: var(--ink65);
+}
+
+.schem .st {
+  fill: var(--ink85);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.schem .sl {
+  fill: var(--quiet);
+  font-family: var(--mono);
+  font-size: 9.5px;
+}
+
+.schem .se {
+  fill: none;
+  stroke: color-mix(in srgb, var(--ink) var(--schem-edge-a), transparent);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+/* Where the drawing came from, said outright. A derived diagram that does not
+ * cite its own source is indistinguishable from one somebody drew. */
+.schem figcaption {
+  margin-top: 9px;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--dimmer);
+}
+
+/* The block headings inside a plate. Small, quiet, and mono: they name a
+ * register, they are not headings in the document's outline sense. */
+.blk-h {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dimmer);
+}
+
+/* The decisions register. Same definition-list shape as the facts register, but
+ * a term here is a phrase rather than a field name, so it gets its own line. */
+.calls {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+}
+
+.calls > div {
+  display: grid;
+  gap: 2px;
+}
+
+.calls dt {
+  font-family: var(--mono);
+  font-size: var(--t-caption);
+  color: var(--ink85);
+}
+
+.calls dd {
+  margin: 0;
+  font-size: var(--t-body-sm);
+  line-height: var(--lh-body-sm);
+  color: var(--dim);
+}
+
+/* Figures the README states outright, and only those. */
+.figs {
+  display: grid;
+  gap: 6px;
+}
+
+.figs ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.figs li {
+  font-family: var(--mono);
+  font-size: var(--t-caption);
+  line-height: 1.5;
+  color: var(--ink65);
+}
+
+/* The repo's own primary language, marked apart from the components around it. */
+.tags li.lang {
+  color: var(--dim);
+  border-color: var(--line-strong);
 }
 
 .psrc {
@@ -965,6 +1146,246 @@ h2.mt {
   background: color-mix(in srgb, var(--accent) var(--tape-run-a), transparent);
 }
 
+/* ----------------------------------------------------------------- plate -- */
+
+/* On the matter reading the Projects page is an index of five names and nothing
+ * else. Each row's own material -- summary, Schematic, registers, source link --
+ * lives in `.plate`, out of flow and hidden until it is asked for.
+ *
+ * `visibility`, not `opacity`: the plate holds a link, and an opacity-0 link is
+ * still a tab stop. That is the exact defect the contact email was fixed for --
+ * a focusable element a keyboard user could neither read nor see focused -- and
+ * it would be five of them here. Hidden this way the plate still lays out, which
+ * is what lets the Schematic be measured and drawn without a second code path.
+ *
+ * It is also why nothing inside `.plate` is marked `.copy`. The class contract at
+ * the top of src/render.js exists because an unmarked element burns through a
+ * page transition at full opacity; a hidden one cannot, and matter.js lowers any
+ * raised plate before it starts a transition. */
+/* The plate sits under its own name, not beside the index.
+ *
+ * Beside was the first attempt and it does not fit: at the Headline rung the
+ * longest name in this account reaches 1054px of an 1180px column, so a side rail
+ * collides with three rows out of five, and anchored to the top of the list it ran
+ * under the nav. Under the name it is always clear of both, and it is the same
+ * object the card will grow -- "the hover plate grows in place into the detail" is
+ * literally what happens, from this box to the card's.
+ *
+ * It carries the card's own ground, because a drawing over loose grain is not a
+ * drawing anyone can read. */
+.matter .project {
+  position: relative;
+}
+
+.matter .pbody {
+  position: relative;
+}
+
+.matter .plate {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  /* Hugs the drawing rather than reserving a column for it: a chain is narrow and
+   * a hub is wide, and a plate with 400px of empty ground beside a pipeline reads
+   * as something that failed to load. */
+  width: fit-content;
+  /* 700px, not a rounder 600: the widest Schematic this account produces is
+   * interview-coach's hub at a measured 617px of viewBox, and at 620 the plate cut
+   * its last column off mid-word behind a hidden scrollbar. */
+  max-width: min(700px, 100%);
+  max-height: 44vh;
+  margin: 0;
+  padding: 14px 16px;
+  overflow: auto;
+  gap: 10px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) var(--plate-a), transparent);
+  /* `visibility` alongside the fade, not `opacity` alone: the plate holds a link,
+   * and an opacity-0 link is still a tab stop. That is the defect the contact
+   * email was demoted from Matter Text to fix, and here there would be five. */
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--fade) ease,
+    visibility var(--fade);
+}
+
+/* Only the Schematic is on the plate. The rest of the row's material arrives when
+ * the card does -- `display: none` until then, so the plate's box is the drawing's
+ * box and not a tall panel with six gaps in it.
+ *
+ * Scoped to `:not(.up)` rather than undone with `display: revert` on the raised
+ * state. Revert rolls back the whole author origin, so it also threw away the
+ * facts register's and the chip row's own `display: flex` -- which rendered a
+ * five-field register as five stacked rows and stretched one chip across the card.
+ *
+ * And scoped by width, because `.matter` is set by a <head> probe that does not
+ * test the viewport -- below 820px the class stays on <html> while the stylesheet
+ * hands the page back to the calm document. Unscoped, this rule hid every
+ * project's summary, register, chips and source link on every phone: the one
+ * reading PRODUCT.md calls a first-class deliverable, showing five bare names.
+ * Undoing it in the narrow query is not an option -- that needs `display: revert`,
+ * which is what the paragraph above is about. */
+@media (min-width: 821px) {
+  .matter .project:not(.up) .plate > :not(.schem) {
+    display: none;
+  }
+}
+
+/* A forming specimen lifts over the rows below it -- which are grains, and would
+ * otherwise read straight through the drawing. */
+.matter .project:hover,
+.matter .project:focus-within,
+.matter .project.hot {
+  z-index: 20;
+}
+
+/* Hovering a row generates its Schematic beside the index -- the same object the
+ * card will grow, drawn small. That continuity is the whole argument for deriving
+ * the drawing rather than shipping a thumbnail of one. The rest of the plate
+ * stays down; a hover is a look, not a read. */
+/* `:has(.schem)` because most READMEs in this account carry no diagram, and a row
+ * with nothing to form must form nothing -- not an empty panel. The absence is
+ * already stated inside the card; on the index it is simply silent.
+ *
+ * `.hot` is the same state reached by a hash flag, so a headless capture can be
+ * taken of it -- see initPlate in matter.js. It is not set by anything else. */
+.matter .project:hover .plate:has(.schem),
+.matter .project:focus-within .plate:has(.schem),
+.matter .project.hot .plate:has(.schem) {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* A raised plate. The row *becomes* the card rather than opening one beside it,
+ * which is why the name inside it is the same element that was matter a moment
+ * ago -- see `.up .pname` below.
+ *
+ * Panel Slate at 96% behind a hairline: the Tweak Panel's material, because this
+ * is the same kind of object -- a surface laid over the field, not a new field.
+ * No backdrop blur. The Glow Is Earned Rule cuts both ways: the material recedes
+ * on its own, and a filter over the whole viewport would cost more per frame than
+ * the transition it sits next to. */
+.matter .project.up {
+  position: fixed;
+  top: 12vh;
+  right: var(--plate-inset);
+  bottom: 11vh;
+  left: var(--plate-inset);
+  /* Above the caret canvas at 40, below the corner mark at 45 and the nav at 50:
+   * the writing head must not draw across a raised card, and the nav has to stay
+   * the way out of the page whatever is up. */
+  z-index: 42;
+  display: block;
+  overflow: auto;
+  padding: 26px clamp(18px, 2.4vw, 34px);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--panel) var(--plate-a), transparent);
+  pointer-events: auto;
+  /* An animation rather than a transition, so raising it takes one class and one
+   * frame. A two-class transition needs a frame to establish the `from` state,
+   * and under virtual time rAF barely ticks -- so every headless capture of the
+   * raise would have been a capture of a card at opacity 0. `--plate-from` is the
+   * row's own offset from the card's centre, measured once on the click and never
+   * in the frame loop. */
+  animation: plate-rise var(--plate-raise) var(--plate-ease) both;
+}
+
+@keyframes plate-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--plate-from, 24px)) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* `.matter .page` refuses the pointer so the four stacked fixed pages cannot
+ * intercept each other's clicks. The index has to take it back: without this a
+ * row is not a hover target, so no Schematic ever forms, and no name is
+ * clickable. Scoped to this page -- the same hole on the other three is a real
+ * defect and its own change, not a side effect of this one. */
+.matter #pg-proj .projects,
+.matter #pg-proj .page-head a {
+  pointer-events: auto;
+}
+
+/* The name arrives as set type. It is the same element and the same glyphs the
+ * index drew from grain, and that material change is what marks the depth
+ * change -- matter.js loosens this row's grains out of formation at the same
+ * moment, so the two are never both on screen. */
+.matter .project.up .pname {
+  opacity: 1;
+  white-space: normal;
+  width: auto;
+  transition: opacity calc(var(--plate-raise) * 0.5) ease-out;
+}
+
+/* Inside a raised card the plate is no longer a plate: the card is the panel, so
+ * every bit of the small one's chrome comes off. `max-height` especially -- left
+ * on, it clipped the card's own contents to 44vh behind a hidden scrollbar.
+ *
+ * `opacity` as well as `visibility`, and it is the omission of exactly this line
+ * that shipped a card containing nothing but its own name. */
+.matter .project.up .plate {
+  position: static;
+  visibility: visible;
+  opacity: 1;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  background: none;
+  gap: 16px;
+  transition: none;
+}
+
+/* Grown, not re-derived: the preview and this are one drawing at two sizes. */
+.matter .project.up .schem {
+  --schem-k: var(--schem-grow);
+  opacity: 1;
+}
+
+/* A focused name shows itself as type.
+ *
+ * The name is the control that raises a plate, so it is focusable -- and a
+ * focusable element at `opacity: 0` composites its own focus ring away. That is
+ * the exact defect the contact email was demoted from Matter Text to fix, and
+ * here there are five of them. Revealing the set type on focus is also the same
+ * material change a raise makes, arrived at by keyboard. */
+.matter .pname:focus-visible {
+  opacity: 1;
+  outline: 1px solid var(--accent);
+  outline-offset: 5px;
+}
+
+/* While one plate is up the others are not hoverable -- a specimen forming behind
+ * a raised card is a drawing nobody asked for. */
+.matter .projects.busy .project:not(.up) {
+  pointer-events: none;
+}
+
+.matter .projects.busy .project:not(.up) .schem {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* The taught gesture, and only ever one of them at a time. */
+.phint {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dimmer);
+}
+
 /* ------------------------------------------------------------------ boot -- */
 
 .matter #boot {
@@ -1084,6 +1505,8 @@ h2.mt {
     --wdth-name: min(var(--wdth-display), 100%);
     --t-tagline: var(--t-tagline-narrow);
     --tr-tagline: 0.1em;
+    /* The index column narrows below, so the name track widens by the same 12px. */
+    --ptrack: calc(min(var(--maxw), 100vw - 2 * var(--gutter)) - 72px);
   }
 
   .name {
@@ -1177,6 +1600,30 @@ h2.mt {
   .matter .epochs {
     display: grid;
     gap: 2.4vw;
+  }
+
+  /* Same for the plate. Below this width there is no index to lay a card over --
+   * the document scrolls and every project's material is simply the rest of it. */
+  .matter .plate {
+    position: static;
+    visibility: visible;
+    width: auto;
+  }
+
+  .matter .schem,
+  .matter .project.up .schem {
+    --schem-k: 1;
+    opacity: 1;
+  }
+
+  .matter .project.up {
+    position: static;
+    inset: auto;
+    padding: 0 6px 14px;
+    border: 0;
+    background: none;
+    opacity: 1;
+    transform: none;
   }
 
   .matter .epoch {

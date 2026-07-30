@@ -650,6 +650,7 @@ void main(){
       this.initHover();
       this.initNav();
       this.initInput();
+      this.initPlate();
 
       const booted = new Promise((done) => this.initBoot(done));
       const built = this.initGL() ? this.afterGL() : Promise.resolve(false);
@@ -665,6 +666,7 @@ void main(){
         this.want = isView(want) ? want : PAGES.includes(want) ? firstView(want) : 'home';
         this.startTr(this.want, true);
         this.scrub();
+        if (this.plate) this.plate.capture();
       });
     }
 
@@ -777,6 +779,11 @@ void main(){
      *  same box behind each other for exactly this reason -- see the tape block
      *  in style.css. */
     sampleAll() {
+      // A re-cut moves every slot, so a raised card is a card measured against a
+      // layout that no longer exists -- and its grains are holding homes about to
+      // be replaced. Lowering first hands both back; `restore()` at the end puts
+      // the card up again against the layout that replaced them.
+      if (this.plate) this.plate.recut();
       const off = document.createElement('canvas');
       const octx = off.getContext('2d', { willReadFrequently: true });
       this.cutAt = innerWidth + 'x' + innerHeight;
@@ -943,6 +950,9 @@ void main(){
       };
       this.ancHome = box('hg-home');
       this.ancSigil = box('hg-sigil');
+      // The slot table and every heading box are fresh now, so a plate that was up
+      // before the re-cut can take its geometry from the layout that replaced them.
+      if (this.plate) this.plate.restore();
     }
 
     /* ---------------------------------------------------------------- gl -- */
@@ -1375,6 +1385,54 @@ void main(){
       }
     }
 
+    /** The index comes apart while a plate is up.
+     *
+     *  Each grain's *home* moves by a bounded random offset and it is set loose to
+     *  travel there; lowering restores the home and sets it loose again, so the
+     *  index knits back. The settle and return physics that already run every
+     *  frame do all of the work, which is why this costs one pass over the live
+     *  set on a click and nothing per frame. Compare The Reach Is The Fill Rate
+     *  Rule: what is expensive about an effect is its radius, not its population,
+     *  and this radius is a dozen pixels.
+     *
+     *  Not a blur and not an opacity ramp. The row being read holds together more
+     *  than the four that are not, so the hierarchy is spatial -- and by the time
+     *  it holds, that row's name is set type inside a card drawn over it, so what
+     *  a visitor actually sees come apart is the rest of the index around the
+     *  card's edges.
+     *
+     *  Takes the name element rather than a row number, because a name too long
+     *  for the matter rung is never sampled and the slot table's target indices
+     *  are therefore not row indices. */
+    loosen(nameEl) {
+      const A = this.A;
+      // The buffer is allocated in `initGL`, which runs after `initPlate` -- and a
+      // plate can be lowered from `sampleAll` before either has happened.
+      if (!A) return;
+      const S = this.slots[this.slotView];
+      const tgs = this.tg[this.slotView];
+      if (!S || !tgs) return;
+      const sel = nameEl ? tgs.findIndex((tg) => tg.el === nameEl) : -1;
+      const n = Math.min(S.n, NP);
+      for (let i = 0; i < n; i++) {
+        const amp = !nameEl ? 0 : S.ti[i] === sel ? T.plateHold : T.plateLoose;
+        const a = Math.random() * 6.2832;
+        const r = amp * (0.35 + Math.random() * 0.65);
+        A.homeX[i] = S.x[i] + Math.cos(a) * r;
+        A.homeY[i] = S.y[i] + Math.sin(a) * r;
+        // A grain burning out or manifesting belongs to the caret's schedule; it
+        // will read the new home when it lands and must not be interrupted here.
+        if (A.st[i] !== 0 && A.st[i] !== 1) continue;
+        const j = i * 2;
+        A.st[i] = 1;
+        A.vel[j] = Math.cos(a) * r * 2.4;
+        A.vel[j + 1] = Math.sin(a) * r * 2.4;
+        A.spin[i] = (Math.random() - 0.5) * 0.5;
+        A.hAt[i] = this.t + T.delay * (0.45 + Math.random() * 0.9);
+        A.mAt[i] = -Infinity;
+      }
+    }
+
     /* --------------------------------------------------------- transition -- */
 
     /** Accepts a view or a page. A page resolves to its first view, so a nav click
@@ -1383,6 +1441,11 @@ void main(){
     goTo(target) {
       const view = isView(target) ? target : firstView(target);
       if (!this.ready || this.tr || view === this.cur) return;
+      // A raised plate is furniture on one page, and nothing inside it is marked
+      // `.copy` -- so it would sit at full opacity over the incoming page for the
+      // whole transition. Lowering it first is also what a visitor means by
+      // clicking a nav link with a card up.
+      if (this.plate) this.plate.lower();
       this.startTr(view, false);
     }
 
@@ -2217,6 +2280,137 @@ void main(){
       document.querySelectorAll('.tick').forEach((el) => {
         el.addEventListener('click', () => this.goTo('exp:' + el.dataset.ep));
       });
+    }
+
+    /** The Plate: a card raised out of the Projects index, and the index coming
+     *  apart behind it.
+     *
+     *  Selection, not navigation. The index never leaves, so there is no view to
+     *  add and no second transition to schedule -- which is why this lives here
+     *  and not in VIEWS. Compare the tape, where an Epoch really is a view because
+     *  only one of the four can be measured at a time.
+     *
+     *  The row's button semantics are added here rather than written into the HTML,
+     *  for the same reason the tape's `role="tabpanel"` is: on the calm reading
+     *  every project's material is already on the page, so a control for revealing
+     *  it would announce a thing that is not hidden. */
+    initPlate() {
+      const list = $('pg-proj') && $('pg-proj').querySelector('.projects');
+      const rows = list ? [...list.querySelectorAll('.project[data-proj]')] : [];
+      if (!rows.length) return;
+      const hint = $('plate-hint');
+      const say = (s) => {
+        if (hint) hint.textContent = s;
+      };
+      const CLOSED = 'click a name to raise its plate';
+      let up = -1;
+
+      const lower = () => {
+        if (up < 0) return;
+        const row = rows[up];
+        row.classList.remove('up');
+        const name = row.querySelector('.pname');
+        if (name) name.setAttribute('aria-expanded', 'false');
+        list.classList.remove('busy');
+        up = -1;
+        this.loosen(null);
+        say(CLOSED);
+      };
+
+      const raise = (i) => {
+        if (up === i) return;
+        lower();
+        const row = rows[i];
+        const name = row.querySelector('.pname');
+        // Measured once, on the click, so the raise has something to rise from --
+        // never in the frame loop. See The Measure-Once Rule.
+        const r = row.getBoundingClientRect();
+        row.style.setProperty(
+          '--plate-from',
+          Math.round(r.top + r.height / 2 - innerHeight / 2) + 'px',
+        );
+        row.classList.add('up');
+        list.classList.add('busy');
+        up = i;
+        if (name) name.setAttribute('aria-expanded', 'true');
+        this.loosen(name);
+        say('click anywhere outside to lower it');
+      };
+
+      rows.forEach((row, i) => {
+        const name = row.querySelector('.pname');
+        if (name) {
+          name.tabIndex = 0;
+          name.setAttribute('role', 'button');
+          name.setAttribute('aria-expanded', 'false');
+          const plate = row.querySelector('.plate');
+          if (plate && plate.id) name.setAttribute('aria-controls', plate.id);
+          name.addEventListener('keydown', (ev) => {
+            if (ev.key !== 'Enter' && ev.key !== ' ') return;
+            ev.preventDefault();
+            if (up === i) lower();
+            else raise(i);
+          });
+        }
+        row.addEventListener('pointerdown', () => {
+          if (up !== i) raise(i);
+        });
+      });
+
+      // Click-outside is the taught way out. Esc is wired and left unadvertised:
+      // a labelled way out reads as application chrome, and this page is meant to
+      // be walked into rather than operated.
+      //
+      // Capture phase, and it tests containment rather than relying on the card to
+      // stop propagation: a raised card has to swallow its own clicks so the source
+      // link inside it still works, and a listener that lowered on the way down
+      // would have taken that link away.
+      addEventListener(
+        'pointerdown',
+        (ev) => {
+          if (up < 0 || rows[up].contains(ev.target)) return;
+          lower();
+        },
+        { capture: true },
+      );
+      addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape') lower();
+      });
+
+      // Headless capture, for the same reason `#t0=` and `#mx=` exist: a hover and
+      // a raise are the two states this page is *for*, and neither can be reached
+      // by loading a URL. `#hot=1` forms the first row's specimen, `#plate=1`
+      // raises its card. Off entirely unless the hash asks.
+      //
+      // Called after the scrub, never here. `initPlate` runs before `initGL`, so a
+      // raise at this point loosens grains against a buffer that does not exist
+      // yet -- which threw, took `start()` down with it, and left every capture of
+      // the card sitting on the boot terminal. The Snap's parked hover is deferred
+      // for the same reason, one line further down the same list.
+      const capture = () => {
+        const hot = QS.get('hot');
+        if (hot !== null && rows[+hot]) rows[+hot].classList.add('hot');
+        const open = QS.get('plate');
+        if (open !== null && rows[+open]) raise(+open);
+      };
+
+      // A re-cut replaces the slot table, so a raised plate has to give its grain
+      // homes back before that happens and take a new card geometry afterwards.
+      // Dropping it instead is what a late-arriving face would do to a visitor
+      // mid-read -- this file measures that shift at 68px on a cold load -- and
+      // what a window resize would do to anyone reading a card.
+      let pending = -1;
+      const recut = () => {
+        pending = up;
+        lower();
+      };
+      const restore = () => {
+        const i = pending;
+        pending = -1;
+        if (i >= 0) raise(i);
+      };
+
+      this.plate = { lower, raise, capture, recut, restore, isUp: () => up >= 0 };
     }
 
     initInput() {

@@ -301,6 +301,24 @@
       ],
     },
     {
+      g: 'Plate',
+      note: 'The Projects page is an index of five names. A plate rises from the one you pick, and the rest come apart behind it.',
+      c: [
+        { k: 'plateRaise', t: 'range', d: 650, min: 150, max: 2000, step: 25, u: 'ms', css: '--plate-raise', l: 'Raise' },
+        { k: 'plateInset', t: 'range', d: 7.5, min: 0, max: 22, step: 0.5, u: '%', css: '--plate-inset', l: 'Card inset' },
+        { k: 'plateA', t: 'range', d: 96, min: 40, max: 100, step: 1, u: '%', css: '--plate-a', l: 'Card fill' },
+        // How far a name's grains come apart. The one being read holds together
+        // more than the four that are not -- the hierarchy is spatial, not an
+        // opacity ramp, which is what keeps it cheap. See The Reach Is The Fill
+        // Rate Rule: this is a bounded per-grain offset, not a blur.
+        { k: 'plateLoose', t: 'range', d: 13, min: 0, max: 60, step: 1, u: 'px', l: 'Out of formation · the rest' },
+        { k: 'plateHold', t: 'range', d: 7, min: 0, max: 40, step: 1, u: 'px', l: 'Out of formation · this one' },
+        { k: 'schemGrow', t: 'range', d: 1.7, min: 1, max: 3, step: 0.05, u: '×', css: '--schem-grow', l: 'Schematic · grown' },
+        { k: 'schemEdge', t: 'range', d: 42, min: 5, max: 100, step: 1, u: '%', css: '--schem-edge-a', l: 'Schematic · edges' },
+        { k: 'plateHover', t: 'bool', d: true, attr: 'plate-hover', l: 'Hover forms the specimen' },
+      ],
+    },
+    {
       g: 'Layout',
       note: 'Chrome and rhythm. Nothing here is the only copy of anything.',
       c: [

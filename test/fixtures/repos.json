@@ -4,8 +4,12 @@
     "full_name": "Jakhmola/career-ops",
     "html_url": "https://github.com/Jakhmola/career-ops",
     "description": "Claude-Code-based job search operations system",
-    "fork": false,
-    "topics": ["llm-agents", "claude", "automation"],
+    "fork": true,
+    "topics": [
+      "llm-agents",
+      "claude",
+      "automation"
+    ],
     "language": "Python",
     "stargazers_count": 3,
     "pushed_at": "2026-06-01T10:00:00Z"
@@ -16,7 +20,10 @@
     "html_url": "https://github.com/Jakhmola/Brain-Tumor-Segmentation",
     "description": "U-Net, ResNet and VGG segmentation models on BraTS 2020",
     "fork": false,
-    "topics": ["deep-learning", "medical-imaging"],
+    "topics": [
+      "deep-learning",
+      "medical-imaging"
+    ],
     "language": "Jupyter Notebook",
     "stargazers_count": 5,
     "pushed_at": "2025-11-12T10:00:00Z"
@@ -27,7 +34,10 @@
     "html_url": "https://github.com/Jakhmola/rag-search-engine",
     "description": "Retrieval-augmented search engine over document corpora",
     "fork": false,
-    "topics": ["rag", "search"],
+    "topics": [
+      "rag",
+      "search"
+    ],
     "language": "Python",
     "stargazers_count": 2,
     "pushed_at": "2026-04-20T10:00:00Z"
@@ -38,7 +48,9 @@
     "html_url": "https://github.com/Jakhmola/coding_agent",
     "description": "An LLM agent that writes and executes code",
     "fork": false,
-    "topics": ["agents"],
+    "topics": [
+      "agents"
+    ],
     "language": "Python",
     "stargazers_count": 1,
     "pushed_at": "2026-05-15T10:00:00Z"
@@ -60,7 +72,9 @@
     "html_url": "https://github.com/Jakhmola/Super-Mario-AI",
     "description": "Reinforcement learning agent that plays Super Mario Bros",
     "fork": false,
-    "topics": ["reinforcement-learning"],
+    "topics": [
+      "reinforcement-learning"
+    ],
     "language": "Python",
     "stargazers_count": 1,
     "pushed_at": "2025-06-10T10:00:00Z"
@@ -71,7 +85,9 @@
     "html_url": "https://github.com/Jakhmola/interview-coach",
     "description": "LLM-powered mock interview practice tool",
     "fork": false,
-    "topics": ["portfolio-feature"],
+    "topics": [
+      "portfolio-feature"
+    ],
     "language": "TypeScript",
     "stargazers_count": 0,
     "pushed_at": "2024-08-01T10:00:00Z"
@@ -93,7 +109,9 @@
     "html_url": "https://github.com/Jakhmola/scratch-experiments",
     "description": "Throwaway experiments",
     "fork": false,
-    "topics": ["portfolio-hide"],
+    "topics": [
+      "portfolio-hide"
+    ],
     "language": "Python",
     "stargazers_count": 0,
     "pushed_at": "2026-06-05T10:00:00Z"

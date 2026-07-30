@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-30T03:45:00Z",
-  "title": "Design System: Shubham Jakhmola — Matter",
+  "generatedAt": "2026-07-30T11:45:00Z",
+  "title": "Design System: Shubham Jakhmola \u2014 Matter",
   "extensions": {
     "colorMeta": {
       "signal-cyan": {
@@ -81,7 +81,7 @@
       },
       "ink-85": {
         "role": "neutral",
-        "displayName": "Ink 85% — the machine's transcript",
+        "displayName": "Ink 85% \u2014 the machine's transcript",
         "canonical": "color-mix(in srgb, #e8edef 85%, transparent)",
         "tonalRamp": [
           "oklch(94% 0.005 210 / 0.15)",
@@ -96,7 +96,7 @@
       },
       "ink-65": {
         "role": "neutral",
-        "displayName": "Ink 65% — inline links",
+        "displayName": "Ink 65% \u2014 inline links",
         "canonical": "color-mix(in srgb, #e8edef 65%, transparent)",
         "tonalRamp": [
           "oklch(94% 0.005 210 / 0.15)",
@@ -111,7 +111,7 @@
       },
       "ink-62": {
         "role": "neutral",
-        "displayName": "Ink 62% — body copy",
+        "displayName": "Ink 62% \u2014 body copy",
         "canonical": "color-mix(in srgb, #e8edef 62%, transparent)",
         "tonalRamp": [
           "oklch(94% 0.005 210 / 0.15)",
@@ -126,7 +126,7 @@
       },
       "ink-55": {
         "role": "neutral",
-        "displayName": "Ink 55% — the AA floor for words",
+        "displayName": "Ink 55% \u2014 the AA floor for words",
         "canonical": "color-mix(in srgb, #e8edef 55%, transparent)",
         "tonalRamp": [
           "oklch(94% 0.005 210 / 0.15)",
@@ -141,7 +141,7 @@
       },
       "ink-40": {
         "role": "neutral",
-        "displayName": "Ink 40% — furniture only, never a word",
+        "displayName": "Ink 40% \u2014 furniture only, never a word",
         "canonical": "color-mix(in srgb, #e8edef 40%, transparent)",
         "tonalRamp": [
           "oklch(94% 0.005 210 / 0.1)",
@@ -156,7 +156,7 @@
       },
       "hairline": {
         "role": "neutral",
-        "displayName": "Hairline — one knob, times 1.3 and 0.72",
+        "displayName": "Hairline \u2014 one knob, times 1.3 and 0.72",
         "canonical": "color-mix(in srgb, #e8edef 14%, transparent)",
         "tonalRamp": [
           "oklch(94% 0.005 210 / 0.02)",
@@ -173,7 +173,7 @@
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "The name, and only the name. Two lines, expanded width, built from matter. Drops to normal width and clamp(26px, 8.6vw, 120px) below 820px — the ramp's only responsive width change."
+        "purpose": "The name, and only the name. Two lines, expanded width, built from matter. Drops to normal width and clamp(26px, 8.6vw, 120px) below 820px \u2014 the ramp's only responsive width change."
       },
       "statement": {
         "displayName": "Statement",
@@ -181,7 +181,7 @@
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Page headings — Experience, Projects. Built from matter."
+        "purpose": "Repo names on the Projects index, at normal width. Built from matter. No page heading is matter any more \u2014 Experience and Projects are both calm-reading furniture. The smallest rung that clears The 26px Floor at every width the matter reading runs at, which is why repo names could come up to it."
       },
       "figure": {
         "displayName": "Figure",
@@ -197,7 +197,7 @@
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Repo names. DOM text, not matter: 22px at 1024px is under the floor, where five of them measured 1.03:1 while spending a third of the grain budget."
+        "purpose": "The fallback rung for a repo name past 45 characters, and nothing else. DOM text. Repo names were set in it outright and did not resolve: 22px at 1024px is under the floor, where five of them measured 1.03:1 while spending a third of the grain budget."
       },
       "tagline": {
         "displayName": "Tagline",
@@ -248,12 +248,12 @@
       {
         "name": "boot-exit",
         "value": "cubic-bezier(.76, 0, .24, 1) over 700ms from 1250ms",
-        "purpose": "The boot terminal's slide-out. The gate is gone at ~2050ms — quote that, not the 1250."
+        "purpose": "The boot terminal's slide-out. The gate is gone at ~2050ms \u2014 quote that, not the 1250."
       },
       {
         "name": "caret-blink",
         "value": "1s step-end, 55% duty",
-        "purpose": "The parked caret and the boot log's ▮ blink on the same cycle."
+        "purpose": "The parked caret and the boot log's \u25ae blink on the same cycle."
       },
       {
         "name": "scramble",
@@ -263,19 +263,29 @@
       {
         "name": "burn-out",
         "value": "0.45s after 1.37s loose",
-        "purpose": "A grain burns out as a code character, is gone for 0.12s, then manifests over 0.55s with a 2.2× swell and an 80ms glyph cycle."
+        "purpose": "A grain burns out as a code character, is gone for 0.12s, then manifests over 0.55s with a 2.2\u00d7 swell and an 80ms glyph cycle."
       },
       {
         "name": "reduced-motion",
         "value": "animation-duration / transition-duration: 0.01ms",
         "purpose": "prefers-reduced-motion is also the switch that keeps the matter reading from starting at all."
+      },
+      {
+        "name": "plate-raise",
+        "value": "650ms cubic-bezier(0.16, 0.84, 0.24, 1)",
+        "purpose": "--plate-raise. A card rising out of the row it was named by, on transform and opacity only so it composites. A CSS animation rather than a transition, so it takes one class and one frame."
+      },
+      {
+        "name": "plate-loosen",
+        "value": "13px / 7px",
+        "purpose": "--plateLoose / --plateHold. How far a name's grains come apart while a plate is up: the row being read holds together more than the four that are not, so the hierarchy is spatial rather than an opacity ramp. Each grain's home moves and the settle physics already running carries it there and back, so it costs one pass on the click and nothing per frame."
       }
     ],
     "breakpoints": [
       {
         "name": "calm",
         "value": "820px",
-        "purpose": "Not a breakpoint adjustment — the other site. Below it the fixed four-page matter reading is abandoned for a scrolling document, the canvases are display:none, and every link becomes a 44px touch target."
+        "purpose": "Not a breakpoint adjustment \u2014 the other site. Below it the fixed four-page matter reading is abandoned for a scrolling document, the canvases are display:none, and every link becomes a 44px touch target."
       }
     ]
   },
@@ -297,7 +307,7 @@
       "css": ".ds-tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; } .ds-tags li { font: 400 10px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: color-mix(in srgb, #e8edef 55%, transparent); border: 1px solid color-mix(in srgb, #e8edef 18.2%, transparent); border-radius: 20px; padding: 2px 9px; }"
     },
     {
-      "name": "Tech Tag — Current Epoch",
+      "name": "Tech Tag \u2014 Current Epoch",
       "kind": "chip",
       "refersTo": "tag-current",
       "description": "The same label on the epoch marked `now`: cyan text, cyan border at 50% alpha. The only place a tag carries the hue.",
@@ -309,7 +319,7 @@
       "kind": "card",
       "refersTo": "project-row",
       "description": "A 52px/1fr grid: cyan mono index, then one column holding name, description and source link. The link sits under the description, never in a right rail.",
-      "html": "<ul class=\"ds-projects\">\n  <li class=\"ds-project\">\n    <span class=\"ds-pnum\">/01</span>\n    <div class=\"ds-pbody\">\n      <h3 class=\"ds-pname\">matter-lab</h3>\n      <span class=\"ds-pdesc\">A conserved particle buffer that spells its own headings. One draw call, no engine.</span>\n      <a class=\"ds-psrc\" href=\"#\">source ↗</a>\n    </div>\n  </li>\n  <li class=\"ds-project\">\n    <span class=\"ds-pnum\">/02</span>\n    <div class=\"ds-pbody\">\n      <h3 class=\"ds-pname\">ledger-probe</h3>\n      <span class=\"ds-pdesc\">Rust. 41 stars. No summary yet — the README is on GitHub.</span>\n      <a class=\"ds-psrc\" href=\"#\">source ↗</a>\n    </div>\n  </li>\n</ul>",
+      "html": "<ul class=\"ds-projects\">\n  <li class=\"ds-project\">\n    <span class=\"ds-pnum\">/01</span>\n    <div class=\"ds-pbody\">\n      <h3 class=\"ds-pname\">matter-lab</h3>\n      <span class=\"ds-pdesc\">A conserved particle buffer that spells its own headings. One draw call, no engine.</span>\n      <a class=\"ds-psrc\" href=\"#\">source \u2197</a>\n    </div>\n  </li>\n  <li class=\"ds-project\">\n    <span class=\"ds-pnum\">/02</span>\n    <div class=\"ds-pbody\">\n      <h3 class=\"ds-pname\">ledger-probe</h3>\n      <span class=\"ds-pdesc\">Rust. 41 stars. No summary yet \u2014 the README is on GitHub.</span>\n      <a class=\"ds-psrc\" href=\"#\">source \u2197</a>\n    </div>\n  </li>\n</ul>",
       "css": ".ds-projects { display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 0; list-style: none; } .ds-project { display: grid; grid-template-columns: 52px 1fr; gap: 20px; align-items: baseline; border-bottom: 1px solid color-mix(in srgb, #e8edef 10.08%, transparent); padding: 0 6px 14px; } .ds-project:last-child { border-bottom: 0; padding-bottom: 0; } .ds-pnum { font: 400 12px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: #67e8f9; } .ds-pbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-pname { margin: 0; font: 700 clamp(22px, 2.2vw, 27px)/1.2 'JetBrains Mono', ui-monospace, Menlo, monospace; color: #e8edef; } .ds-pdesc { font: 500 13px/1.55 'Archivo', system-ui, sans-serif; color: color-mix(in srgb, #e8edef 62%, transparent); max-width: 620px; } .ds-psrc { align-self: start; margin-top: 4px; font: 400 12px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: color-mix(in srgb, #e8edef 55%, transparent); text-decoration: none; } .ds-psrc:hover { color: #67e8f9; } .ds-psrc:focus-visible { outline: 2px solid #67e8f9; outline-offset: 3px; } @media (max-width: 820px) { .ds-project { grid-template-columns: 40px 1fr; } .ds-psrc { display: inline-block; padding-block: 14px; margin-top: 0; } }"
     },
     {
@@ -321,18 +331,18 @@
       "css": ".ds-tape { position: relative; height: 46px; min-width: 320px; }.ds-tape-rail { position: absolute; top: 0; left: 0; right: 0; height: 1px; background: color-mix(in srgb, var(--ink, #e8edef) 10%, transparent); }.ds-tick { position: absolute; top: 0; left: var(--at); width: var(--run); padding: 13px 10px 0 0; border: 0; background: none; text-align: left; cursor: pointer; color: color-mix(in srgb, var(--ink, #e8edef) 55%, transparent); font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 11px; line-height: 1; transition: color .3s ease; }.ds-tick::before { content: \"\"; position: absolute; top: 0; left: 0; width: 1px; height: 9px; background: color-mix(in srgb, var(--ink, #e8edef) 18%, transparent); }.ds-tick::after { content: \"\"; position: absolute; top: 0; left: 0; width: 100%; height: 9px; }.ds-tick:hover, .ds-tick:focus-visible { color: var(--ink, #e8edef); }.ds-tick:focus-visible { outline: 2px solid var(--accent, #67e8f9); outline-offset: 3px; }.ds-tick[aria-selected=\"true\"] { color: var(--accent, #67e8f9); }.ds-tick[aria-selected=\"true\"]::before { background: var(--accent, #67e8f9); }.ds-tick[aria-selected=\"true\"]::after { background: color-mix(in srgb, var(--accent, #67e8f9) 18%, transparent); }"
     },
     {
-      "name": "Project Row — Empty State",
+      "name": "Project Row \u2014 Empty State",
       "kind": "card",
       "refersTo": "project-row",
       "description": "What the Projects page ships as when the nightly cron gets zero featured repos back. A dimmed index, one honest sentence, and the GitHub link.",
-      "html": "<ul class=\"ds-projects-empty\">\n  <li class=\"ds-project-empty\">\n    <span class=\"ds-pnum-empty\">/--</span>\n    <div class=\"ds-pbody-empty\">\n      <span class=\"ds-pdesc-empty\">Nothing came back from the API on the last rebuild. The repositories are still there; this page just could not see them.</span>\n      <a class=\"ds-psrc-empty\" href=\"#\">github ↗</a>\n    </div>\n  </li>\n</ul>",
+      "html": "<ul class=\"ds-projects-empty\">\n  <li class=\"ds-project-empty\">\n    <span class=\"ds-pnum-empty\">/--</span>\n    <div class=\"ds-pbody-empty\">\n      <span class=\"ds-pdesc-empty\">Nothing came back from the API on the last rebuild. The repositories are still there; this page just could not see them.</span>\n      <a class=\"ds-psrc-empty\" href=\"#\">github \u2197</a>\n    </div>\n  </li>\n</ul>",
       "css": ".ds-projects-empty { margin: 0; padding: 0; list-style: none; } .ds-project-empty { display: grid; grid-template-columns: 52px 1fr; gap: 20px; align-items: baseline; padding: 0 6px 14px; } .ds-pnum-empty { font: 400 12px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: color-mix(in srgb, #e8edef 40%, transparent); } .ds-pbody-empty { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-pdesc-empty { font: 500 13px/1.55 'Archivo', system-ui, sans-serif; color: color-mix(in srgb, #e8edef 62%, transparent); max-width: 620px; } .ds-psrc-empty { align-self: start; margin-top: 4px; font: 400 12px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: color-mix(in srgb, #e8edef 55%, transparent); text-decoration: none; } .ds-psrc-empty:hover { color: #67e8f9; } .ds-psrc-empty:focus-visible { outline: 2px solid #67e8f9; outline-offset: 3px; }"
     },
     {
       "name": "Hourglass Sigil",
       "kind": "custom",
       "refersTo": "sigil",
-      "description": "The site's mark: two triangles meeting at a slight waist, a six-point clip-path with two 2px cyan caps. CSS in both readings, never an image. Two fill alphas because the fill is not scale-invariant — 28% at 28x40, 16% at the home size.",
+      "description": "The site's mark: two triangles meeting at a slight waist, a six-point clip-path with two 2px cyan caps. CSS in both readings, never an image. Two fill alphas because the fill is not scale-invariant \u2014 28% at 28x40, 16% at the home size.",
       "html": "<div class=\"ds-sigil\" aria-hidden=\"true\"></div>\n<div class=\"ds-sigil ds-sigil-lg\" aria-hidden=\"true\"></div>",
       "css": ".ds-sigil { position: relative; flex: none; width: 28px; height: 40px; } .ds-sigil::before { content: ''; position: absolute; inset: 2px 0; background: color-mix(in srgb, #67e8f9 28%, transparent); clip-path: polygon(0 0, 100% 0, 50% 48%, 100% 100%, 0 100%, 50% 52%); } .ds-sigil::after { content: ''; position: absolute; inset: 0; border-top: 2px solid #67e8f9; border-bottom: 2px solid #67e8f9; } .ds-sigil-lg { width: 180px; height: 260px; } .ds-sigil-lg::before { background: color-mix(in srgb, #67e8f9 16%, transparent); } @media (max-width: 820px) { .ds-sigil-lg { width: 84px; height: 126px; } }"
     },
@@ -340,15 +350,15 @@
       "name": "Boot Terminal",
       "kind": "custom",
       "refersTo": "boot-window",
-      "description": "A macOS-convention window on a backdrop one step darker than the page. Three descending ink-alpha dots, not traffic lights — window furniture introduces no hue of its own. The only elevated surface in the system.",
-      "html": "<div class=\"ds-boot\">\n  <div class=\"ds-boot-win\">\n    <div class=\"ds-boot-bar\"><span class=\"ds-d\"></span><span class=\"ds-d\"></span><span class=\"ds-d\"></span><span class=\"ds-boot-title\">jakhmola.sys — v4</span></div>\n    <div class=\"ds-boot-log\">\n      <div><span class=\"ds-boot-accent\">$</span> jakhmola --wake</div>\n      <div>&gt; ledger restored ....... 9,000 units · nothing lost</div>\n      <div>&gt; route /index<span class=\"ds-blink\">▎</span></div>\n    </div>\n  </div>\n  <p class=\"ds-boot-hint\">any input skips ▶</p>\n</div>",
+      "description": "A macOS-convention window on a backdrop one step darker than the page. Three descending ink-alpha dots, not traffic lights \u2014 window furniture introduces no hue of its own. The only elevated surface in the system.",
+      "html": "<div class=\"ds-boot\">\n  <div class=\"ds-boot-win\">\n    <div class=\"ds-boot-bar\"><span class=\"ds-d\"></span><span class=\"ds-d\"></span><span class=\"ds-d\"></span><span class=\"ds-boot-title\">jakhmola.sys \u2014 v4</span></div>\n    <div class=\"ds-boot-log\">\n      <div><span class=\"ds-boot-accent\">$</span> jakhmola --wake</div>\n      <div>&gt; ledger restored ....... 9,000 units \u00b7 nothing lost</div>\n      <div>&gt; route /index<span class=\"ds-blink\">\u258e</span></div>\n    </div>\n  </div>\n  <p class=\"ds-boot-hint\">any input skips \u25b6</p>\n</div>",
       "css": ".ds-boot { position: relative; display: flex; align-items: center; justify-content: center; padding: 48px 0 64px; background: #07090b; } .ds-boot-win { width: min(480px, 90vw); border: 1px solid color-mix(in srgb, #e8edef 14%, transparent); border-radius: 10px; background: #0a0d10; box-shadow: 0 30px 90px color-mix(in srgb, #07090b 60%, transparent); } .ds-boot-bar { display: flex; align-items: center; gap: 7px; padding: 11px 15px; border-bottom: 1px solid color-mix(in srgb, #e8edef 10.08%, transparent); } .ds-d { width: 9px; height: 9px; border-radius: 50%; background: color-mix(in srgb, #e8edef 62%, transparent); } .ds-d:nth-child(2) { background: color-mix(in srgb, #e8edef 40%, transparent); } .ds-d:nth-child(3) { background: color-mix(in srgb, #e8edef 14%, transparent); } .ds-boot-title { margin-left: 9px; font: 400 11px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: color-mix(in srgb, #e8edef 55%, transparent); } .ds-boot-log { padding: 16px 20px 20px; min-height: 88px; font: 400 12.5px/2.1 'JetBrains Mono', ui-monospace, Menlo, monospace; color: color-mix(in srgb, #e8edef 85%, transparent); } .ds-boot-accent { color: #67e8f9; } .ds-blink { animation: ds-blink 1s step-end infinite; } @keyframes ds-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } } .ds-boot-hint { position: absolute; bottom: 24px; left: 0; right: 0; margin: 0; text-align: center; font: 400 11px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; color: color-mix(in srgb, #e8edef 55%, transparent); }"
     },
     {
       "name": "Tweak Panel Row",
       "kind": "input",
       "refersTo": "tweak-panel",
-      "description": "One control from the 120. Label at Ink 62%, live readout in cyan with tabular figures, native range below spanning the row with accent-color set — no custom slider is ever drawn.",
+      "description": "One control from the 120. Label at Ink 62%, live readout in cyan with tabular figures, native range below spanning the row with accent-color set \u2014 no custom slider is ever drawn.",
       "html": "<div class=\"ds-tw\">\n  <div class=\"ds-tw-row\">\n    <label for=\"ds-grain\">Grain size</label>\n    <output for=\"ds-grain\">1.75</output>\n    <input id=\"ds-grain\" type=\"range\" min=\"0.5\" max=\"6\" step=\"0.05\" value=\"1.75\">\n  </div>\n  <div class=\"ds-tw-row ds-tw-bool\">\n    <label for=\"ds-rsym\">Characters at rest</label>\n    <input id=\"ds-rsym\" type=\"checkbox\" checked>\n  </div>\n</div>",
       "css": ".ds-tw { width: min(340px, 100vw); background: color-mix(in srgb, #0a0d10 96%, transparent); border-left: 1px solid color-mix(in srgb, #e8edef 14%, transparent); padding: 6px 0; font: 400 12px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; } .ds-tw-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 14px; } .ds-tw-row label { font-size: 11px; color: color-mix(in srgb, #e8edef 62%, transparent); } .ds-tw-row output { font-size: 10.5px; color: #67e8f9; text-align: right; font-variant-numeric: tabular-nums; } .ds-tw-row input[type=range] { grid-column: 1 / -1; width: 100%; height: 16px; margin: 0; accent-color: #67e8f9; background: none; cursor: pointer; } .ds-tw-bool { align-items: center; } .ds-tw-bool input[type=checkbox] { width: 15px; height: 15px; margin: 0; accent-color: #67e8f9; cursor: pointer; } .ds-tw-row input:focus-visible { outline: 2px solid #67e8f9; outline-offset: 3px; }"
     },
@@ -364,46 +374,76 @@
       "name": "HUD Strip",
       "kind": "custom",
       "refersTo": "hud",
-      "description": "The machine talking about itself along the bottom edge: clock, page counter, build line. Mono, uppercase, Ink 55%, pointer-events off. Decorative — a page change is announced to assistive tech through a separate live region.",
-      "html": "<p class=\"ds-hud\" aria-hidden=\"true\">\n  <span>IN · GMT+5:30 · 21:04:11</span>\n  <span>01 / 04 — INDEX</span>\n  <span>v4.0 — ✧ MATTER IS CONSERVED</span>\n</p>",
+      "description": "The machine talking about itself along the bottom edge: clock, page counter, build line. Mono, uppercase, Ink 55%, pointer-events off. Decorative \u2014 a page change is announced to assistive tech through a separate live region.",
+      "html": "<p class=\"ds-hud\" aria-hidden=\"true\">\n  <span>IN \u00b7 GMT+5:30 \u00b7 21:04:11</span>\n  <span>01 / 04 \u2014 INDEX</span>\n  <span>v4.0 \u2014 \u2727 MATTER IS CONSERVED</span>\n</p>",
       "css": ".ds-hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin: 0; padding: 15px 3.2vw; pointer-events: none; font: 400 11.5px/1.4 'JetBrains Mono', ui-monospace, Menlo, monospace; text-transform: uppercase; color: color-mix(in srgb, #e8edef 55%, transparent); } .ds-hud span:last-child { text-align: right; }"
+    },
+    {
+      "name": "Plate",
+      "kind": "panel",
+      "refersTo": "plate",
+      "description": "A project's derived material \u2014 summary, Schematic, facts register, chips, decisions register, reported figures, source link. In the calm reading it is simply the rest of the document. On the matter reading it is out of flow and hidden until asked for: hovering a row forms its Schematic on a small panel under its own name, and clicking raises the whole row into a card. Hidden with visibility rather than opacity, because it holds a link and an opacity-0 link is still a tab stop."
+    },
+    {
+      "name": "Plate \u2014 Raised Card",
+      "kind": "panel",
+      "refersTo": "plate-card",
+      "description": "The row itself, grown into a fixed card inset on all four sides so there is always an outside to click. Panel Slate at 96% behind a hairline \u2014 the Tweak Panel's material, because it is the same kind of object. No backdrop blur: the material recedes on its own. Raised over 650ms on transform and opacity only, from the row's own measured offset. The name inside arrives as set type while matter.js loosens that row's grains out of formation, and that material change is what marks the depth change."
+    },
+    {
+      "name": "Schematic",
+      "kind": "figure",
+      "refersTo": "schem",
+      "description": "A directed graph lifted verbatim out of a repo's README \u2014 a Mermaid flowchart, an arrow chain, or a vertical labelled pipeline \u2014 drawn as drafting: hairline dashed edges, solid slab nodes, mono labels, no fill. Inline SVG generated at build time, so it costs no grain, needs no JavaScript, and reaches the calm reading. A chain runs top to bottom; anything else is layered left to right. Cites its own source heading in a caption, and is omitted entirely when the README carries no diagram."
+    },
+    {
+      "name": "Decisions Register",
+      "kind": "list",
+      "refersTo": "calls",
+      "description": "Up to three of a README's own emphasised lead-ins with its own gloss on each, verbatim. Omitted when a README carries none. Read from bullets only, never from table rows \u2014 a two-column table of emphasised terms is a stack listing, and reading it as decisions both misrepresents it and duplicates the chip row."
+    },
+    {
+      "name": "Reported Figures",
+      "kind": "list",
+      "refersTo": "figs",
+      "description": "Numbers a README states outright, capped at five and never computed, rounded or compared. A line is kept only when it carries a measurement \u2014 a percentage, a unit, a decimal, or a count of two digits \u2014 so a model name like 3D U-Net or Qwen3-8B is not mistaken for a result. Omitted where a repo reports nothing."
     }
   ],
   "narrative": {
     "northStar": "Deliberate Machinery",
-    "overview": "A system that conserves its own material and moves it with intent. Not decoration, not chaos. Cold, precise, slightly alive. The governing illusion is that the same matter has been on screen the whole time — and every visual decision either supports that illusion or is cut.\n\nThe illusion is now told as destruction rather than as transport. Matter does not fly from one page's letterforms into the next: the caret sweeps a page and everything it passes over **burns out as a code character**, and it sweeps the next page **typing each slot back into existence** — a character that licks through a few glyphs and settles into flesh. The conservation claim is unchanged and still literally true, because the grain that manifests into a slot is the same buffer entry that vacated it. What changed is which of the two truths the visitor is shown: a machine writing, rather than a courier carrying.\n\nThe surface is almost entirely absent. One near-black field, one cyan, and type. There are no images, no illustrations, no gradients on content, no decorative shapes; the only things that move are the particles, the caret that drives them, and copy fading in behind it. This is not minimalism as a style choice — image and video generation are unavailable to this project, so everything must be computed in the browser or authored by hand. The restraint is a production fact that became the identity.\n\nThe register is instrumentation rather than editorial. Monospace carries everything the machine says about itself: the clock, the page counter, the year markers, the repo names, the boot log. The proportional face is reserved for the two things a person says: the name and the headings. When the system speaks as a machine it is mono; when it speaks as Shubham it is Archivo. Nothing else is added.",
+    "overview": "A system that conserves its own material and moves it with intent. Not decoration, not chaos. Cold, precise, slightly alive. The governing illusion is that the same matter has been on screen the whole time \u2014 and every visual decision either supports that illusion or is cut.\n\nThe illusion is now told as destruction rather than as transport. Matter does not fly from one page's letterforms into the next: the caret sweeps a page and everything it passes over **burns out as a code character**, and it sweeps the next page **typing each slot back into existence** \u2014 a character that licks through a few glyphs and settles into flesh. The conservation claim is unchanged and still literally true, because the grain that manifests into a slot is the same buffer entry that vacated it. What changed is which of the two truths the visitor is shown: a machine writing, rather than a courier carrying.\n\nThe surface is almost entirely absent. One near-black field, one cyan, and type. There are no images, no illustrations, no gradients on content, no decorative shapes; the only things that move are the particles, the caret that drives them, and copy fading in behind it. This is not minimalism as a style choice \u2014 image and video generation are unavailable to this project, so everything must be computed in the browser or authored by hand. The restraint is a production fact that became the identity.\n\nThe register is instrumentation rather than editorial. Monospace carries everything the machine says about itself: the clock, the page counter, the year markers, the repo names, the boot log. The proportional face is reserved for the two things a person says: the name and the headings. When the system speaks as a machine it is mono; when it speaks as Shubham it is Archivo. Nothing else is added.",
     "keyCharacteristics": [
       "Exactly one chromatic value in the entire system",
       "Square by default; the boot window is the only rounded surface",
-      "No shadows on content — depth comes from a radial vignette and from the matter's own lit surface",
-      "Type is either large enough to be built from matter (≥26px) or small enough to be DOM text; nothing sits in between",
+      "No shadows on content \u2014 depth comes from a radial vignette and from the matter's own lit surface",
+      "Type is either large enough to be built from matter (\u226526px) or small enough to be DOM text; nothing sits in between",
       "Every page fills the viewport exactly once and never scrolls",
-      "Every value in this document is a control a visitor can move — see The Tweak Layer. What is written here is the **default** state of the system, and defaults are the part that was measured"
+      "Every value in this document is a control a visitor can move \u2014 see The Tweak Layer. What is written here is the **default** state of the system, and defaults are the part that was measured"
     ],
     "rules": [
       {
         "name": "The AA Floor Rule",
-        "body": "Ink 55% is the darkest a *word* is ever set in. Anything quieter is furniture — a dot, a rule, an index. The three elements that broke this (the contact footer at 3.39:1, the boot title at 3.99:1, the boot hint at 2.86:1) each read as \"deliberately quiet\" and were each simply unreadable; quiet is a job for size and placement, not for alpha below the threshold.",
+        "body": "Ink 55% is the darkest a *word* is ever set in. Anything quieter is furniture \u2014 a dot, a rule, an index. The three elements that broke this (the contact footer at 3.39:1, the boot title at 3.99:1, the boot hint at 2.86:1) each read as \"deliberately quiet\" and were each simply unreadable; quiet is a job for size and placement, not for alpha below the threshold.",
         "section": "colors"
       },
       {
         "name": "The One Hue Rule",
-        "body": "The system has exactly one chromatic value. Every other color is a neutral or an alpha of the ink. A second hue breaks the claim that all matter on screen is the same matter. The rule has no exceptions, including borrowed chrome: the boot window quotes an OS titlebar, but its three dots are ink alphas (`--dim`, `--dimmer`, `--line`), not red/amber/green. They are window furniture, not status lights, and they are the first thing a visitor sees — a saturated trio there would spend the single-cyan reveal before the site has drawn a single grain.",
+        "body": "The system has exactly one chromatic value. Every other color is a neutral or an alpha of the ink. A second hue breaks the claim that all matter on screen is the same matter. The rule has no exceptions, including borrowed chrome: the boot window quotes an OS titlebar, but its three dots are ink alphas (`--dim`, `--dimmer`, `--line`), not red/amber/green. They are window furniture, not status lights, and they are the first thing a visitor sees \u2014 a saturated trio there would spend the single-cyan reveal before the site has drawn a single grain.",
         "section": "colors"
       },
       {
         "name": "The Specular Ceiling Rule",
-        "body": "This is what replaced The Additive Ceiling Rule. Signal Cyan is `rgb(0.404, 0.910, 0.976)`, so red is the channel with room to climb: push a grain's luminance past roughly 2.4 and red reaches green, and the pixel stops being cyan. The One Hue Rule breaks in the rendered output while every value in the stylesheet still complies. What changed is where that pressure comes from. Under `blendFunc(SRC_ALPHA, ONE)` it came from **stacking**, and density was the lever that had to be held. The blend is now `SRC_ALPHA, ONE_MINUS_SRC_ALPHA`: a grain occludes the grains behind it instead of adding to them, so no amount of crowding can core the field out. The only thing that can now is a **specular highlight** on a single grain — ambient plus diffuse plus specular plus rim, on one sprite, exceeding the ceiling on its own. That is a different rule with a different remedy. Density is no longer the lever; `spec`, `shin`, `rim` and `bright` are. And unlike stacking, a small amount of it is correct: a lit solid with no blown highlight anywhere does not read as lit. Last measured at 1440×900 (`node tools/coverage.mjs`), share of each heading's ink box that has gone achromatic: `SHUBHAM` 0.62%, `JAKHMOLA` 0.59%, Experience 0.13%, the year markers 0.18–0.45%, `NOW` 1.20%, Projects 0.24%, the contact statement 0.20–0.23%. `NOW` is the highest because it is the smallest box and one highlight is a lar",
+        "body": "This is what replaced The Additive Ceiling Rule. Signal Cyan is `rgb(0.404, 0.910, 0.976)`, so red is the channel with room to climb: push a grain's luminance past roughly 2.4 and red reaches green, and the pixel stops being cyan. The One Hue Rule breaks in the rendered output while every value in the stylesheet still complies. What changed is where that pressure comes from. Under `blendFunc(SRC_ALPHA, ONE)` it came from **stacking**, and density was the lever that had to be held. The blend is now `SRC_ALPHA, ONE_MINUS_SRC_ALPHA`: a grain occludes the grains behind it instead of adding to them, so no amount of crowding can core the field out. The only thing that can now is a **specular highlight** on a single grain \u2014 ambient plus diffuse plus specular plus rim, on one sprite, exceeding the ceiling on its own. That is a different rule with a different remedy. Density is no longer the lever; `spec`, `shin`, `rim` and `bright` are. And unlike stacking, a small amount of it is correct: a lit solid with no blown highlight anywhere does not read as lit. Last measured at 1440\u00d7900 (`node tools/coverage.mjs`), share of each heading's ink box that has gone achromatic: `SHUBHAM` 0.62%, `JAKHMOLA` 0.59%, Experience 0.13%, the year markers 0.18\u20130.45%, `NOW` 1.20%, Projects 0.24%, the contact statement 0.20\u20130.23%. `NOW` is the highest because it is the smallest box and one highlight is a lar",
         "section": "colors"
       },
       {
         "name": "The Name Reads First Rule",
-        "body": "The name is the one heading a visitor must be able to read, and it is held to that by measurement, not intent. It rests at a larger grain than anything else (`heroS`, against every other heading's `restS`), and the sampler never thins it when the budget gets tight. The bar is **lit coverage inside its own ink box**, which must stay above the site's own body copy on the same page. The measurement is taken over the **ink box** — the extent of the sampled point cloud — not the layout box, because a `nowrap; fit-content` span runs well past its last stroke and coverage over that dead space measures the gap rather than the word.",
+        "body": "The name is the one heading a visitor must be able to read, and it is held to that by measurement, not intent. It rests at a larger grain than anything else (`heroS`, against every other heading's `restS`), and the sampler never thins it when the budget gets tight. The bar is **lit coverage inside its own ink box**, which must stay above the site's own body copy on the same page. The measurement is taken over the **ink box** \u2014 the extent of the sampled point cloud \u2014 not the layout box, because a `nowrap; fit-content` span runs well past its last stroke and coverage over that dead space measures the gap rather than the word.",
         "section": "colors"
       },
       {
         "name": "The Monochrome Matter Rule",
-        "body": "Every particle is drawn with the same uniform color. An `.accent` class on Matter Text has no effect in the matter reading — it only colors the calm reading. Never design a variant whose idea depends on two colors of matter.",
+        "body": "Every particle is drawn with the same uniform color. An `.accent` class on Matter Text has no effect in the matter reading \u2014 it only colors the calm reading. Never design a variant whose idea depends on two colors of matter.",
         "section": "colors"
       },
       {
@@ -413,22 +453,22 @@
       },
       {
         "name": "The Closed Ramp Rule",
-        "body": "The ramp above is the complete set of sizes in the system — 22 steps, every one of them in use. A new size is a system change, not a local decision: add it to `typography.scale` in this file's frontmatter or reuse an existing rung. The design hook enforces this, so an undocumented literal will be flagged on the next edit.",
+        "body": "The ramp above is the complete set of sizes in the system \u2014 22 steps, every one of them in use. A new size is a system change, not a local decision: add it to `typography.scale` in this file's frontmatter or reuse an existing rung. The design hook enforces this, so an undocumented literal will be flagged on the next edit.",
         "section": "typography"
       },
       {
         "name": "The Contour Rule",
-        "body": "Every heading keeps its whole contour and thins only the interior — to 69%. A silhouette is what makes a letterform legible; the fill is only weight, and weight is the cheap thing to buy back with grain size. When a page outgrows the budget it is the interior that is cut, never the outline, and never the name at all.",
+        "body": "Every heading keeps its whole contour and thins only the interior \u2014 to 69%. A silhouette is what makes a letterform legible; the fill is only weight, and weight is the cheap thing to buy back with grain size. When a page outgrows the budget it is the interior that is cut, never the outline, and never the name at all.",
         "section": "typography"
       },
       {
         "name": "The Grain Ratio Rule",
-        "body": "A grain sprite must stay near its sample spacing. Push it much past ~2× and neighbouring sprites merge before the eye resolves either, so the letterform reads as a brush stroke rather than as matter, and the extra coverage is spent on a halo outside the stroke. The ratio is now maintained by construction rather than by discipline: a slot carries the lattice it was cut on, and a grain landing there takes its sprite size from that lattice. So a heading sampled at 2px and one sampled at 3px wear proportionally sized grains automatically, and the three knobs — `grain`, `heroS`, `restS` — scale that relationship rather than setting it. Before this, the name on a 3px grid wore sprites sized for a 2px one and rendered as a skeleton. Measured on the name: a 3px lattice, `baseS` 2.55–3.75, `heroS` 1.05, `grain` 1.75 and near-gain ~1.14 give a sprite of roughly **6.6px on a 3px grid — 2.2×**, right at the documented edge. It reads as discrete matter rather than as a stroke, and the reason it survives the edge is that the lit forms do not fill their own sprite: the `surface` form falls off from 0.55 of the radius, and the `chip` is a bowtie inside a square. A hard disc at 2.2× would merge. Change any of the three and re-measure the rendered page; do not re-derive it.",
+        "body": "A grain sprite must stay near its sample spacing. Push it much past ~2\u00d7 and neighbouring sprites merge before the eye resolves either, so the letterform reads as a brush stroke rather than as matter, and the extra coverage is spent on a halo outside the stroke. The ratio is now maintained by construction rather than by discipline: a slot carries the lattice it was cut on, and a grain landing there takes its sprite size from that lattice. So a heading sampled at 2px and one sampled at 3px wear proportionally sized grains automatically, and the three knobs \u2014 `grain`, `heroS`, `restS` \u2014 scale that relationship rather than setting it. Before this, the name on a 3px grid wore sprites sized for a 2px one and rendered as a skeleton. Measured on the name: a 3px lattice, `baseS` 2.55\u20133.75, `heroS` 1.05, `grain` 1.75 and near-gain ~1.14 give a sprite of roughly **6.6px on a 3px grid \u2014 2.2\u00d7**, right at the documented edge. It reads as discrete matter rather than as a stroke, and the reason it survives the edge is that the lit forms do not fill their own sprite: the `surface` form falls off from 0.55 of the radius, and the `chip` is a bowtie inside a square. A hard disc at 2.2\u00d7 would merge. Change any of the three and re-measure the rendered page; do not re-derive it.",
         "section": "typography"
       },
       {
         "name": "The 26px Floor",
-        "body": "Type below roughly 26px cannot be built from matter: the lattice floors at 2px, and a stroke that thin leaves no room under it. Anything smaller must be DOM text. This is a hard constraint of the renderer, not a preference — and CSS specificity is the usual way it gets violated, since any rule that shrinks a Matter Text element below the floor silently dissolves it.",
+        "body": "Type below roughly 26px cannot be built from matter: the lattice floors at 2px, and a stroke that thin leaves no room under it. Anything smaller must be DOM text. This is a hard constraint of the renderer, not a preference \u2014 and CSS specificity is the usual way it gets violated, since any rule that shrinks a Matter Text element below the floor silently dissolves it.",
         "section": "typography"
       },
       {
@@ -438,12 +478,12 @@
       },
       {
         "name": "The Two Widths Rule",
-        "body": "Archivo runs at its normal width everywhere except the two things a person says outright — the name and the contact statement — which run at `font-stretch: expanded` (the `wdth 125` end of the axis). Wide is reserved for those two; a third expanded element dilutes the signal. Because width inherits, it is set once on `.name` and `.ct` and reaches the `.mt` spans the sampler measures. The sampler must set it separately as a keyword: the canvas `font` shorthand silently drops stretch, and the computed `125%` is rejected by `ctx.fontStretch`, so a width set only in the shorthand would render normal-width particles under expanded DOM text. The rule has exactly one exception, and it is a phone. `SHUBHAM` and `JAKHMOLA` are single tokens, so no wrapping strategy can rescue them — below 820px the expanded name did not fit any viewport, and `overflow-wrap: anywhere` only converted the overflow into `SHUB / HAM / JAKH / MOLA`. The ~27% the width axis costs *is* the entire deficit, so below 820px the name drops to normal width at `clamp(26px, 8.6vw, 120px)`. Verified: one line per span, zero horizontal overflow, at every width from 320px up. Given a real choice between the width axis and a readable name, the name wins — that is The Name Reads First Rule applied to the one axis that can pay for it.",
+        "body": "Archivo runs at its normal width everywhere except the two things a person says outright \u2014 the name and the contact statement \u2014 which run at `font-stretch: expanded` (the `wdth 125` end of the axis). Wide is reserved for those two; a third expanded element dilutes the signal. Because width inherits, it is set once on `.name` and `.ct` and reaches the `.mt` spans the sampler measures. The sampler must set it separately as a keyword: the canvas `font` shorthand silently drops stretch, and the computed `125%` is rejected by `ctx.fontStretch`, so a width set only in the shorthand would render normal-width particles under expanded DOM text. The rule has exactly one exception, and it is a phone. `SHUBHAM` and `JAKHMOLA` are single tokens, so no wrapping strategy can rescue them \u2014 below 820px the expanded name did not fit any viewport, and `overflow-wrap: anywhere` only converted the overflow into `SHUB / HAM / JAKH / MOLA`. The ~27% the width axis costs *is* the entire deficit, so below 820px the name drops to normal width at `clamp(26px, 8.6vw, 120px)`. Verified: one line per span, zero horizontal overflow, at every width from 320px up. Given a real choice between the width axis and a readable name, the name wins \u2014 that is The Name Reads First Rule applied to the one axis that can pay for it.",
         "section": "typography"
       },
       {
         "name": "The Sigil Budget Rule",
-        "body": "On the home page the name and the sigil share one flex row that is allowed to wrap, and a wrap breaks the one-viewport rule — the sigil drops to its own line and the composition collapses. The budget is `min(1180, 84vw) − 180 − min(5vw, 96)`, and the row fits only while max(tagline width, name width) ≤ that budget",
+        "body": "On the home page the name and the sigil share one flex row that is allowed to wrap, and a wrap breaks the one-viewport rule \u2014 the sigil drops to its own line and the composition collapses. The budget is `min(1180, 84vw) \u2212 180 \u2212 min(5vw, 96)`, and the row fits only while max(tagline width, name width) \u2264 that budget",
         "section": "typography"
       },
       {
@@ -458,7 +498,7 @@
       },
       {
         "name": "The Measure-Once Rule",
-        "body": "Element positions are sampled on load, on resize, and on page change — never per frame. Any layout idea that would require continuous measurement is out.",
+        "body": "Element positions are sampled on load, on resize, and on page change \u2014 never per frame. Any layout idea that would require continuous measurement is out.",
         "section": "layout"
       },
       {
@@ -468,7 +508,7 @@
       },
       {
         "name": "The Hand Has To Be Attributable Rule",
-        "body": "A word answers a hand near it — grains lean toward it, swell and brighten, and a share of them reach for it. That response is worth nothing unless the visitor can tell it is *theirs*, and it is competing against the word's own idle shimmer for the same channel. Two things nearly lost it. The falloff was `(1 − d/r)²`, which puts almost the whole response inside the first fifth of the radius; and the idle terms were large enough (4px of flow on a 3px lattice) that everything past ~40px sat inside the shimmer's own variance. It is linear now, and the idle floor is a third of what it was. Measured by `tools/probes/life.js`, which isolates the aura by taking the hand away and advancing a *tenth* of a frame — the idle terms move by almost nothing in 1.6ms, and the aura is assigned rather than eased, so what is left is the aura alone at one instant: | distance from the hand | grains | brightening | | --- | --- | --- | | 0–60px | 368 | +14.8% | | 60–120px | 820 | +8.8% | | 120–180px | 1,029 | +2.6% | | past 167px | — | none, by construction | The structure is what matters more than the figures: the aura is a **coherent regional** lift over hundreds of grains, while the ember is **incoherent per-grain** noise on independent phases. A signal that is smaller per grain than the noise still reads, as long as it is the only one of the two that is spatially organised. Exactly one real shadow ",
+        "body": "A word answers a hand near it \u2014 grains lean toward it, swell and brighten, and a share of them reach for it. That response is worth nothing unless the visitor can tell it is *theirs*, and it is competing against the word's own idle shimmer for the same channel. Two things nearly lost it. The falloff was `(1 \u2212 d/r)\u00b2`, which puts almost the whole response inside the first fifth of the radius; and the idle terms were large enough (4px of flow on a 3px lattice) that everything past ~40px sat inside the shimmer's own variance. It is linear now, and the idle floor is a third of what it was. Measured by `tools/probes/life.js`, which isolates the aura by taking the hand away and advancing a *tenth* of a frame \u2014 the idle terms move by almost nothing in 1.6ms, and the aura is assigned rather than eased, so what is left is the aura alone at one instant: | distance from the hand | grains | brightening | | --- | --- | --- | | 0\u201360px | 368 | +14.8% | | 60\u2013120px | 820 | +8.8% | | 120\u2013180px | 1,029 | +2.6% | | past 167px | \u2014 | none, by construction | The structure is what matters more than the figures: the aura is a **coherent regional** lift over hundreds of grains, while the ember is **incoherent per-grain** noise on independent phases. A signal that is smaller per grain than the noise still reads, as long as it is the only one of the two that is spatially organised. Exactly one real shadow ",
         "section": "elevation"
       },
       {
@@ -478,7 +518,7 @@
       },
       {
         "name": "The Glow Is Earned Rule",
-        "body": "Brightness is a property of the material — a lit surface catching a key light — never a CSS glow, blur, or filter on content. It was previously earned by particle density under additive blending; under solid alpha a grain occludes rather than adds, so density now reads as **weight** and the light does the brightening. Both readings satisfy the rule; neither permits a `filter`.",
+        "body": "Brightness is a property of the material \u2014 a lit surface catching a key light \u2014 never a CSS glow, blur, or filter on content. It was previously earned by particle density under additive blending; under solid alpha a grain occludes rather than adds, so density now reads as **weight** and the light does the brightening. Both readings satisfy the rule; neither permits a `filter`.",
         "section": "elevation"
       },
       {
@@ -488,27 +528,27 @@
       },
       {
         "name": "The Hairline, Not Box, Rule",
-        "body": "Separate with a 1px hairline at 10–15% ink. Never enclose content in a full border.",
+        "body": "Separate with a 1px hairline at 10\u201315% ink. Never enclose content in a full border.",
         "section": "shapes"
       },
       {
         "name": "The 44px Thumb Rule",
-        "body": "Below 820px every link is a touch target and gets `padding-block: 14px`. Padding, not `min-height`, so the text keeps its baseline inside the row it belongs to. All eighteen links on the calm reading failed this before it was written down, none of them by more than a few pixels of padding — it is the kind of thing that is invisible on a desk and constant on a phone.",
+        "body": "Below 820px every link is a touch target and gets `padding-block: 14px`. Padding, not `min-height`, so the text keeps its baseline inside the row it belongs to. All eighteen links on the calm reading failed this before it was written down, none of them by more than a few pixels of padding \u2014 it is the kind of thing that is invisible on a desk and constant on a phone.",
         "section": "components"
       },
       {
         "name": "The Every Knob Rule",
-        "body": "Anything added to this system ships with its control in the same change. A hard-coded literal in `static/style.css` or `static/matter.js` is now a defect on its own — not because the value is wrong, but because it is the one value a visitor cannot reach. Colors, sizes, weights, tracking, leading, radii, rhythm, durations, particle counts, grain sizes, blend modes, glyph sets: each one is either a token in `:root` that the schema writes, or a key in `T` that the frame loop reads.",
+        "body": "Anything added to this system ships with its control in the same change. A hard-coded literal in `static/style.css` or `static/matter.js` is now a defect on its own \u2014 not because the value is wrong, but because it is the one value a visitor cannot reach. Colors, sizes, weights, tracking, leading, radii, rhythm, durations, particle counts, grain sizes, blend modes, glyph sets: each one is either a token in `:root` that the schema writes, or a key in `T` that the frame loop reads.",
         "section": "tweak"
       },
       {
         "name": "The Defaults Are The Measured Set Rule",
-        "body": "The One Hue Rule, The Specular Ceiling, The Grain Ratio Rule and The Name Reads First Rule were all established by measuring the rendered page, and they hold at the defaults. The panel can leave all four behind — a second hue is one color picker away, and `grain` at 6 on a 1px lattice is cotton wool. That is the point of it, and it is not a licence to ship a new default without re-measuring. **A default changes only with a fresh measurement; a slider changes with a drag.** The measurement is a command, not a judgement call: `node tools/coverage.mjs` screenshots every page and reports lit and cored coverage per heading, and `node tools/bench.mjs probe dist/index.html tools/probes/fill.js` reports what the frame costs. Anything imported from elsewhere has to be re-measured *here* — the reach radius arrived from the lab at 5 and had to be cut to 2.2, because on this page 5 radii is the entire name and the word vanished under its own filaments.",
+        "body": "The One Hue Rule, The Specular Ceiling, The Grain Ratio Rule and The Name Reads First Rule were all established by measuring the rendered page, and they hold at the defaults. The panel can leave all four behind \u2014 a second hue is one color picker away, and `grain` at 6 on a 1px lattice is cotton wool. That is the point of it, and it is not a licence to ship a new default without re-measuring. **A default changes only with a fresh measurement; a slider changes with a drag.** The measurement is a command, not a judgement call: `node tools/coverage.mjs` screenshots every page and reports lit and cored coverage per heading, and `node tools/bench.mjs probe dist/index.html tools/probes/fill.js` reports what the frame costs. Anything imported from elsewhere has to be re-measured *here* \u2014 the reach radius arrived from the lab at 5 and had to be cut to 2.2, because on this page 5 radii is the entire name and the word vanished under its own filaments.",
         "section": "tweak"
       },
       {
         "name": "The Reach Is The Fill Rate Rule",
-        "body": "The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* — one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440×900: idle 0.22, hand parked 0.35, hand sweeping a Trail 0.40, page change 1.71, mid-throw 2.52; four times each of those at a 2× pixel ratio, so the page change costs ~6.8× overdraw and ~32M fragments a frame on a real machine.",
+        "body": "The particle budget is not what costs the frame. `gl.POINTS` sprites are square, so a grain that reaches pays for the whole diagonal *squared* \u2014 one grain mid-throw is 50px across where a settled one is 9px. Measured overdraw per device pixel at 1440\u00d7900: idle 0.22, hand parked 0.35, hand sweeping a Trail 0.40, page change 1.71, mid-throw 2.52; four times each of those at a 2\u00d7 pixel ratio, so the page change costs ~6.8\u00d7 overdraw and ~32M fragments a frame on a real machine.",
         "section": "tweak"
       },
       {
@@ -518,12 +558,12 @@
       },
       {
         "name": "The Reload-Free Rule",
-        "body": "A control takes effect on the frame after it moves. Three cannot: the reading (`auto`/`matter`/`calm`) and the boot terminal are decided before the panel exists, so they persist and reload. Everything else — including the particle budget, which is why the buffer is allocated once at a 22,000-grain ceiling and drawn to a live `NP` — resolves live.",
+        "body": "A control takes effect on the frame after it moves. Three cannot: the reading (`auto`/`matter`/`calm`) and the boot terminal are decided before the panel exists, so they persist and reload. Everything else \u2014 including the particle budget, which is why the buffer is allocated once at a 22,000-grain ceiling and drawn to a live `NP` \u2014 resolves live.",
         "section": "tweak"
       },
       {
         "name": "The Panel Owns The Gesture Rule",
-        "body": "The matter site navigates on wheel, arrow keys, digits and swipe. While the panel is open it sets `data-tw=\"open\"` on `<html>` and matter.js refuses **three of the four** — because a panel you cannot scroll without changing page is not a panel. Digits stay live, and the exception is the rule's own argument taken seriously: it is about scrolling, and a digit is not a scroll. Nearly every control in the panel affects matter that appears on exactly one page, so refusing all four made the instrument unable to inspect the thing it instruments. The nav bar also translates clear of the panel while it is open, since the panel is pinned to the edge the nav lives on and was clipping the first link in half.",
+        "body": "The matter site navigates on wheel, arrow keys, digits and swipe. While the panel is open it sets `data-tw=\"open\"` on `<html>` and matter.js refuses **three of the four** \u2014 because a panel you cannot scroll without changing page is not a panel. Digits stay live, and the exception is the rule's own argument taken seriously: it is about scrolling, and a digit is not a scroll. Nearly every control in the panel affects matter that appears on exactly one page, so refusing all four made the instrument unable to inspect the thing it instruments. The nav bar also translates clear of the panel while it is open, since the panel is pinned to the edge the nav lives on and was clipping the first link in half.",
         "section": "tweak"
       },
       {
@@ -540,34 +580,46 @@
         "name": "The Playback Hands Over Rule",
         "body": "The Tape plays itself forward once, on a 6s dwell, and the first deliberate input takes it for the rest of the visit - not for the rest of the page, and not until a timer resumes. A timer that resumed would keep taking the Tape back off the visitor, and then nothing on the page is attributable to them, which is the argument The Hand Has To Be Attributable Rule makes about the aura applied to time instead of to space. Deliberate means acted, not present: pointerdown, a key, a wheel, a touch - never pointermove.",
         "section": "components"
+      },
+      {
+        "name": "The Plate Fits By Measurement Rule",
+        "body": "The Projects index is five repo names built from matter, and that reverses an earlier measurement \u2014 so it holds by a newer one. Archivo 700 normal runs at most 0.522em per character over the alphabet repo names use, and the stylesheet sizes each name with min(Headline, track / (chars \u00d7 0.522)) from a character count the build writes onto the row. The track is the page column less 84px of row chrome (72px narrow): 617px at 821, 776 at 1024, 1096 at 1440 and above. The binding width is 821px, where Headline computes to 36.1px and the longest name in the account \u2014 behavioral-biometric-identification, 35 characters \u2014 takes 522 of 606px and sizes down to 33.1px. At the 26px floor the track admits 45 characters, which is where MATTER_NAME_MAX sits; past it the build hands the name back to DOM text at Title. The index asks for more than the 80% cap and is thinned to it, and still measures 28\u201341% lit at p95 237\u2013239 against the loudest DOM text on the page at 0.42\u20133.88%. tools/probes/plate-fit.js is the check."
+      },
+      {
+        "name": "The Schematic Costs No Grain Rule",
+        "body": "A project's Schematic is drawn as drafting \u2014 hairline dashed edges, solid slab nodes, mono labels \u2014 as inline SVG generated at build time, never as Matter Text. All three consequences are the reason: the home page's claim that every glyph on screen is conserved matter stays literally true; a raised card costs nothing against a grain budget the index is already at the cap of; and the calm reading gets a real diagram with no JavaScript. Laid out along the axis its author drew it along \u2014 a chain top to bottom, anything else layered left to right \u2014 because a seven-node chain laid out across came to 864px and scaled into a card puts a 10px mono label at 8px, under the ramp's smallest step."
+      },
+      {
+        "name": "The Derived Or Absent Rule",
+        "body": "Every block on a project is extracted from data the build already holds, or it does not exist. Nothing is written by hand and nothing is padded: a README with no diagram gets no Schematic, a repo that reports no figures gets no figures block, and a sparse project ships sparse. Stars are printed at zero rather than omitted, because a portfolio that prints only its flattering fields is one a reader checks once and stops trusting. The LLM rung of the extraction ladder is deliberately absent \u2014 three of the account's READMEs parse for free and the rest omit, which is the honest outcome, and per ADR 0001 a Schematic could never depend on a model anyway."
       }
     ],
     "dos": [
       "**Do** keep Signal Cyan (#67e8f9) as the only hue. If a variant needs a second color, it needs a different idea.",
-      "**Do** keep Matter Text at 26px or larger, and check the computed size rather than the authored rule — a more specific selector elsewhere is the usual way this breaks.",
-      "**Do** separate content with 1px hairlines at 10–15% ink.",
+      "**Do** keep Matter Text at 26px or larger, and check the computed size rather than the authored rule \u2014 a more specific selector elsewhere is the usual way this breaks.",
+      "**Do** separate content with 1px hairlines at 10\u201315% ink.",
       "**Do** express secondary text as an alpha of Phosphor (#e8edef), not as a chosen grey.",
       "**Do** let mono speak for the machine (HUD, years, repo names, links, boot log) and Archivo speak for the person (name, headings).",
       "**Do** design both readings. Anything added to the matter site must also make sense in the calm scrolling document, because the same markup serves both.",
-      "**Do** ship a control with anything new, in the same change. One line in `SCHEMA` — see The Every Knob Rule.",
+      "**Do** ship a control with anything new, in the same change. One line in `SCHEMA` \u2014 see The Every Knob Rule.",
       "**Do** re-measure before changing a default. A slider is free; a default is a claim.",
-      "**Do** add a *view* rather than a second renderer when something needs to sequence inside a page. The caret, the schedule and the budget all already work per view — see The Views, Not Pages, Rule.",
+      "**Do** add a *view* rather than a second renderer when something needs to sequence inside a page. The caret, the schedule and the budget all already work per view \u2014 see The Views, Not Pages, Rule.",
       "**Do** make a measurement tool name its subjects from the field. `align.js` listed its own pages and went silent on the one that changed shape.",
-      "**Do** give a new hand response that falls off with distance the radius the hand already has (`repelR × sreach`). The aura and the reach share the same 167px, and a third circle would make the hand's influence a set of unrelated ones instead of one field. The Trail is exempt because it has no falloff — it is emitted by travel, not by proximity, which is why it works over empty field."
+      "**Do** give a new hand response that falls off with distance the radius the hand already has (`repelR \u00d7 sreach`). The aura and the reach share the same 167px, and a third circle would make the hand's influence a set of unrelated ones instead of one field. The Trail is exempt because it has no falloff \u2014 it is emitted by travel, not by proximity, which is why it works over empty field."
     ],
     "donts": [
       "**Don't** add a shadow to content. The boot window is the only elevated surface in the system.",
       "**Don't** introduce a corner radius on a content surface; square is the default and the three exceptions are already spent.",
-      "**Don't** use a CSS glow, blur, or `filter` to brighten something. Brightness belongs to the material — a lit surface catching a key light — and is earned there.",
+      "**Don't** use a CSS glow, blur, or `filter` to brighten something. Brightness belongs to the material \u2014 a lit surface catching a key light \u2014 and is earned there.",
       "**Don't** add a third typeface, or move a role from one face to the other.",
-      "**Don't** rely on a color difference *within* matter — every particle renders in the same uniform color regardless of the element's CSS.",
+      "**Don't** rely on a color difference *within* matter \u2014 every particle renders in the same uniform color regardless of the element's CSS.",
       "**Don't** introduce an image, illustration, gradient fill, or texture. Generated assets are unavailable to this project and the identity is built on that absence.",
       "**Don't** write a literal size, color, duration, or particle constant into `style.css` or `matter.js`. If it is worth choosing, it is worth exposing; if it is not worth exposing, it should not be a magic number either.",
       "**Don't** let a page scroll or reveal a scrollbar in the matter reading.",
       "**Don't** let anything change page on its own. The tape advances an Epoch by itself and stops at the last one; that is the whole of what may move without being asked.",
       "**Don't** space a sequence evenly when the intervals mean something. The tape's ticks are placed by real years, and the gap between two of them is the fact the page is there to carry.",
-      "**Don't** write a hover or pointer offset to `transform`. `.copy` owns `transform` for its reveal and the transition assigns `transform: none` to those elements directly. Use the standalone `translate` property, which composes with it — see Lean.",
-      "**Don't** draw a second pointer. The Caret is not one — it stays where the machine last wrote. The hand is answered by the Trail it writes and the Snap that absorbs it, and neither is an object following the cursor. A blob, a ring, a trailing dot or a full-viewport blend-mode layer is one pointer too many, and the last of those costs a compositing readback every frame besides."
+      "**Don't** write a hover or pointer offset to `transform`. `.copy` owns `transform` for its reveal and the transition assigns `transform: none` to those elements directly. Use the standalone `translate` property, which composes with it \u2014 see Lean.",
+      "**Don't** draw a second pointer. The Caret is not one \u2014 it stays where the machine last wrote. The hand is answered by the Trail it writes and the Snap that absorbs it, and neither is an object following the cursor. A blob, a ring, a trailing dot or a full-viewport blend-mode layer is one pointer too many, and the last of those costs a compositing readback every frame besides."
     ]
   }
 }

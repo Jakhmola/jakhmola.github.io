@@ -26,7 +26,11 @@ test('forks, the profile repo, and portfolio-hide repos never appear', async () 
   assert.ok(!all.includes('freeCodeCamp-boilerplate'), 'fork excluded');
   assert.ok(!all.includes('Jakhmola'), 'profile repo excluded');
   assert.ok(!all.includes('scratch-experiments'), 'portfolio-hide excluded');
-  assert.equal(all.length, 8);
+  // career-ops is fork-flagged on the live API (parent deleted) and carries no
+  // portfolio-feature topic, so the amended fork rule excludes it -- which is
+  // exactly how it left the Featured set, with no code change.
+  assert.ok(!all.includes('career-ops'), 'untagged fork excluded');
+  assert.equal(all.length, 7);
 });
 
 test('portfolio-feature pins a low-scoring repo into Featured', async () => {
@@ -37,25 +41,26 @@ test('portfolio-feature pins a low-scoring repo into Featured', async () => {
 test('featured are score-ordered: recent, starred, documented work first', async () => {
   const { featured } = rankRepos(await loadRepos(), opts);
   assert.deepEqual(names(featured), [
-    'career-ops',
-    'coding_agent',
     'rag-search-engine',
+    'coding_agent',
     'Brain-Tumor-Segmentation',
     'automated-ticketing-system',
     'interview-coach',
+    'behavioral-biometric-identification',
   ]);
 });
 
 test('featured/rest split respects featuredCount; rest holds the remainder', async () => {
   const { featured, rest } = rankRepos(await loadRepos(), opts);
   assert.equal(featured.length, 6);
-  assert.deepEqual(names(rest), ['Super-Mario-AI', 'behavioral-biometric-identification']);
+  assert.deepEqual(names(rest), ['Super-Mario-AI']);
 });
 
 test('pinned repos can exceed featuredCount', async () => {
   const repos = (await loadRepos()).map((r) => ({ ...r, topics: [...(r.topics || []), 'portfolio-feature'] }));
   const { featured, rest } = rankRepos(repos, { ...opts, featuredCount: 2 });
-  // 8 originals + the now-pinned fork (amended rule); profile repo and portfolio-hide still out.
+  // 7 originals + the two now-pinned forks (amended rule); profile repo and
+  // portfolio-hide still out.
   assert.equal(featured.length, 9, 'every pinned repo is featured even above the cap');
   assert.equal(rest.length, 0);
 });
@@ -95,11 +100,11 @@ test('portfolio-hide beats portfolio-feature, even on a fork', async () => {
 
 test('a repo missing pushed_at ranks with zero recency instead of a NaN score', async () => {
   const repos = (await loadRepos()).map((r) =>
-    r.name === 'career-ops' ? { ...r, pushed_at: undefined } : r,
+    r.name === 'rag-search-engine' ? { ...r, pushed_at: undefined } : r,
   );
   const { featured, rest } = rankRepos(repos, opts);
   for (const r of [...featured, ...rest]) assert.ok(Number.isFinite(r.score), `${r.name} score is finite`);
-  assert.equal([...featured, ...rest].length, 8, 'the repo still appears');
+  assert.equal([...featured, ...rest].length, 7, 'the repo still appears');
 });
 
 test('rankRepos does not mutate its input', async () => {
