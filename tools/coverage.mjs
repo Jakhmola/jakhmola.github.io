@@ -23,14 +23,6 @@ const SCRATCH = process.env.CLAUDE_JOB_DIR ? join(process.env.CLAUDE_JOB_DIR, 't
 const size = process.argv.includes('--size')
   ? process.argv[process.argv.indexOf('--size') + 1]
   : '1440x900';
-// Appended to every shot's hash. The two measured rules are claims about what is
-// lit, and half of what lights this field is a response to a pointer -- so without
-// a way to put a hand on the page, this tool can only ever measure the room with
-// nobody in it. `--hash 'mx=500&my=340'` is how the aura, the reach and the wake
-// get measured against The Name Reads First Rule at all.
-const extra = process.argv.includes('--hash')
-  ? '&' + process.argv[process.argv.indexOf('--hash') + 1]
-  : '';
 const dir = mkdtempSync(join(SCRATCH, 'cov-'));
 const bench = new URL('bench.mjs', import.meta.url).pathname;
 const run = (args) => execFileSync('node', [bench, ...args], { encoding: 'utf8', maxBuffer: 1 << 28 });
@@ -52,7 +44,7 @@ const py = (v) => Math.round((v - probeH / 2) + h / 2);
 const out = {};
 for (const pg of Object.keys(boxes.pages)) {
   const png = join(dir, pg + '.png');
-  run(['shot', 'dist/index.html', png, '--size', size, '--hash', `t0=3.5&pg=${pg}` + extra]);
+  run(['shot', 'dist/index.html', png, '--size', size, '--hash', `t0=3.5&pg=${pg}`]);
   const rows = boxes.pages[pg].map((tg) => {
     const [x0, y0, x1, y1] = tg.box;
     return { t: tg.t, n: tg.n, box: [x0, py(y0), x1, py(y1)] };

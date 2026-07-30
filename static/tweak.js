@@ -203,28 +203,6 @@
       ],
     },
     {
-      g: 'Wake',
-      note:
-        'Between reaching and being thrown: the hand takes a few grains out of the word and ' +
-        'carries them, and they burn home when the leash runs out. Nothing new arrives on screen — ' +
-        'a grain in the wake is a grain the word is currently missing, and it re-types into its own ' +
-        'slot afterwards like every other one. The leash is the felt radius from Life rather than a ' +
-        'number of its own, so the hand keeps one zone of influence instead of three. ' +
-        'This is the only standing cost in the system: everything else expensive is a page change, ' +
-        'which lasts two seconds, while a wake lasts as long as a hand rests on a word. Measured at ' +
-        '0.0011 overdraw per carried grain — the cap is set where the wake costs no more than the ' +
-        'idle field it sits on, and the slider goes well past there.',
-      c: [
-        { k: 'wake', t: 'bool', d: true, l: 'Wake' },
-        { k: 'wn', t: 'range', d: 140, min: 20, max: 400, step: 10, l: 'Carried · cap' },
-        { k: 'wshare', t: 'range', d: 0.18, min: 0.02, max: 1, step: 0.02, l: 'Carried · share of the word' },
-        { k: 'wpick', t: 'range', d: 0.35, min: 0.1, max: 1, step: 0.05, u: '×', l: 'Picked up within · of felt radius' },
-        { k: 'wspread', t: 'range', d: 34, min: 0, max: 120, step: 2, u: 'px', l: 'Carried · spread around the hand' },
-        { k: 'wseek', t: 'range', d: 20, min: 2, max: 80, step: 1, l: 'Follow stiffness' },
-        { k: 'wlag', t: 'range', d: 7, min: 0, max: 20, step: 0.5, l: 'Follow damping' },
-      ],
-    },
-    {
       g: 'Throw',
       note:
         'What a moving hand does. A parked hand does nothing at all — that is the aura’s job, in ' +
@@ -269,13 +247,8 @@
         { k: 'caretW', t: 'range', d: 0.12, min: 0.03, max: 0.5, step: 0.01, l: 'Caret width' },
         { k: 'caretBlink', t: 'range', d: 1, min: 0.2, max: 3, step: 0.1, u: 's', l: 'Caret blink' },
         { k: 'caretTilt', t: 'range', d: 0.3, min: 0, max: 0.8, step: 0.02, u: 'rad', l: 'Caret tilt' },
-        { k: 'caretDock', t: 'bool', d: true, l: 'Caret docks to a hovered link' },
-        { k: 'caretDockMs', t: 'range', d: 170, min: 40, max: 600, step: 10, u: 'ms', l: 'Caret dock · travel' },
         { k: 'fade', t: 'range', d: 0.5, min: 0.05, max: 2, step: 0.05, u: 's', css: '--fade', l: 'Copy fade' },
         { k: 'rise', t: 'range', d: 8, min: 0, max: 40, step: 1, u: 'px', css: '--rise', l: 'Copy rise' },
-        { k: 'lean', t: 'bool', d: true, l: 'Links lean toward the hand' },
-        { k: 'leanF', t: 'range', d: 0.15, min: 0.02, max: 0.8, step: 0.01, l: 'Lean · pull' },
-        { k: 'leanK', t: 'range', d: 10, min: 1, max: 40, step: 0.5, u: '/s', l: 'Lean · response' },
         { k: 'scramble', t: 'bool', d: true, l: 'Link scramble' },
         { k: 'scrambleMs', t: 'range', d: 550, min: 100, max: 2000, step: 25, u: 'ms', l: 'Scramble' },
         { k: 'boot', t: 'bool', d: true, fx: 'reload', l: 'Boot terminal' },
